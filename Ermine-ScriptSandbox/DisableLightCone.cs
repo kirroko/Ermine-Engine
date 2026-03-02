@@ -9,6 +9,7 @@ public class DisableLightCone : MonoBehaviour
     private bool orbInside = false;
     private bool currentlyColliding = false;
 
+    private Animator anim;
     private GameObject lightCone = null;
 
     private void Start()
@@ -19,6 +20,8 @@ public class DisableLightCone : MonoBehaviour
         //lightCone = FindMatchingCone();
         //if (lightCone != null)
         //    oldConePos = lightCone.transform.position;
+
+        anim = GameObject.Find("PlayerAnim").GetComponent<Animator>();
 
         if (transform.childCount > 0)
             lightCone = gameObject.transform.GetChild(0).gameObject;
@@ -42,6 +45,9 @@ public class DisableLightCone : MonoBehaviour
                 Physics.SetPosition((ulong)sphere.GetInstanceID(), sphere.transform.position);
                 Physics.RemovePhysic((ulong)sphere.GetInstanceID());
                 GameObject.Destroy(sphere);
+
+                // Play explode animation
+                anim.SetTrigger("explode");
             }
         }
 

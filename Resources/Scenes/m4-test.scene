@@ -60482,6 +60482,1623 @@
         },
         "GlobalTransform": {}
       }
+    },
+    {
+      "id": 989,
+      "components": {
+        "IDComponent": {
+          "guid": "23f5f80ad6d69842881c32ccc57a9bfd"
+        },
+        "Transform": {
+          "position": [
+            12.078804969787598,
+            -0.28275108337402346,
+            3.1547393798828127
+          ],
+          "rotation": [
+            -0.7062873840332031,
+            -3.977191909143585e-7,
+            0.7079253196716309,
+            -1.610009547903246e-8
+          ],
+          "scale": [
+            0.029999617487192155,
+            0.03000102937221527,
+            0.006028585135936737
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "clock (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_BC.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_BC.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "ModelComponent": {
+          "model": "ART1_clock_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e5629f445dad8f44865cf212af3d6281",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 990,
+      "components": {
+        "IDComponent": {
+          "guid": "e5629f445dad8f44865cf212af3d6281"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            -59.9779052734375
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Level1-2Dressing",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 991,
+      "components": {
+        "IDComponent": {
+          "guid": "1dc636099b5a27499932f3f403daf62a"
+        },
+        "Transform": {
+          "position": [
+            12.09898853302002,
+            14.640012741088868,
+            -5.280433654785156
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.029999474063515664,
+            0.029999999329447748,
+            0.006028562318533659
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "clock (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_BC.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_BC.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "ModelComponent": {
+          "model": "ART1_clock_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e5629f445dad8f44865cf212af3d6281",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 992,
+      "components": {
+        "IDComponent": {
+          "guid": "6dc40615655e5340a42c06061f6d2972"
+        },
+        "Transform": {
+          "position": [
+            12.282428741455079,
+            4.914005756378174,
+            9.71881103515625
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.7071068286895752,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.14999088644981385,
+            0.14999088644981385,
+            0.15000000596046449
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "gear (13)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_gear_1_r_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e5629f445dad8f44865cf212af3d6281",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 993,
+      "components": {
+        "IDComponent": {
+          "guid": "5361df8dacef0a42a9933bcdcdd09c98"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            314.76300048828127
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.0010000000474974514,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_gear_1_r_low.fbx_Gears_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "6dc40615655e5340a42c06061f6d2972",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 994,
+      "components": {
+        "IDComponent": {
+          "guid": "38f22c48e67eb9479d65b2c6958cdfa0"
+        },
+        "Transform": {
+          "position": [
+            12.282428741455079,
+            3.2162833213806154,
+            11.301822662353516
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.7071068286895752,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.14999191462993623,
+            0.14999191462993623,
+            0.15000000596046449
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "gear (12)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_gear_1_r_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e5629f445dad8f44865cf212af3d6281",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 995,
+      "components": {
+        "IDComponent": {
+          "guid": "20624d32bf83284bad60f8f87ca4cbfe"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            314.76300048828127
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.0010000000474974514,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_gear_1_r_low.fbx_Gears_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "38f22c48e67eb9479d65b2c6958cdfa0",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 996,
+      "components": {
+        "IDComponent": {
+          "guid": "96b17886741bea4ca05ee55be8017256"
+        },
+        "Transform": {
+          "position": [
+            -4.026330947875977,
+            14.591388702392579,
+            -91.44869995117188
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "chain (6)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 997,
+      "components": {
+        "IDComponent": {
+          "guid": "7ec4cab8e14d4140932505760ec159ef"
+        },
+        "Transform": {
+          "position": [
+            -106.3723373413086,
+            -68.52906036376953,
+            -230.86036682128907
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            10.0,
+            10.0,
+            10.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_pCube19_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "96b17886741bea4ca05ee55be8017256",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 998,
+      "components": {
+        "IDComponent": {
+          "guid": "297bfbb9576334478e4de5f099fa59b9"
+        },
+        "Transform": {
+          "position": [
+            7.2382965087890629,
+            14.591388702392579,
+            -66.83924865722656
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "chain (7)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 999,
+      "components": {
+        "IDComponent": {
+          "guid": "fcc283163de0f84bace50e1dd3d8c0d7"
+        },
+        "Transform": {
+          "position": [
+            -106.3723373413086,
+            -68.52906036376953,
+            -230.86036682128907
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            10.0,
+            10.0,
+            10.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_pCube19_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "297bfbb9576334478e4de5f099fa59b9",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1000,
+      "components": {
+        "IDComponent": {
+          "guid": "0cba6fb7aba4474b870776507bc3ead6"
+        },
+        "Transform": {
+          "position": [
+            11.949746131896973,
+            10.86425495147705,
+            -54.63957214355469
+          ],
+          "rotation": [
+            0.0,
+            0.7069846391677856,
+            0.0,
+            0.7072288990020752
+          ],
+          "scale": [
+            0.014999999664723874,
+            0.014999999664723874,
+            0.006028586998581886
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "clock (3)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_BC.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_BC.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "ModelComponent": {
+          "model": "ART1_clock_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1001,
+      "components": {
+        "IDComponent": {
+          "guid": "94a325283552244bb62057cb4c1b6b6b"
+        },
+        "Transform": {
+          "position": [
+            11.954214096069336,
+            -1.3780784606933594,
+            -67.31183624267578
+          ],
+          "rotation": [
+            0.0,
+            0.7069846391677856,
+            0.0,
+            0.7072288990020752
+          ],
+          "scale": [
+            0.014999999664723874,
+            0.014999999664723874,
+            0.006028586998581886
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "clock (4)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_BC.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_BC.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "ModelComponent": {
+          "model": "ART1_clock_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1002,
+      "components": {
+        "IDComponent": {
+          "guid": "5f130cf9466e22429b3767380075c0bf"
+        },
+        "Transform": {
+          "position": [
+            12.282428741455079,
+            3.8754663467407228,
+            -65.88980865478516
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.7071068286895752,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.29999783635139468,
+            0.29999783635139468,
+            0.30000001192092898
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "gear (14)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_gear_1_r_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1003,
+      "components": {
+        "IDComponent": {
+          "guid": "370c9ace5b2f5044b0ab245915585a7f"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            314.76300048828127
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.0010000000474974514,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_gear_1_r_low.fbx_Gears_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "5f130cf9466e22429b3767380075c0bf",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1004,
+      "components": {
+        "IDComponent": {
+          "guid": "4c0afb0f3144e94cacf3d72bb8032247"
+        },
+        "Transform": {
+          "position": [
+            12.282428741455079,
+            7.111503601074219,
+            -67.14981079101563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.7071068286895752,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.14998778700828553,
+            0.14998778700828553,
+            0.15000000596046449
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "gear (15)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_gear_1_r_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1005,
+      "components": {
+        "IDComponent": {
+          "guid": "3558cd2269e6eb4689612a5f108ea983"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            314.76300048828127
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.0010000000474974514,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_gear_1_r_low.fbx_Gears_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Miscellaneous_BC.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "4c0afb0f3144e94cacf3d72bb8032247",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1006,
+      "components": {
+        "IDComponent": {
+          "guid": "2de6b18a45a4fa4ca2476c7389bd260a"
+        },
+        "Transform": {
+          "position": [
+            12.6043119430542,
+            2.4017205238342287,
+            -44.999847412109378
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.019999874755740167,
+            0.029999999329447748,
+            0.019999874755740167
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "machine1 (3)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_machine_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1007,
+      "components": {
+        "IDComponent": {
+          "guid": "d27a9e05115922499016eb5e2e29c612"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -542.9864501953125,
+            -2779.45556640625
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            100.0,
+            100.0,
+            100.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              0.5709999799728394
+            ],
+            "materialAlpha": 0.5709999799728394,
+            "materialTransparency": 0.42900002002716067,
+            "materialHasAlbedoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "2de6b18a45a4fa4ca2476c7389bd260a",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1008,
+      "components": {
+        "IDComponent": {
+          "guid": "8bf2df92fed23848a75eb4bcbd8c71e5"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -542.9864501953125,
+            -2779.45556640625
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            100.0,
+            100.0,
+            100.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_BC.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_BC.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "2de6b18a45a4fa4ca2476c7389bd260a",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1009,
+      "components": {
+        "IDComponent": {
+          "guid": "edc9838205821947a80c3bd91fd544a5"
+        },
+        "Transform": {
+          "position": [
+            8.690835952758789,
+            7.738279819488525,
+            -47.928707122802737
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            0.3796616494655609,
+            0.7745097875595093,
+            0.7512834072113037
+          ],
+          "intensity": 1.1979999542236329,
+          "type": "Point",
+          "castsShadows": true,
+          "castsRays": false,
+          "innerAngle": -1.0,
+          "outerAngle": -1.0,
+          "radius": 10.9399995803833
+        },
+        "ObjectMetaData": {
+          "name": "Machine Light 1 (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1010,
+      "components": {
+        "IDComponent": {
+          "guid": "063b05da6d0ddb41b1fce5e66e8f8f8e"
+        },
+        "Transform": {
+          "position": [
+            -6.401124954223633,
+            -4.646347999572754,
+            -54.27439498901367
+          ],
+          "rotation": [
+            0.6830107569694519,
+            -0.18301334977149964,
+            0.18301217257976533,
+            0.6830146312713623
+          ],
+          "scale": [
+            0.019999617710709573,
+            0.030000004917383195,
+            0.01999962329864502
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "machine1 (4)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_machine_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1011,
+      "components": {
+        "IDComponent": {
+          "guid": "bad9b9bf22efd243a0f7ea317628e3b8"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -542.9864501953125,
+            -2779.45556640625
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            100.0,
+            100.0,
+            100.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_BC.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_BC.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "063b05da6d0ddb41b1fce5e66e8f8f8e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1012,
+      "components": {
+        "IDComponent": {
+          "guid": "7529bc8b07987c4fa7540e7a3025fcbb"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -542.9864501953125,
+            -2779.45556640625
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            100.0,
+            100.0,
+            100.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              0.5709999799728394
+            ],
+            "materialAlpha": 0.5709999799728394,
+            "materialTransparency": 0.42900002002716067,
+            "materialHasAlbedoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "063b05da6d0ddb41b1fce5e66e8f8f8e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1013,
+      "components": {
+        "IDComponent": {
+          "guid": "8c0be150aabb7040a18baaa13604128b"
+        },
+        "Transform": {
+          "position": [
+            -7.903924942016602,
+            -1.9241043329238892,
+            -48.366905212402347
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            0.3796616494655609,
+            0.7745097875595093,
+            0.7512834072113037
+          ],
+          "intensity": 1.1979999542236329,
+          "type": "Point",
+          "castsShadows": true,
+          "castsRays": false,
+          "innerAngle": -1.0,
+          "outerAngle": -1.0,
+          "radius": 10.9399995803833
+        },
+        "ObjectMetaData": {
+          "name": "Machine Light 1 (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1014,
+      "components": {
+        "IDComponent": {
+          "guid": "cddc7c5724668c4d9de55247227c15b2"
+        },
+        "Transform": {
+          "position": [
+            12.068081855773926,
+            15.425151824951172,
+            -48.22040557861328
+          ],
+          "rotation": [
+            0.0,
+            0.7069846391677856,
+            0.0,
+            0.7072288990020752
+          ],
+          "scale": [
+            0.014999999664723874,
+            0.014999999664723874,
+            0.006028586998581886
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "clock (5)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "materialAlpha": 1.0,
+            "materialTransparency": 0.0,
+            "materialMetallic": 0.0,
+            "materialRoughness": 0.5,
+            "materialEmissive": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "materialEmissiveIntensity": 1.0,
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_BC.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_BC.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "ModelComponent": {
+          "model": "ART1_clock_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1015,
+      "components": {
+        "IDComponent": {
+          "guid": "7e3f277c04de1c4f996c15747bf427d5"
+        },
+        "Transform": {
+          "position": [
+            -11.757164001464844,
+            -3.9712045192718508,
+            -56.908023834228519
+          ],
+          "rotation": [
+            0.7361368536949158,
+            0.16566018760204316,
+            -0.2746387720108032,
+            0.5960140824317932
+          ],
+          "scale": [
+            0.019999617710709573,
+            0.030000032857060434,
+            0.01999964565038681
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "machine1 (5)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_machine_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1016,
+      "components": {
+        "IDComponent": {
+          "guid": "18a981e3f4bbf647a0cbee232feaccb7"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -542.9864501953125,
+            -2779.45556640625
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            100.0,
+            100.0,
+            100.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialAlbedo": [
+              1.0,
+              1.0,
+              1.0,
+              0.5709999799728394
+            ],
+            "materialAlpha": 0.5709999799728394,
+            "materialTransparency": 0.42900002002716067,
+            "materialHasAlbedoMap": false
+          },
+          "textures": [],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "7e3f277c04de1c4f996c15747bf427d5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1017,
+      "components": {
+        "IDComponent": {
+          "guid": "6fc713d4847a4d43bc03d95c8e94f116"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -542.9864501953125,
+            -2779.45556640625
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            100.0,
+            100.0,
+            100.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "hasMaterial": true,
+          "params": {
+            "materialHasAlbedoMap": true
+          },
+          "textures": [
+            {
+              "slot": "materialAlbedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_BC.png"
+            },
+            {
+              "slot": "material.albedoMap",
+              "path": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_machine_BC.png"
+            }
+          ],
+          "uvScale": [
+            1.0,
+            1.0
+          ],
+          "uvOffset": [
+            0.0,
+            0.0
+          ],
+          "castsShadows": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "7e3f277c04de1c4f996c15747bf427d5",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
     }
   ],
   "globalGraphics": {
