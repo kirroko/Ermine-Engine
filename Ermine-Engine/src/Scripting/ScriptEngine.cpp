@@ -3233,6 +3233,78 @@ namespace
 		}
 	}
 #pragma endregion
+
+#pragma region PostEffects ICalls
+	void icall_posteffects_set_exposure(float value)
+	{
+		auto& ecs = ECS::GetInstance();
+		value = std::clamp(value, 0.0f, 2.0f);
+		ecs.GetSystem<graphics::Renderer>()->m_VignetteIntensity = value;
+	}
+
+	void icall_posteffects_set_contrast(float value)
+	{
+		auto& ecs = ECS::GetInstance();
+		value = std::clamp(value, 0.0f, 2.0f);
+		ecs.GetSystem<graphics::Renderer>()->m_Contrast = value;
+	}
+
+	void icall_posteffects_set_saturation(float value)
+	{
+		auto& ecs = ECS::GetInstance();
+		value = std::clamp(value, 0.0f, 2.0f);
+		ecs.GetSystem<graphics::Renderer>()->m_Saturation = value;
+	}
+
+	void icall_posteffects_set_gamma(float value)
+	{
+		auto& ecs = ECS::GetInstance();
+		value = std::clamp(value, 0.0f, 3.0f);
+		ecs.GetSystem<graphics::Renderer>()->m_Gamma = value;
+	}
+
+	void icall_posteffects_set_vignetteintensity(float value)
+	{
+		auto& ecs = ECS::GetInstance();
+		value = std::clamp(value, 0.0f, 2.0f);
+		ecs.GetSystem<graphics::Renderer>()->m_VignetteIntensity = value;
+	}
+
+	void icall_posteffects_set_vignetteradius(float value)
+	{
+		auto& ecs = ECS::GetInstance();
+		value = std::clamp(value, 0.0f, 2.0f);
+		ecs.GetSystem<graphics::Renderer>()->m_VignetteRadius = value;
+	}
+
+	void icall_posteffects_set_bloomStrength(float value)
+	{
+		auto& ecs = ECS::GetInstance();
+		value = std::clamp(value, 0.0f, 2.0f);
+		ecs.GetSystem<graphics::Renderer>()->m_BloomStrength = value;
+	}
+
+	void icall_posteffects_set_grainintensity(float value)
+	{
+		auto& ecs = ECS::GetInstance();
+		value = std::clamp(value, 0.0f, 2.0f);
+		ecs.GetSystem<graphics::Renderer>()->m_GrainIntensity = value;
+	}
+
+	void icall_posteffects_set_grainsize(float value)
+	{
+		auto& ecs = ECS::GetInstance();
+		value = std::clamp(value, 0.0f, 2.0f);
+		ecs.GetSystem<graphics::Renderer>()->m_GrainScale = value;
+	}
+
+	void icall_posteffects_set_chromaticaberration(float value)
+	{
+		auto& ecs = ECS::GetInstance();
+		value = std::clamp(value, 0.0f, 2.0f);
+		ecs.GetSystem<graphics::Renderer>()->m_ChromaticAmount = value;
+	}
+#pragma endregion
 }
 
 namespace Ermine::scripting
@@ -3832,5 +3904,18 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Animator::Internal_GetCurrentStateName", (const void*)icall_animator_get_current_state);
 
 	mono_add_internal_call("ErmineEngine.Animator::Internal_SetState", (const void*)icall_animator_set_state);
+#pragma endregion
+
+#pragma region PostEffects ICalls
+	mono_add_internal_call("ErmineEngine.PostEffects::SetExposure", (const void*)icall_posteffects_set_exposure);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetContrast", (const void*)icall_posteffects_set_contrast);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetSaturation", (const void*)icall_posteffects_set_saturation);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetGamma", (const void*)icall_posteffects_set_gamma);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetVignetteIntensity", (const void*)icall_posteffects_set_vignetteintensity);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetVignetteRadius", (const void*)icall_posteffects_set_vignetteradius);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetBloomStrength", (const void*)icall_posteffects_set_bloomStrength);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetGrainIntensity", (const void*)icall_posteffects_set_grainintensity);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetGrainSize", (const void*)icall_posteffects_set_grainsize);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetChromaticAberrationIntensity", (const void*)icall_posteffects_set_chromaticaberration);
 #pragma endregion
 }
