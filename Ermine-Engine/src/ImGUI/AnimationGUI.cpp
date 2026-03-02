@@ -2,7 +2,7 @@
 /*!
 \file       AnimationGUI.cpp
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       26/01/2026
+\date       28/02/2026
 \brief      This file contains the definition of the animation editor GUI.
 
 Copyright (C) 2026 DigiPen Institute of Technology.
@@ -311,11 +311,12 @@ namespace Ermine
             // Parameters
             ImGui::DragFloat(("Speed##" + std::to_string(n.id)).c_str(), &n.speed, 0.01f, 0.01f, 10.f);
             ImGui::DragFloat(("Blend##" + std::to_string(n.id)).c_str(), &n.blendWeight, 0.01f, 0.f, 1.f);
+            ImGui::Checkbox(("Loop##" + std::to_string(n.id)).c_str(), &n.loop);
 
             // Action buttons
             if (ImGui::Button(("Preview##" + std::to_string(n.id)).c_str())) {
                 if (n.isAttached && animator) {
-                    animator->PlayAnimation(n.clipName);
+                    animator->PlayAnimation(n.clipName, n.loop);
                     graph->current = FindStateById(graph, n.id);
                     graph->playing = true;
                 }
@@ -437,7 +438,7 @@ namespace Ermine
         if (ImGui::Button("Play")) {
             graph->playing = true;
             if (graph->current && animator)
-                animator->PlayAnimation(graph->current->clipName);
+                animator->PlayAnimation(graph->current->clipName, graph->current->loop);
         }
         ImGui::SameLine();
         if (ImGui::Button("Pause")) {
@@ -454,10 +455,6 @@ namespace Ermine
             graph->playing = false;
             if (animator) animator->StopAnimation();
         }
-        ImGui::SameLine();
-        bool looping = animator->IsLooping();
-        if (ImGui::Checkbox("Looping", &looping)) animator->IsLooping() = looping;
-
         ImGui::EndChild(); // StateInspector end
     }
 

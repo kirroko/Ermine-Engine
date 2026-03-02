@@ -72,13 +72,12 @@
   <ItemGroup>
     <Compile Include="AnimationExample.cs" />
     <Compile Include="AttackState.cs" />
-    <Compile Include="EndElevator.cs" />
     <Compile Include="SpotLightTrigger.cs" />
-    <Compile Include="MoveState.cs" />
     <Compile Include="ChaseState.cs" />
     <Compile Include="CutscenePlayer.cs" />
     <Compile Include="DamagePlayer.cs" />
     <Compile Include="DisableLightCone.cs" />
+    <Compile Include="EndElevator.cs" />
     <Compile Include="EnvironmentAnimation\TemplateScript.cs" />
     <Compile Include="FakePlayer.cs" />
     <Compile Include="GameManager.cs" />
@@ -99,6 +98,7 @@
     <Compile Include="TemplateScript.cs" />
     <Compile Include="Test1.cs" />
     <Compile Include="Test2.cs" />
+    <Compile Include="TimedDestroy.cs" />
     <Compile Include="VerticalPlatform.cs" />
   </ItemGroup>
   <ItemGroup>

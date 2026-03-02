@@ -6,6 +6,8 @@ public class OrbTeleport : MonoBehaviour
 {
     private Transform origin;
     private Transform cam;
+    private Animator anim;
+
     private float health = 0f;
     public float damage = 10f;
     public float recallHealAmt = 10f;
@@ -49,6 +51,7 @@ public class OrbTeleport : MonoBehaviour
     {
         origin = GameObject.Find("Player").GetComponent<Transform>();
         cam = GameObject.Find("Main Camera").transform;
+        anim = GameObject.Find("PlayerAnim").GetComponent<Animator>();
 
         // Find healthbar by name
         healthBar = GameObject.Find(healthBarName);
@@ -156,6 +159,9 @@ public class OrbTeleport : MonoBehaviour
         TakeDamage(damage);
         GlobalAudio.PlaySFX("Shoot");
 
+        // Play shoot animation
+        anim.SetTrigger("shoot");
+
         // Update UI: Orb is out, teleport and return are now ready
         SetSkillsForOrbOut();
 
@@ -219,6 +225,9 @@ public class OrbTeleport : MonoBehaviour
         if (sphere != null)
         {
             GlobalAudio.PlaySFX("Teleport"); // Or a custom recall sound
+
+            // Play recall animation
+            anim.SetTrigger("recall");
 
             // Remove orb
             Physics.RemovePhysic((ulong)sphere.GetInstanceID());
