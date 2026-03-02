@@ -23,6 +23,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "GLFW/glfw3.h"
 #include "EditorGUI.h"
 #include "Window.h"
+#include "Renderer.h"
 
 #ifdef EE_EDITOR
 #include "EditorGUI.h"
@@ -444,13 +445,40 @@ namespace Ermine
                 TogglePauseMenu();
                 EE_CORE_INFO("Resume button clicked");
             }
-            // ===== Settings Page Flow =====
-            // Main Menu -> Settings Page (3 category buttons)
+            // ===== Old Flow (Audio/Controls as separate main menu buttons) =====
+            else if (button.actionData == "OpenControls")
+            {
+                SetEntityActiveByName("ControlsScreen", true);
+                SetEntityActiveByName("Play Button", false);
+                SetEntityActiveByName("Controls", false);
+                SetEntityActiveByName("Audio", false);
+                SetEntityActiveByName("Quit Button", false);
+                SetEntityActiveByName("Title", false);
+            }
+            else if (button.actionData == "OpenSettings")
+            {
+                SetEntityActiveByName("SettingsMenu", true);
+                SetEntityActiveByName("Play Button", false);
+                SetEntityActiveByName("Controls", false);
+                SetEntityActiveByName("Audio", false);
+                SetEntityActiveByName("Quit Button", false);
+                SetEntityActiveByName("Title", false);
+            }
+            else if (button.actionData == "CloseSettings")
+            {
+                SetEntityActiveByName("SettingsMenu", false);
+                SetEntityActiveByName("Play Button", true);
+                SetEntityActiveByName("Controls", true);
+                SetEntityActiveByName("Audio", true);
+                SetEntityActiveByName("Quit Button", true);
+                SetEntityActiveByName("Title", true);
+            }
+            // ===== New Settings Page Flow =====
             else if (button.actionData == "OpenSettingsPage")
             {
                 // Hide main menu buttons
                 SetEntityActiveByName("Play Button", false);
-                SetEntityActiveByName("Settings", false);
+                SetEntityActiveByName("Settings Button", false);
                 SetEntityActiveByName("Quit Button", false);
                 SetEntityActiveByName("Title", false);
 
@@ -465,7 +493,7 @@ namespace Ermine
 
                 // Show main menu buttons
                 SetEntityActiveByName("Play Button", true);
-                SetEntityActiveByName("Settings", true);
+                SetEntityActiveByName("Settings Button", true);
                 SetEntityActiveByName("Quit Button", true);
                 SetEntityActiveByName("Title", true);
             }
@@ -778,8 +806,18 @@ namespace Ermine
         }
         else if (slider.target == UISliderComponent::SliderTarget::Custom)
         {
-            // Custom target handling can be extended here
-            EE_CORE_INFO("Custom slider '{}' value: {}", slider.customTarget, slider.value);
+            if (slider.customTarget == "Gamma")
+            {
+                // Gamma range: slider 0.0-1.0 maps to gamma 1.6-2.8
+                // 2.2 is standard, lower = brighter, higher = darker
+                float gamma = 1.6f + (slider.value * 1.2f);
+                ecs.GetSystem<graphics::Renderer>()->m_Gamma = gamma;
+                EE_CORE_INFO("Gamma slider: value={}, gamma={}", slider.value, gamma);
+            }
+            else
+            {
+                EE_CORE_INFO("Custom slider '{}' value: {}", slider.customTarget, slider.value);
+            }
         }
     }
 }

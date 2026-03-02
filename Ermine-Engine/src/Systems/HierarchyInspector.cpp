@@ -4331,24 +4331,64 @@ namespace Ermine::editor {
 	}
 
 	// Action data (scene path or custom event)
-	if (button.action != UIButtonComponent::ButtonAction::None && button.action != UIButtonComponent::ButtonAction::Quit)
+	if (button.action == UIButtonComponent::ButtonAction::LoadScene)
 	{
 		char actionDataBuffer[256];
 		strncpy_s(actionDataBuffer, button.actionData.c_str(), sizeof(actionDataBuffer) - 1);
 		actionDataBuffer[sizeof(actionDataBuffer) - 1] = '\0';
 
-		const char* label = (button.action == UIButtonComponent::ButtonAction::LoadScene)
-			? "Scene Path"
-			: "Event Name";
-
-		if (ImGui::InputText(label, actionDataBuffer, sizeof(actionDataBuffer))) {
+		if (ImGui::InputText("Scene Path", actionDataBuffer, sizeof(actionDataBuffer))) {
 			button.actionData = actionDataBuffer;
 		}
+		ImGui::TextDisabled("Example: ../Resources/Scenes/level.scene");
+	}
+	else if (button.action == UIButtonComponent::ButtonAction::Custom)
+	{
+		// Dropdown for known custom actions
+		static const char* customActions[] = {
+			"OpenControls",
+			"CloseControlsScreen",
+			"OpenSettings",
+			"CloseSettings",
+			"OpenSettingsPage",
+			"CloseSettingsPage",
+			"OpenSettingsAudio",
+			"OpenSettingsControls",
+			"OpenSettingsVideo",
+			"BackToSettingsPage",
+			"Resume",
+			"ShowTeleportInfo",
+			"ShowShootingInfo",
+			"ShowReturnInfo",
+			"ShowLightDInfo"
+		};
+		static const int numCustomActions = IM_ARRAYSIZE(customActions);
 
-		// Helper text
-		if (button.action == UIButtonComponent::ButtonAction::LoadScene) {
-			ImGui::TextDisabled("Example: ../Resources/Scenes/level.scene");
+		// Find current selection index
+		int currentCustomAction = -1;
+		for (int i = 0; i < numCustomActions; ++i)
+		{
+			if (button.actionData == customActions[i])
+			{
+				currentCustomAction = i;
+				break;
+			}
 		}
+
+		// Show dropdown
+		if (ImGui::Combo("Custom Action", &currentCustomAction, customActions, numCustomActions))
+		{
+			button.actionData = customActions[currentCustomAction];
+		}
+
+		// Also allow manual input for custom events not in the list
+		char actionDataBuffer[256];
+		strncpy_s(actionDataBuffer, button.actionData.c_str(), sizeof(actionDataBuffer) - 1);
+		actionDataBuffer[sizeof(actionDataBuffer) - 1] = '\0';
+		if (ImGui::InputText("Action (Manual)", actionDataBuffer, sizeof(actionDataBuffer))) {
+			button.actionData = actionDataBuffer;
+		}
+		ImGui::TextDisabled("Use dropdown above or type a custom event name");
 	}
 
 	// Audio settings
