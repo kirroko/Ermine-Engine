@@ -559,7 +559,7 @@ namespace Ermine
         auto& audioComp = ecs.GetComponent<AudioComponent>(entity);
         if (audioComp.isPlaying && audioComp.channelId != -1)
         {
-            CAudioEngine::StopChannel(audioComp.channelId);
+            CAudioEngine::StopChannel(audioComp.channelId, true, 0.3f); // Fade out
         }
 
         // Remove the component
@@ -669,7 +669,7 @@ namespace Ermine
             // Stop current audio if playing
             if (m_TestChannelId != -1 && CAudioEngine::IsPlaying(m_TestChannelId))
             {
-                CAudioEngine::StopChannel(m_TestChannelId);
+                CAudioEngine::StopChannel(m_TestChannelId, true, 0.3f); // Fade out
                 m_TestChannelId = -1;
             }
 
@@ -1770,7 +1770,7 @@ namespace Ermine
 
     void AudioImGUI::StopAllAudio()
     {
-        CAudioEngine::StopAllChannels();
+        CAudioEngine::StopAllChannels(true, 0.5f); // Fade out
         SetStatusMessage("All audio channels stopped");
     }
 
@@ -1778,7 +1778,7 @@ namespace Ermine
     {
         if (m_TestChannelId != -1)
         {
-            CAudioEngine::StopChannel(m_TestChannelId);
+            CAudioEngine::StopChannel(m_TestChannelId, true, 0.3f); // Fade out
             m_TestChannelId = -1;
             SetStatusMessage("Test audio stopped");
         }
