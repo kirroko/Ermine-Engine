@@ -3466,7 +3466,7 @@ namespace Ermine
 		float agentRadius = 0.5f;
 		float bakedAgentRadius = 0.0f;
 		float bakedAgentHeight = 0.0f;
-		float agentMaxClimb = 0.0f;
+		float agentMaxClimb = 0.2f;
 		float agentMaxSlope = 45.0f;
 
 		// Debug toggles

@@ -436,13 +436,22 @@ namespace Ermine {
         cfg.ch = c.cellHeight;
         cfg.walkableSlopeAngle = c.agentMaxSlope;
         cfg.walkableHeight = (int)std::ceil(c.agentHeight / cfg.ch);
-        cfg.walkableClimb = (int)std::floor(c.agentMaxClimb / cfg.ch);
+        //cfg.walkableClimb = (int)std::floor(c.agentMaxClimb / cfg.ch);
+        cfg.walkableClimb = std::max(1, (int)std::floor(c.agentMaxClimb / cfg.ch));
         cfg.walkableRadius = (int)std::ceil(c.agentRadius / cfg.cs);
         rcVcopy(cfg.bmin, bmin);
         rcVcopy(cfg.bmax, bmax);
         rcCalcGridSize(cfg.bmin, cfg.bmax, cfg.cs, &cfg.width, &cfg.height);
         cfg.width = std::max(cfg.width, 2);
         cfg.height = std::max(cfg.height, 2);
+        //EE_CORE_INFO(
+        //    "[NavMeshSystem] Build Config | walkableRadius={} walkableClimb={} walkableHeight={} gridWidth={} gridHeight={}",
+        //    cfg.walkableRadius,
+        //    cfg.walkableClimb,
+        //    cfg.walkableHeight,
+        //    cfg.width,
+        //    cfg.height
+        //);
         cfg.maxEdgeLen = 12;
         cfg.maxSimplificationError = 1.3f;
         cfg.minRegionArea = (int)rcSqr(8);
@@ -695,7 +704,7 @@ namespace Ermine {
             }
         };
 
-    auto AppendStaticCollider = [&](EntityID ent, std::vector<float>& outVerts, std::vector<int>& outTris)
+    auto AppendStaticCollider = [&](EntityID ent, std::vector<float>& outVerts, std::vector<int>& outTris, bool topFaceOnly)
     {
             auto& ecs = ECS::GetInstance();
             auto& t = ecs.GetComponent<Transform>(ent);
@@ -705,7 +714,8 @@ namespace Ermine {
             if (pc.shapeType != ShapeType::Box) return;
 
             // Build collider local transform (pivot + collider rotation)
-            glm::quat entRot = glm::quat(t.rotation.w, t.rotation.x, t.rotation.y, t.rotation.z);
+            //glm::quat entRot = glm::quat(t.rotation.w, t.rotation.x, t.rotation.y, t.rotation.z);
+            glm::quat entRot = glm::normalize(glm::quat(t.rotation.w, t.rotation.x, t.rotation.y, t.rotation.z));
 
             // If colliderRot is degrees in your editor, convert to radians.
             glm::vec3 colEulerRad(glm::radians(pc.colliderRot.x),
@@ -749,8 +759,18 @@ namespace Ermine {
                 outVerts.push_back(v.z);
             }
 
-            for (int i = 0; i < (int)(sizeof(cubeTris) / sizeof(int)); ++i)
-                outTris.push_back(base + cubeTris[i]);
+            static const int topTris[] = { 2,3,6, 3,7,6 }; // Up facing top
+
+            if (topFaceOnly)
+            {
+                for (int i = 0; i < 6; ++i)
+                    outTris.push_back(base + topTris[i]);
+            }
+            else
+            {
+                for (int i = 0; i < (int)(sizeof(cubeTris) / sizeof(int)); ++i)
+                    outTris.push_back(base + cubeTris[i]);
+            }
     };
 
 
@@ -766,6 +786,7 @@ namespace Ermine {
         auto& nm = ecs.GetComponent<NavMeshComponent>(e);
 
         SyncBakeAgentSettingsFromAgents(nm);
+        //EE_CORE_INFO("[NavMeshSystem] NM after Sync | cellHeight={} agentMaxClimb={}", nm.cellHeight, nm.agentMaxClimb);
 
         auto& navT = ecs.GetComponent<Transform>(e);
         auto& navM = ecs.GetComponent<Mesh>(e);
@@ -807,7 +828,7 @@ namespace Ermine {
         tris.reserve(2048);
 
         // Bake floor's TOP face as walkable
-        AppendStaticCollider(e, verts, tris);
+        AppendStaticCollider(e, verts, tris, true);
 
         // Include nearby static colliders as obstacles (skip NavMeshAgents)
         for (EntityID ent = 1; ent < MAX_ENTITIES; ++ent)
@@ -827,7 +848,7 @@ namespace Ermine {
             auto& ot = ecs.GetComponent<Transform>(ent);
             if (!InsideBakeRegionByCenter(ot)) continue; // you can improve this later to use AABB
 
-            AppendStaticCollider(ent, verts, tris);
+            AppendStaticCollider(ent, verts, tris, false);
         }
 
         const int nverts = (int)(verts.size() / 3);
