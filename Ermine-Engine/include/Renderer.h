@@ -267,6 +267,7 @@ namespace Ermine::graphics
         bool m_ShowSkybox = true;
         bool m_FilmGrainEnabled = false;
         bool m_ChromaticAberrationEnabled = false;
+        bool m_RadialBlurEnabled = false;
 
         // Post-processing uniforms - parameters
         float m_Exposure = 1.0f;
@@ -275,10 +276,18 @@ namespace Ermine::graphics
         float m_Gamma = 2.2f;
         float m_VignetteIntensity = 0.3f;
         float m_VignetteRadius = 0.8f;
+        float m_VignetteCoverage = 0.0f;
+        float m_VignetteFalloff = 0.2f;
+        float m_VignetteMapStrength = 1.0f;
+        std::string m_VignetteMapPath{};
+        glm::vec3 m_VignetteMapRGBModifier = glm::vec3(0.0f, 0.0f, 0.0f);
         float m_BloomStrength = 0.04f;
         float m_GrainIntensity = 0.015f;
         float m_GrainScale = 1.5f;
         float m_ChromaticAmount = 0.003f;
+        float m_RadialBlurStrength = 0.0f;
+        int m_RadialBlurSamples = 12;
+        glm::vec2 m_RadialBlurCenter = glm::vec2(0.5f, 0.5f);
 
         // FXAA parameters
         float m_FXAASpanMax = 8.0f;
@@ -314,6 +323,23 @@ namespace Ermine::graphics
         // Sync helpers
         void SyncToGlobalGraphics();    // copy class -> m_GlobalGraphics
         void ApplyFromGlobalGraphics(); // copy m_GlobalGraphics -> class
+
+        void SetVignetteMapTexture(const std::shared_ptr<Texture>& texture, const std::string& path)
+        {
+            m_VignetteMapTexture = texture;
+            m_VignetteMapPath = path;
+        }
+
+        void ClearVignetteMapTexture()
+        {
+            m_VignetteMapTexture.reset();
+            m_VignetteMapPath.clear();
+        }
+
+        bool HasVignetteMapTexture() const
+        {
+            return m_VignetteMapTexture && m_VignetteMapTexture->IsValid();
+        }
 
         /**
          * @brief To run the pass and read GL_STENCIL_INDEX at a pixel
@@ -1288,10 +1314,11 @@ namespace Ermine::graphics
         std::shared_ptr<PostProcessBuffer> m_BloomExtractBuffer;
         std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer1;
         std::shared_ptr<PostProcessBuffer> m_BloomBlurBuffer2;
-		std::shared_ptr<PostProcessBuffer> m_AntiAliasingBuffer;
+        std::shared_ptr<PostProcessBuffer> m_AntiAliasingBuffer;
         std::shared_ptr<PostProcessBuffer> m_MotionBlurBuffer;
         std::shared_ptr<PostProcessBuffer> m_MotionBlurMaskBuffer;
         GLuint m_NoiseTexture = 0; // Film grain noise texture
+        std::shared_ptr<Texture> m_VignetteMapTexture = nullptr; // Optional vignette map texture
         std::shared_ptr<Shader> m_BloomShader = 0; // Shader for bloom effect
         std::shared_ptr<Shader> m_PostProcessShader = 0; // Shader for post-processing effects
 		std::shared_ptr<Shader> m_AAShader = 0; // Shader for anti-aliasing

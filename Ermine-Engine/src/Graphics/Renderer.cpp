@@ -3682,6 +3682,10 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 	m_PostProcessShader->SetUniform1f("u_GrainScale", m_GrainScale);
 	m_PostProcessShader->SetUniform1i("u_ChromaticAberration", m_ChromaticAberrationEnabled ? 1 : 0);
 	m_PostProcessShader->SetUniform1f("u_ChromaticAmount", m_ChromaticAmount);
+	m_PostProcessShader->SetUniform1i("u_RadialBlur", m_RadialBlurEnabled ? 1 : 0);
+	m_PostProcessShader->SetUniform1f("u_RadialBlurStrength", m_RadialBlurStrength);
+	m_PostProcessShader->SetUniform1i("u_RadialBlurSamples", m_RadialBlurSamples);
+	m_PostProcessShader->SetUniform2f("u_RadialBlurCenter", m_RadialBlurCenter.x, m_RadialBlurCenter.y);
 
 	// Bind noise texture for film grain (use texture unit 3 to avoid conflict with outline mask on unit 2)
 	glActiveTexture(GL_TEXTURE3);
@@ -3689,6 +3693,17 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 	m_PostProcessShader->SetUniform1i("u_NoiseTexture", 3);
 	// Animate noise by offsetting UV based on time
 	m_PostProcessShader->SetUniform2f("u_NoiseOffset", std::fmod(m_ElapsedTime * 10.0f, 1.0f), std::fmod(m_ElapsedTime * 7.0f, 1.0f));
+
+	// Bind optional vignette map texture on texture unit 4
+	const bool hasVignetteMap = (m_VignetteMapTexture && m_VignetteMapTexture->IsValid());
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, hasVignetteMap ? m_VignetteMapTexture->GetRendererID() : 0);
+	m_PostProcessShader->SetUniform1i("u_VignetteMap", 4);
+	m_PostProcessShader->SetUniform1i("u_HasVignetteMap", hasVignetteMap ? 1 : 0);
+	m_PostProcessShader->SetUniform1f("u_VignetteCoverage", m_VignetteCoverage);
+	m_PostProcessShader->SetUniform1f("u_VignetteFalloff", m_VignetteFalloff);
+	m_PostProcessShader->SetUniform1f("u_VignetteMapStrength", m_VignetteMapStrength);
+	m_PostProcessShader->SetUniform3f("u_VignetteMapRGBModifier", m_VignetteMapRGBModifier);
 
 	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
@@ -7857,6 +7872,15 @@ void Renderer::SyncToGlobalGraphics()
 	m_GlobalGraphics.gamma = m_Gamma;
 	m_GlobalGraphics.vignetteIntensity = m_VignetteIntensity;
 	m_GlobalGraphics.vignetteRadius = m_VignetteRadius;
+	m_GlobalGraphics.vignetteCoverage = m_VignetteCoverage;
+	m_GlobalGraphics.vignetteFalloff = m_VignetteFalloff;
+	m_GlobalGraphics.vignetteMapStrength = m_VignetteMapStrength;
+	m_GlobalGraphics.vignetteMapRGBModifier = Ermine::Vec3(
+		m_VignetteMapRGBModifier.r,
+		m_VignetteMapRGBModifier.g,
+		m_VignetteMapRGBModifier.b
+	);
+	m_GlobalGraphics.vignetteMapPath = m_VignetteMapPath;
 	m_GlobalGraphics.bloomStrength = m_BloomStrength;
 
 	m_GlobalGraphics.filmGrainEnabled = m_FilmGrainEnabled;
@@ -7864,6 +7888,11 @@ void Renderer::SyncToGlobalGraphics()
 	m_GlobalGraphics.grainScale = m_GrainScale;
 	m_GlobalGraphics.chromaticAberrationEnabled = m_ChromaticAberrationEnabled;
 	m_GlobalGraphics.chromaticAmount = m_ChromaticAmount;
+	m_GlobalGraphics.radialBlurEnabled = m_RadialBlurEnabled;
+	m_GlobalGraphics.radialBlurStrength = m_RadialBlurStrength;
+	m_GlobalGraphics.radialBlurSamples = m_RadialBlurSamples;
+	m_GlobalGraphics.radialBlurCenterX = m_RadialBlurCenter.x;
+	m_GlobalGraphics.radialBlurCenterY = m_RadialBlurCenter.y;
 
 	m_GlobalGraphics.fxaaSpanMax = m_FXAASpanMax;
 	m_GlobalGraphics.fxaaReduceMin = m_FXAAReduceMin;
@@ -7926,6 +7955,25 @@ void Renderer::ApplyFromGlobalGraphics()
 	m_Gamma = m_GlobalGraphics.gamma;
 	m_VignetteIntensity = m_GlobalGraphics.vignetteIntensity;
 	m_VignetteRadius = m_GlobalGraphics.vignetteRadius;
+	m_VignetteCoverage = m_GlobalGraphics.vignetteCoverage;
+	m_VignetteFalloff = m_GlobalGraphics.vignetteFalloff;
+	m_VignetteMapStrength = m_GlobalGraphics.vignetteMapStrength;
+	m_VignetteMapRGBModifier = glm::vec3(
+		m_GlobalGraphics.vignetteMapRGBModifier.x,
+		m_GlobalGraphics.vignetteMapRGBModifier.y,
+		m_GlobalGraphics.vignetteMapRGBModifier.z
+	);
+	m_VignetteMapPath = m_GlobalGraphics.vignetteMapPath;
+	if (!m_VignetteMapPath.empty()) {
+		m_VignetteMapTexture = AssetManager::GetInstance().LoadTexture(m_VignetteMapPath);
+		if (!m_VignetteMapTexture || !m_VignetteMapTexture->IsValid()) {
+			EE_CORE_WARN("Failed to load vignette map texture: {}", m_VignetteMapPath);
+			m_VignetteMapTexture.reset();
+		}
+	}
+	else {
+		m_VignetteMapTexture.reset();
+	}
 	m_BloomStrength = m_GlobalGraphics.bloomStrength;
 
 	m_FilmGrainEnabled = m_GlobalGraphics.filmGrainEnabled;
@@ -7933,6 +7981,13 @@ void Renderer::ApplyFromGlobalGraphics()
 	m_GrainScale = m_GlobalGraphics.grainScale;
 	m_ChromaticAberrationEnabled = m_GlobalGraphics.chromaticAberrationEnabled;
 	m_ChromaticAmount = m_GlobalGraphics.chromaticAmount;
+	m_RadialBlurEnabled = m_GlobalGraphics.radialBlurEnabled;
+	m_RadialBlurStrength = std::clamp(m_GlobalGraphics.radialBlurStrength, 0.0f, 0.35f);
+	m_RadialBlurSamples = std::clamp(m_GlobalGraphics.radialBlurSamples, 4, 24);
+	m_RadialBlurCenter = glm::vec2(
+		std::clamp(m_GlobalGraphics.radialBlurCenterX, 0.0f, 1.0f),
+		std::clamp(m_GlobalGraphics.radialBlurCenterY, 0.0f, 1.0f)
+	);
 
 	m_FXAASpanMax = m_GlobalGraphics.fxaaSpanMax;
 	m_FXAAReduceMin = m_GlobalGraphics.fxaaReduceMin;

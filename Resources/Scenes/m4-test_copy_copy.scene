@@ -54212,10 +54212,6 @@
                   "t": 0,
                   "v": 2.0
                 },
-                "teleportDashDuration": {
-                  "t": 0,
-                  "v": 0.20000000298023225
-                },
                 "skillsHUDName": {
                   "t": 3,
                   "v": "Skills"

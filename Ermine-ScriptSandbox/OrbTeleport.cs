@@ -20,12 +20,36 @@ public class OrbTeleport : MonoBehaviour
 
     private float timeSinceLastDamage = 0f;
     public float regenDelay = 2.0f; // seconds before regen starts
-    public float teleportDashDuration = 0.2f;
 
-    private bool isTeleportDashing = false;
-    private float teleportDashElapsed = 0f;
-    private Vector3 teleportDashStart;
-    private Vector3 teleportDashTarget;
+    private float teleportDashDuration = 0.4f; // total dash travel duration in seconds
+    private float teleportDashRadialBlurBaseStrength = 0.015f; // baseline radial blur during dash
+    private float teleportDashRadialBlurPeakStrength = 0.20f; // max radial blur near dash end
+    private float teleportDashRadialBlurSpikeStart = 0.70f; // normalized time when blur spike starts
+    private int teleportDashRadialBlurSamples = 14; // sample count for radial blur pass
+    private float dashVignetteIntensity = 0.5f; // vignette intensity applied at dash pulse start
+    private float vignetteStartCoverage = 0.5f; // start with medium vignette coverage
+    private Vector3 teleportVignetteColor = new Vector3(0f, 0f, 0f); // tint color applied during teleport pulse
+    private const float dashEndVignetteDuration = 0.2f; // duration of post-dash vignette pulse
+
+    private const float dashEndRadialBlurRestoreDuration = 0.06f; // time to restore pre-dash radial blur state
+    private bool isTeleportDashing = false; // true while teleport dash is in progress
+    private float teleportDashElapsed = 0f; // elapsed time for current dash
+    private Vector3 teleportDashStart; // world position where dash begins
+    private Vector3 teleportDashTarget; // world position where dash ends
+    private bool dashEndVignetteActive = false; // whether vignette pulse restore is currently running
+    private float dashEndVignetteElapsed = 0f; // elapsed time for vignette pulse restore
+    private bool dashEndPrevVignetteEnabled = false; // cached vignette enabled state before pulse
+    private float dashEndPrevVignetteIntensity = 0f; // cached vignette intensity before pulse
+    private float dashEndPrevVignetteRadius = 0f; // cached vignette radius before pulse
+    private float dashEndPrevVignetteCoverage = 0f; // cached vignette coverage before pulse
+    private float dashEndPrevVignetteFalloff = 0f; // cached vignette falloff before pulse
+    private Vector3 dashEndPrevVignetteRGBModifier = Vector3.zero; // cached vignette tint before pulse
+    private bool dashEndRadialBlurRestoreActive = false; // whether radial blur restore is active
+    private float dashEndRadialBlurRestoreElapsed = 0f; // elapsed time for radial blur restore
+    private bool dashEndPrevRadialBlurEnabled = false; // cached radial blur enabled state before dash
+    private float dashEndPrevRadialBlurStrength = 0f; // cached radial blur strength before dash
+    private int dashEndPrevRadialBlurSamples = 12; // cached radial blur sample count before dash
+    private Vector2 dashEndPrevRadialBlurCenter = new Vector2(0.5f, 0.5f); // cached radial blur center before dash
 
 
     // Name of the entity with UISkillsComponent (must match your scene)
@@ -86,6 +110,15 @@ public class OrbTeleport : MonoBehaviour
 
     void Update()
     {
+        if (dashEndVignetteActive)
+        {
+            UpdateDashEndVignettePulse();
+        }
+        if (dashEndRadialBlurRestoreActive)
+        {
+            UpdateDashEndRadialBlurRestore();
+        }
+
         if (isTeleportDashing)
         {
             UpdateTeleportDash();
@@ -209,6 +242,18 @@ public class OrbTeleport : MonoBehaviour
         teleportDashElapsed = 0f;
         isTeleportDashing = true;
 
+        dashEndPrevRadialBlurEnabled = PostEffects.EnableRadialBlur;
+        dashEndPrevRadialBlurStrength = PostEffects.RadialBlurStrength;
+        dashEndPrevRadialBlurSamples = PostEffects.RadialBlurSamples;
+        dashEndPrevRadialBlurCenter = PostEffects.RadialBlurCenter;
+        dashEndRadialBlurRestoreActive = false;
+        dashEndRadialBlurRestoreElapsed = 0f;
+
+        PostEffects.EnableRadialBlur = true;
+        PostEffects.RadialBlurSamples = teleportDashRadialBlurSamples;
+        PostEffects.RadialBlurCenter = new Vector2(0.5f, 0.5f);
+        PostEffects.RadialBlurStrength = teleportDashRadialBlurBaseStrength;
+
         // Remove orb
         Debug.Log("OrbTeleport: Destroying orb after teleport: " + sphere.GetInstanceID());
         Physics.RemovePhysic((ulong)sphere.GetInstanceID());
@@ -280,6 +325,18 @@ public class OrbTeleport : MonoBehaviour
         float easedT = t * t; // Ease-in only: accelerate into dash, then stop instantly at the end.
         Vector3 dashPos = teleportDashStart + (teleportDashTarget - teleportDashStart) * easedT;
 
+        float blurStrength = teleportDashRadialBlurBaseStrength;
+        float spikeStart = Math.Max(0.0f, Math.Min(teleportDashRadialBlurSpikeStart, 0.99f));
+        if (t > spikeStart)
+        {
+            float spikeT = (t - spikeStart) / (1.0f - spikeStart);
+            spikeT = Math.Max(0.0f, Math.Min(spikeT, 1.0f));
+            float smoothSpike = spikeT * spikeT * (3.0f - 2.0f * spikeT);
+            blurStrength = teleportDashRadialBlurBaseStrength +
+                (teleportDashRadialBlurPeakStrength - teleportDashRadialBlurBaseStrength) * smoothSpike;
+        }
+        PostEffects.RadialBlurStrength = blurStrength;
+
         gameObject.transform.position = dashPos;
         Physics.SetPosition((ulong)gameObject.GetInstanceID(), dashPos);
 
@@ -288,6 +345,72 @@ public class OrbTeleport : MonoBehaviour
             gameObject.transform.position = teleportDashTarget;
             Physics.SetPosition((ulong)gameObject.GetInstanceID(), teleportDashTarget);
             isTeleportDashing = false;
+            TriggerDashEndVignettePulse();
+            dashEndRadialBlurRestoreElapsed = 0f;
+            dashEndRadialBlurRestoreActive = true;
+        }
+    }
+
+    void TriggerDashEndVignettePulse()
+    {
+        dashEndPrevVignetteEnabled = PostEffects.EnableVignette;
+        dashEndPrevVignetteIntensity = PostEffects.VignetteIntensity;
+        dashEndPrevVignetteRadius = PostEffects.VignetteRadius;
+        dashEndPrevVignetteCoverage = PostEffects.VignetteCoverage;
+        dashEndPrevVignetteFalloff = PostEffects.VignetteFalloff;
+        dashEndPrevVignetteRGBModifier = PostEffects.VignetteMapRGBModifier;
+
+        PostEffects.EnableVignette = true;
+        PostEffects.VignetteIntensity = dashVignetteIntensity;
+        PostEffects.VignetteCoverage = vignetteStartCoverage;
+        PostEffects.VignetteRadius = 0.5f;
+        PostEffects.VignetteFalloff = 0.01f;
+        PostEffects.VignetteMapRGBModifier = teleportVignetteColor;
+
+        dashEndVignetteElapsed = 0f;
+        dashEndVignetteActive = true;
+    }
+
+    void UpdateDashEndVignettePulse()
+    {
+        float duration = Math.Max(0.0001f, dashEndVignetteDuration);
+        dashEndVignetteElapsed += Time.deltaTime;
+
+        float t = Math.Min(dashEndVignetteElapsed / duration, 1.0f);
+
+        PostEffects.VignetteIntensity = dashVignetteIntensity + (dashEndPrevVignetteIntensity - dashVignetteIntensity) * t;
+        PostEffects.VignetteCoverage = vignetteStartCoverage + (dashEndPrevVignetteCoverage - vignetteStartCoverage) * t;
+        PostEffects.VignetteRadius = 0.5f + (dashEndPrevVignetteRadius - 0.5f) * t;
+        PostEffects.VignetteFalloff = 0.01f + (dashEndPrevVignetteFalloff - 0.01f) * t;
+
+        if (t >= 1.0f)
+        {
+            PostEffects.EnableVignette = dashEndPrevVignetteEnabled;
+            PostEffects.VignetteIntensity = dashEndPrevVignetteIntensity;
+            PostEffects.VignetteRadius = dashEndPrevVignetteRadius;
+            PostEffects.VignetteCoverage = dashEndPrevVignetteCoverage;
+            PostEffects.VignetteFalloff = dashEndPrevVignetteFalloff;
+            PostEffects.VignetteMapRGBModifier = dashEndPrevVignetteRGBModifier;
+            dashEndVignetteActive = false;
+        }
+    }
+
+    void UpdateDashEndRadialBlurRestore()
+    {
+        float duration = Math.Max(0.0001f, dashEndRadialBlurRestoreDuration);
+        dashEndRadialBlurRestoreElapsed += Time.deltaTime;
+        float t = Math.Min(dashEndRadialBlurRestoreElapsed / duration, 1.0f);
+
+        float currentStrength = PostEffects.RadialBlurStrength;
+        PostEffects.RadialBlurStrength = currentStrength + (dashEndPrevRadialBlurStrength - currentStrength) * t;
+
+        if (t >= 1.0f)
+        {
+            PostEffects.EnableRadialBlur = dashEndPrevRadialBlurEnabled;
+            PostEffects.RadialBlurStrength = dashEndPrevRadialBlurStrength;
+            PostEffects.RadialBlurSamples = dashEndPrevRadialBlurSamples;
+            PostEffects.RadialBlurCenter = dashEndPrevRadialBlurCenter;
+            dashEndRadialBlurRestoreActive = false;
         }
     }
 

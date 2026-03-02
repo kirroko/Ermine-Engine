@@ -24,6 +24,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FrameController.h"
 #include "AssetManager.h"
 #include "GISystem.h"
+#include <array>
+#include <cstdio>
 
 using namespace Ermine::editor;
 using namespace Ermine::graphics;
@@ -279,6 +281,8 @@ void GraphicsDebugGUI::DrawPostProcessingControls()
                         "Add film grain noise effect");
         DrawToggleButton("Chromatic Aberration", &renderer->m_ChromaticAberrationEnabled,
                         "Color fringing effect at screen edges");
+        DrawToggleButton("Radial Blur", &renderer->m_RadialBlurEnabled,
+                        "Screen-space zoom blur from a configurable center");
 
         ImGui::Separator();
         
@@ -315,6 +319,56 @@ void GraphicsDebugGUI::DrawPostProcessingControls()
                            "Strength of vignette darkening");
             DrawFloatSlider("Vignette Radius", &renderer->m_VignetteRadius, 0.1f, 1.0f,
                            "Size of vignette effect");
+            DrawFloatSlider("Vignette Coverage", &renderer->m_VignetteCoverage, 0.0f, 1.0f,
+                           "Coverage across entire screen (1.0 affects full frame)");
+            DrawFloatSlider("Vignette Falloff", &renderer->m_VignetteFalloff, 0.01f, 1.0f,
+                           "Edge transition softness for vignette");
+            DrawFloatSlider("Vignette Map Strength", &renderer->m_VignetteMapStrength, 0.0f, 1.0f,
+                           "How much the vignette map influences the mask");
+            ImGui::SliderFloat3("Vignette Map RGB Modifier", &renderer->m_VignetteMapRGBModifier.x, 0.0f, 2.0f, "%.3f");
+            DrawTooltip("Vignette tint color (0,0,0 = classic black vignette)");
+
+            static std::array<char, 512> vignetteMapPathBuffer{};
+            static bool vignetteMapPathInitialized = false;
+            if (!vignetteMapPathInitialized)
+            {
+                std::snprintf(vignetteMapPathBuffer.data(), vignetteMapPathBuffer.size(), "%s",
+                    renderer->m_VignetteMapPath.c_str());
+                vignetteMapPathInitialized = true;
+            }
+
+            if (ImGui::InputText("Vignette Map Path", vignetteMapPathBuffer.data(), vignetteMapPathBuffer.size()))
+            {
+                renderer->m_VignetteMapPath = vignetteMapPathBuffer.data();
+            }
+            DrawTooltip("Texture path for optional vignette mask map");
+
+            if (ImGui::Button("Load Vignette Map"))
+            {
+                renderer->m_VignetteMapPath = vignetteMapPathBuffer.data();
+                if (!renderer->m_VignetteMapPath.empty())
+                {
+                    auto tex = AssetManager::GetInstance().LoadTexture(renderer->m_VignetteMapPath);
+                    if (tex && tex->IsValid())
+                    {
+                        renderer->SetVignetteMapTexture(tex, renderer->m_VignetteMapPath);
+                    }
+                    else
+                    {
+                        renderer->SetVignetteMapTexture(nullptr, renderer->m_VignetteMapPath);
+                        EE_CORE_WARN("Failed to load vignette map texture: {}", renderer->m_VignetteMapPath);
+                    }
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Clear Vignette Map"))
+            {
+                renderer->ClearVignetteMapTexture();
+                vignetteMapPathBuffer[0] = '\0';
+            }
+
+            const bool hasVignetteMap = renderer->HasVignetteMapTexture();
+            ImGui::Text("Vignette Map: %s", hasVignetteMap ? "Loaded" : "None");
             ImGui::TreePop();
         }
 
@@ -333,6 +387,18 @@ void GraphicsDebugGUI::DrawPostProcessingControls()
         {
             DrawFloatSlider("Aberration Amount", &renderer->m_ChromaticAmount, 0.0f, 0.02f,
                            "Strength of color separation at edges");
+            ImGui::TreePop();
+        }
+
+        if (ImGui::TreeNode("Radial Blur Settings"))
+        {
+            DrawFloatSlider("Radial Blur Strength", &renderer->m_RadialBlurStrength, 0.0f, 0.35f,
+                           "Zoom blur intensity");
+            ImGui::SliderInt("Radial Blur Samples", &renderer->m_RadialBlurSamples, 4, 24);
+            DrawTooltip("Sample count for radial blur quality/performance");
+            ImGui::SliderFloat("Radial Blur Center X", &renderer->m_RadialBlurCenter.x, 0.0f, 1.0f, "%.3f");
+            ImGui::SliderFloat("Radial Blur Center Y", &renderer->m_RadialBlurCenter.y, 0.0f, 1.0f, "%.3f");
+            DrawTooltip("Screen-space blur center in UV space");
             ImGui::TreePop();
         }
 

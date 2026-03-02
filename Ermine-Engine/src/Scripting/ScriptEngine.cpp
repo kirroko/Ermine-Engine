@@ -32,6 +32,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "UIRenderSystem.h"
 #include "Window.h"
 #include "VideoManager.h"
+#include "Renderer.h"
 
 namespace fs = std::filesystem;
 
@@ -1100,6 +1101,7 @@ namespace
 		return { vx + qw * tx + cx, vy + qw * ty + cy, vz + qw * tz + cz };
 	}
 
+	struct ManagedVector2 { float x, y; };
 	struct ManagedVector3 { float x, y, z; };
 	struct ManagedQuaternion { float x, y, z, w; };
 	struct ManagedMatrix4x4 {
@@ -1116,6 +1118,7 @@ namespace
 		uint64_t entityID; // the EntityID of the collider that was hit
 	};
 	ManagedVector3 ToManagedVec(const Ermine::Vec3& v) { return { v.x, v.y, v.z }; }
+	ManagedVector2 ToManagedVec2(const Ermine::Vec2& v) { return { v.x, v.y }; }
 	ManagedQuaternion ToManagedQuat(const Ermine::Quaternion& q) { return { q.x, q.y, q.z, q.w }; }
 	ManagedMatrix4x4 ToManagedMatrix4x4(const Ermine::Matrix4x4& m4x4) {
 		return { m4x4.m00, m4x4.m01, m4x4.m02, m4x4.m03,
@@ -1125,6 +1128,7 @@ namespace
 	}
 
 	Ermine::Vec3 ToNativeVec(const ManagedVector3& v) { return { v.x, v.y, v.z }; }
+	Ermine::Vec2 ToNativeVec2(const ManagedVector2& v) { return { v.x, v.y }; }
 	Ermine::Quaternion ToNativeQuat(const ManagedQuaternion& q) { return { q.x, q.y, q.z, q.w }; }
 	Ermine::Matrix4x4 ToNativeMatrix4x4(const ManagedMatrix4x4& m4x4) {
 		return { m4x4.m00, m4x4.m01, m4x4.m02, m4x4.m03,
@@ -2919,6 +2923,217 @@ namespace
 	}
 #pragma endregion
 
+#pragma region PostProcess ICalls
+
+	std::shared_ptr<Ermine::graphics::Renderer> GetPostProcessRenderer()
+	{
+		auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+		if (!renderer)
+			EE_CORE_WARN("PostProcess internal call: Renderer system not registered.");
+		return renderer;
+	}
+
+	mono_bool icall_postprocess_get_vignette_enabled()
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			return renderer->m_VignetteEnabled ? 1 : 0;
+		return 0;
+	}
+
+	void icall_postprocess_set_vignette_enabled(mono_bool enabled)
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			renderer->m_VignetteEnabled = (enabled != 0);
+	}
+
+	float icall_postprocess_get_vignette_intensity()
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			return renderer->m_VignetteIntensity;
+		return 0.0f;
+	}
+
+	void icall_postprocess_set_vignette_intensity(float value)
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			renderer->m_VignetteIntensity = std::clamp(value, 0.0f, 1.0f);
+	}
+
+	float icall_postprocess_get_vignette_radius()
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			return renderer->m_VignetteRadius;
+		return 0.8f;
+	}
+
+	void icall_postprocess_set_vignette_radius(float value)
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			renderer->m_VignetteRadius = std::clamp(value, 0.0f, 2.0f);
+	}
+
+	float icall_postprocess_get_vignette_coverage()
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			return renderer->m_VignetteCoverage;
+		return 0.0f;
+	}
+
+	void icall_postprocess_set_vignette_coverage(float value)
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			renderer->m_VignetteCoverage = std::clamp(value, 0.0f, 1.0f);
+	}
+
+	float icall_postprocess_get_vignette_falloff()
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			return renderer->m_VignetteFalloff;
+		return 0.2f;
+	}
+
+	void icall_postprocess_set_vignette_falloff(float value)
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			renderer->m_VignetteFalloff = std::max(value, 0.01f);
+	}
+
+	float icall_postprocess_get_vignette_map_strength()
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			return renderer->m_VignetteMapStrength;
+		return 1.0f;
+	}
+
+	void icall_postprocess_set_vignette_map_strength(float value)
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			renderer->m_VignetteMapStrength = std::clamp(value, 0.0f, 1.0f);
+	}
+
+	ManagedVector3 icall_postprocess_get_vignette_map_rgb_modifier()
+	{
+		if (auto renderer = GetPostProcessRenderer())
+		{
+			return ManagedVector3{
+				renderer->m_VignetteMapRGBModifier.r,
+				renderer->m_VignetteMapRGBModifier.g,
+				renderer->m_VignetteMapRGBModifier.b
+			};
+		}
+		return ManagedVector3{ 1.0f, 1.0f, 1.0f };
+	}
+
+	void icall_postprocess_set_vignette_map_rgb_modifier(ManagedVector3 value)
+	{
+		if (auto renderer = GetPostProcessRenderer())
+		{
+			renderer->m_VignetteMapRGBModifier = glm::vec3(
+				std::max(value.x, 0.0f),
+				std::max(value.y, 0.0f),
+				std::max(value.z, 0.0f)
+			);
+		}
+	}
+
+	MonoString* icall_postprocess_get_vignette_map_path()
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			return mono_string_new(mono_domain_get(), renderer->m_VignetteMapPath.c_str());
+		return mono_string_new(mono_domain_get(), "");
+	}
+
+	void icall_postprocess_set_vignette_map_path(MonoString* path)
+	{
+		if (auto renderer = GetPostProcessRenderer())
+		{
+			std::string pathText;
+			ToTempUTF8(path, pathText);
+			renderer->m_VignetteMapPath = pathText;
+
+			if (pathText.empty())
+			{
+				renderer->ClearVignetteMapTexture();
+				return;
+			}
+
+			auto texture = AssetManager::GetInstance().LoadTexture(pathText);
+			if (texture && texture->IsValid())
+			{
+				renderer->SetVignetteMapTexture(texture, pathText);
+			}
+			else
+			{
+				renderer->SetVignetteMapTexture(nullptr, pathText);
+				EE_CORE_WARN("PostProcess: failed to load vignette map '{}'", pathText);
+			}
+		}
+	}
+
+	mono_bool icall_postprocess_get_radial_blur_enabled()
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			return renderer->m_RadialBlurEnabled ? 1 : 0;
+		return 0;
+	}
+
+	void icall_postprocess_set_radial_blur_enabled(mono_bool enabled)
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			renderer->m_RadialBlurEnabled = (enabled != 0);
+	}
+
+	float icall_postprocess_get_radial_blur_strength()
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			return renderer->m_RadialBlurStrength;
+		return 0.0f;
+	}
+
+	void icall_postprocess_set_radial_blur_strength(float value)
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			renderer->m_RadialBlurStrength = std::clamp(value, 0.0f, 0.35f);
+	}
+
+	int icall_postprocess_get_radial_blur_samples()
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			return renderer->m_RadialBlurSamples;
+		return 12;
+	}
+
+	void icall_postprocess_set_radial_blur_samples(int value)
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			renderer->m_RadialBlurSamples = std::clamp(value, 4, 24);
+	}
+
+	ManagedVector2 icall_postprocess_get_radial_blur_center()
+	{
+		if (auto renderer = GetPostProcessRenderer())
+		{
+			return ManagedVector2{
+				renderer->m_RadialBlurCenter.x,
+				renderer->m_RadialBlurCenter.y
+			};
+		}
+		return ManagedVector2{ 0.5f, 0.5f };
+	}
+
+	void icall_postprocess_set_radial_blur_center(ManagedVector2 value)
+	{
+		if (auto renderer = GetPostProcessRenderer())
+		{
+			renderer->m_RadialBlurCenter = glm::vec2(
+				std::clamp(value.x, 0.0f, 1.0f),
+				std::clamp(value.y, 0.0f, 1.0f)
+			);
+		}
+	}
+
+#pragma endregion
+
 #pragma region VideoManager ICalls
 
 	std::shared_ptr<Ermine::VideoManager> GetVideoManager()
@@ -3239,7 +3454,7 @@ namespace
 	{
 		auto& ecs = ECS::GetInstance();
 		value = std::clamp(value, 0.0f, 2.0f);
-		ecs.GetSystem<graphics::Renderer>()->m_VignetteIntensity = value;
+		ecs.GetSystem<graphics::Renderer>()->m_Exposure = value;
 	}
 
 	void icall_posteffects_set_contrast(float value)
@@ -3303,6 +3518,58 @@ namespace
 		auto& ecs = ECS::GetInstance();
 		value = std::clamp(value, 0.0f, 2.0f);
 		ecs.GetSystem<graphics::Renderer>()->m_ChromaticAmount = value;
+	}
+
+	mono_bool icall_posteffects_get_vignette_enabled()
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			return renderer->m_VignetteEnabled ? 1 : 0;
+		return 0;
+	}
+
+	void icall_posteffects_set_vignette_enabled(mono_bool enabled)
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			renderer->m_VignetteEnabled = (enabled != 0);
+	}
+
+	mono_bool icall_posteffects_get_flim_grain_enabled()
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			return renderer->m_FilmGrainEnabled ? 1 : 0;
+		return 0;
+	}
+
+	void icall_posteffects_set_flim_grain_enabled(mono_bool enabled)
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			renderer->m_FilmGrainEnabled = (enabled != 0);
+	}
+
+	mono_bool icall_posteffects_get_chromatic_aberration_enabled()
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			return renderer->m_ChromaticAberrationEnabled ? 1 : 0;
+		return 0;
+	}
+
+	void icall_posteffects_set_chromatic_aberration_enabled(mono_bool enabled)
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			renderer->m_ChromaticAberrationEnabled = (enabled != 0);
+	}
+
+	mono_bool icall_posteffects_get_bloom_enabled()
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			return renderer->m_BloomEnabled ? 1 : 0;
+		return 0;
+	}
+
+	void icall_posteffects_set_bloom_enabled(mono_bool enabled)
+	{
+		if (auto renderer = GetPostProcessRenderer())
+			renderer->m_BloomEnabled = (enabled != 0);
 	}
 #pragma endregion
 }
@@ -3911,11 +4178,39 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.PostEffects::SetContrast", (const void*)icall_posteffects_set_contrast);
 	mono_add_internal_call("ErmineEngine.PostEffects::SetSaturation", (const void*)icall_posteffects_set_saturation);
 	mono_add_internal_call("ErmineEngine.PostEffects::SetGamma", (const void*)icall_posteffects_set_gamma);
-	mono_add_internal_call("ErmineEngine.PostEffects::SetVignetteIntensity", (const void*)icall_posteffects_set_vignetteintensity);
-	mono_add_internal_call("ErmineEngine.PostEffects::SetVignetteRadius", (const void*)icall_posteffects_set_vignetteradius);
 	mono_add_internal_call("ErmineEngine.PostEffects::SetBloomStrength", (const void*)icall_posteffects_set_bloomStrength);
 	mono_add_internal_call("ErmineEngine.PostEffects::SetGrainIntensity", (const void*)icall_posteffects_set_grainintensity);
 	mono_add_internal_call("ErmineEngine.PostEffects::SetGrainSize", (const void*)icall_posteffects_set_grainsize);
 	mono_add_internal_call("ErmineEngine.PostEffects::SetChromaticAberrationIntensity", (const void*)icall_posteffects_set_chromaticaberration);
+	mono_add_internal_call("ErmineEngine.PostEffects::GetVignetteEnabled", (const void*)icall_posteffects_get_vignette_enabled);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetVignetteEnabled", (const void*)icall_posteffects_set_vignette_enabled);
+	mono_add_internal_call("ErmineEngine.PostEffects::GetFlimGrainEnabled", (const void*)icall_posteffects_get_flim_grain_enabled);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetFlimGrainEnabled", (const void*)icall_posteffects_set_flim_grain_enabled);
+	mono_add_internal_call("ErmineEngine.PostEffects::GetChromaticAberrationEnabled", (const void*)icall_posteffects_get_chromatic_aberration_enabled);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetChromaticAberrationEnabled", (const void*)icall_posteffects_set_chromatic_aberration_enabled);
+	mono_add_internal_call("ErmineEngine.PostEffects::GetBloomEnabled", (const void*)icall_posteffects_get_bloom_enabled);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetBloomEnabled", (const void*)icall_posteffects_set_bloom_enabled);
+	mono_add_internal_call("ErmineEngine.PostEffects::GetVignetteIntensity", (const void*)icall_postprocess_get_vignette_intensity);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetVignetteIntensity", (const void*)icall_postprocess_set_vignette_intensity);
+	mono_add_internal_call("ErmineEngine.PostEffects::GetVignetteRadius", (const void*)icall_postprocess_get_vignette_radius);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetVignetteRadius", (const void*)icall_postprocess_set_vignette_radius);
+	mono_add_internal_call("ErmineEngine.PostEffects::GetVignetteCoverage", (const void*)icall_postprocess_get_vignette_coverage);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetVignetteCoverage", (const void*)icall_postprocess_set_vignette_coverage);
+	mono_add_internal_call("ErmineEngine.PostEffects::GetVignetteFalloff", (const void*)icall_postprocess_get_vignette_falloff);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetVignetteFalloff", (const void*)icall_postprocess_set_vignette_falloff);
+	mono_add_internal_call("ErmineEngine.PostEffects::GetVignetteMapStrength", (const void*)icall_postprocess_get_vignette_map_strength);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetVignetteMapStrength", (const void*)icall_postprocess_set_vignette_map_strength);
+	mono_add_internal_call("ErmineEngine.PostEffects::Internal_GetVignetteMapRGBModifier", (const void*)icall_postprocess_get_vignette_map_rgb_modifier);
+	mono_add_internal_call("ErmineEngine.PostEffects::Internal_SetVignetteMapRGBModifier", (const void*)icall_postprocess_set_vignette_map_rgb_modifier);
+	mono_add_internal_call("ErmineEngine.PostEffects::Internal_GetVignetteMapPath", (const void*)icall_postprocess_get_vignette_map_path);
+	mono_add_internal_call("ErmineEngine.PostEffects::Internal_SetVignetteMapPath", (const void*)icall_postprocess_set_vignette_map_path);
+	mono_add_internal_call("ErmineEngine.PostEffects::GetRadialBlurEnabled", (const void*)icall_postprocess_get_radial_blur_enabled);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetRadialBlurEnabled", (const void*)icall_postprocess_set_radial_blur_enabled);
+	mono_add_internal_call("ErmineEngine.PostEffects::GetRadialBlurStrength", (const void*)icall_postprocess_get_radial_blur_strength);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetRadialBlurStrength", (const void*)icall_postprocess_set_radial_blur_strength);
+	mono_add_internal_call("ErmineEngine.PostEffects::GetRadialBlurSamples", (const void*)icall_postprocess_get_radial_blur_samples);
+	mono_add_internal_call("ErmineEngine.PostEffects::SetRadialBlurSamples", (const void*)icall_postprocess_set_radial_blur_samples);
+	mono_add_internal_call("ErmineEngine.PostEffects::Internal_GetRadialBlurCenter", (const void*)icall_postprocess_get_radial_blur_center);
+	mono_add_internal_call("ErmineEngine.PostEffects::Internal_SetRadialBlurCenter", (const void*)icall_postprocess_set_radial_blur_center);
 #pragma endregion
 }
