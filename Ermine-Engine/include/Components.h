@@ -4197,6 +4197,13 @@ namespace Ermine
 		std::string labelImagePath = "";        // Normal/unselected image
 		std::string labelActiveImagePath = "";  // Active/selected image (shown when dragging)
 
+		// Value display
+		bool showValue = true;
+		Vec3 valueColor = { 1.0f, 1.0f, 1.0f };
+		float valueScale = 0.5f;
+		Vec2 valueOffset = { 0.22f, 0.0f };  // Right of slider
+		bool valueAsPercentage = true;        // true = "75%", false = raw value
+
 		// State (runtime - don't serialize)
 		bool isHovered = false;
 		bool isDragging = false;
@@ -4248,6 +4255,17 @@ namespace Ermine
 			out.AddMember("labelImagePath", labelImagePathVal, alloc);
 			rapidjson::Value labelActiveImagePathVal(labelActiveImagePath.c_str(), alloc);
 			out.AddMember("labelActiveImagePath", labelActiveImagePathVal, alloc);
+
+			out.AddMember("showValue", showValue, alloc);
+			out.AddMember("valueColor", Vec3ToJson(valueColor, alloc), alloc);
+			out.AddMember("valueScale", valueScale, alloc);
+
+			rapidjson::Value valueOffsetVal(rapidjson::kArrayType);
+			valueOffsetVal.PushBack(valueOffset.x, alloc);
+			valueOffsetVal.PushBack(valueOffset.y, alloc);
+			out.AddMember("valueOffset", valueOffsetVal, alloc);
+
+			out.AddMember("valueAsPercentage", valueAsPercentage, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in)
@@ -4314,6 +4332,24 @@ namespace Ermine
 				labelImagePath = in["labelImagePath"].GetString();
 			if (in.HasMember("labelActiveImagePath") && in["labelActiveImagePath"].IsString())
 				labelActiveImagePath = in["labelActiveImagePath"].GetString();
+
+			if (in.HasMember("showValue") && in["showValue"].IsBool())
+				showValue = in["showValue"].GetBool();
+			if (in.HasMember("valueColor") && in["valueColor"].IsArray())
+				valueColor = JsonToVec3(in["valueColor"]);
+			if (in.HasMember("valueScale") && in["valueScale"].IsNumber())
+				valueScale = in["valueScale"].GetFloat();
+			if (in.HasMember("valueOffset") && in["valueOffset"].IsArray())
+			{
+				const auto& arr = in["valueOffset"].GetArray();
+				if (arr.Size() >= 2)
+				{
+					valueOffset.x = arr[0].GetFloat();
+					valueOffset.y = arr[1].GetFloat();
+				}
+			}
+			if (in.HasMember("valueAsPercentage") && in["valueAsPercentage"].IsBool())
+				valueAsPercentage = in["valueAsPercentage"].GetBool();
 		}
 
 		XPROPERTY_DEF("UISliderComponent", UISliderComponent)

@@ -1685,6 +1685,38 @@ namespace Ermine
                 m_VBO
             );
         }
+
+        // Render value display text
+        if (slider.showValue && m_textRenderer)
+        {
+            std::string valueText;
+            if (slider.valueAsPercentage)
+            {
+                int percent = static_cast<int>(normalizedValue * 100.0f);
+                valueText = std::to_string(percent) + "%";
+            }
+            else
+            {
+                char buf[32];
+                snprintf(buf, sizeof(buf), "%.1f", slider.value);
+                valueText = buf;
+            }
+
+            float valueX = slider.position.x + slider.valueOffset.x;
+            float valueY = slider.position.y + slider.valueOffset.y;
+
+            m_textRenderer->RenderText(
+                m_uiShader,
+                valueText,
+                valueX,
+                valueY,
+                slider.valueScale,
+                slider.valueColor,
+                1.0f,
+                m_VAO,
+                m_VBO
+            );
+        }
     }
 
 } // namespace Ermine

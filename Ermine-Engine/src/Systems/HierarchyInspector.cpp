@@ -4525,6 +4525,16 @@ void HierarchyInspector::DrawUISliderComponent(EntityID entity)
 		slider.labelActiveImagePath = labelActiveImageBuffer;
 	}
 
+	// Value display settings
+	ImGui::Separator();
+	ImGui::Text("Value Display");
+
+	ImGui::Checkbox("Show Value", &slider.showValue);
+	ImGui::Checkbox("As Percentage", &slider.valueAsPercentage);
+	ImGui::ColorEdit3("Value Color", &slider.valueColor.x);
+	ImGui::DragFloat("Value Scale", &slider.valueScale, 0.1f, 0.1f, 3.0f);
+	ImGui::DragFloat2("Value Offset", &slider.valueOffset.x, 0.01f, -1.0f, 1.0f);
+
 	// Show slider state (read-only)
 	ImGui::Separator();
 	ImGui::Text("State (Read-Only)");
