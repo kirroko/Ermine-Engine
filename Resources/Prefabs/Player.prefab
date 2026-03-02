@@ -3,7 +3,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "b477ab934c16c7498a2c440ed5b82b6f"
+          "guid": "7bddec7ca839f940a6720f2dad371ac1"
         },
         "Transform": {
           "position": [
@@ -95,7 +95,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "a33eed16f3a076418293353a2ce0aaef"
+          "guid": "e0882d092441e940bb40490e2ae21a45"
         },
         "Transform": {
           "position": [
@@ -121,7 +121,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "b477ab934c16c7498a2c440ed5b82b6f",
+          "parentGuid": "7bddec7ca839f940a6720f2dad371ac1",
           "depth": 1
         },
         "GlobalTransform": {},
@@ -138,7 +138,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "6c3dd72b66478048af03e5271068a77e"
+          "guid": "33651e06c0ef9947b41b528249ff412b"
         },
         "Transform": {
           "position": [
@@ -171,7 +171,7 @@
           "model": "DavidArmsV3_ALL.fbx",
           "graph": {
             "playbackSpeed": 1.0,
-            "playing": false,
+            "playing": true,
             "currentTime": 0.0,
             "states": [
               {
@@ -628,7 +628,7 @@
           }
         },
         "HierarchyComponent": {
-          "parentGuid": "a33eed16f3a076418293353a2ce0aaef",
+          "parentGuid": "e0882d092441e940bb40490e2ae21a45",
           "depth": 2
         },
         "GlobalTransform": {}
@@ -637,235 +637,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "6fb00a6835deed4aaf094fa783798dfd"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:Syringe_Body_geo_mesh6",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "fe5fb5b305157f458cb0246faba15b60"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "6c3dd72b66478048af03e5271068a77e",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "4e0cd64f3b4a0a48b8e45bc6fbd0a1d1"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:Syringe_EmissivePlane_geo_mesh5",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "35f12d35e20f0b43883d219dbd3e8b67"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "6c3dd72b66478048af03e5271068a77e",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "f7f640bf8e839943bcbbccaa38f23131"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:Syringe_Trigger_geo_mesh4",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "fe5fb5b305157f458cb0246faba15b60"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "6c3dd72b66478048af03e5271068a77e",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "c3c7ef8393d895409420469d004a9162"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:Syringe_Meter_geo_mesh3",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "fe5fb5b305157f458cb0246faba15b60"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "6c3dd72b66478048af03e5271068a77e",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "ad5eee833cca4e4db75f35f160a314cb"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:David_Cuffs_geo_mesh2",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "59fa6a60c7ea2849bf6b424fadb266c0"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "6c3dd72b66478048af03e5271068a77e",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "9eaea025b80b2b4e84375ecb1ba09c11"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:David_Sleeves_geo_mesh1",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "8c8237ed3eb91b409a5f40bfb212d647"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "6c3dd72b66478048af03e5271068a77e",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "b4d657aa25e15443968dfadce93d6127"
+          "guid": "738388dc96245d4b81e82f5e3cd414ce"
         },
         "Transform": {
           "position": [
@@ -894,8 +666,236 @@
           "guid": "df107739e35dbc439951d41b3d7734cb"
         },
         "HierarchyComponent": {
-          "parentGuid": "6c3dd72b66478048af03e5271068a77e",
-          "depth": 1
+          "parentGuid": "33651e06c0ef9947b41b528249ff412b",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "01ed1de92a6708448f76a02053e2eab0"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:David_Sleeves_geo_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "8c8237ed3eb91b409a5f40bfb212d647"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "33651e06c0ef9947b41b528249ff412b",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "c68606d1a08d1841aac7dbb88b1e32f2"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:David_Cuffs_geo_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "59fa6a60c7ea2849bf6b424fadb266c0"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "33651e06c0ef9947b41b528249ff412b",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "e8f2ed7907bd6e4f9983dc37898db9e8"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:Syringe_Meter_geo_mesh3",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "fe5fb5b305157f458cb0246faba15b60"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "33651e06c0ef9947b41b528249ff412b",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "edd52a65f7641848be0fc0be156ed6bc"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:Syringe_Trigger_geo_mesh4",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "fe5fb5b305157f458cb0246faba15b60"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "33651e06c0ef9947b41b528249ff412b",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "2339a14b62294b49ba6df605662d3de5"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:Syringe_EmissivePlane_geo_mesh5",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "35f12d35e20f0b43883d219dbd3e8b67"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "33651e06c0ef9947b41b528249ff412b",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "59fbc5c62d92b74f94d22dfc39e35f34"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:Syringe_Body_geo_mesh6",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "fe5fb5b305157f458cb0246faba15b60"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "33651e06c0ef9947b41b528249ff412b",
+          "depth": 3
         },
         "GlobalTransform": {}
       }

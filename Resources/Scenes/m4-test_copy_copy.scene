@@ -25829,11 +25829,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -26661,11 +26661,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -27493,11 +27493,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -28325,11 +28325,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -29157,11 +29157,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -29989,11 +29989,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -30821,11 +30821,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -31653,11 +31653,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -32485,11 +32485,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -33317,11 +33317,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -46340,17 +46340,13 @@
                   "t": 0,
                   "v": 15.0
                 },
-                "eSpeed": {
-                  "t": 0,
-                  "v": 1.0
-                },
                 "doorMoveSpeed": {
                   "t": 0,
                   "v": 1.0
                 },
-                "eDuration": {
+                "eSpeed": {
                   "t": 0,
-                  "v": 15.0
+                  "v": 1.0
                 },
                 "sceneName": {
                   "t": 3,
@@ -46359,6 +46355,10 @@
                 "doorMoveDuration": {
                   "t": 0,
                   "v": 2.0
+                },
+                "eDuration": {
+                  "t": 0,
+                  "v": 15.0
                 },
                 "dSpeed": {
                   "t": 0,
@@ -54080,7 +54080,7 @@
       }
     },
     {
-      "id": 1105,
+      "id": 1095,
       "components": {
         "IDComponent": {
           "guid": "0a6472817226394bb56c36ccc5ace535"
@@ -54166,13 +54166,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.10000000149011612
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.10000000149011612
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -54182,13 +54182,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -54200,11 +54200,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
@@ -54231,7 +54231,7 @@
       }
     },
     {
-      "id": 1106,
+      "id": 1096,
       "components": {
         "IDComponent": {
           "guid": "cf0ea7e282f7a1459b12e3a40ac9b6a0"
@@ -54275,7 +54275,7 @@
       }
     },
     {
-      "id": 1107,
+      "id": 1097,
       "components": {
         "IDComponent": {
           "guid": "3aed6ddbe3301344a9f0d30ace3cc629"
@@ -54775,7 +54775,7 @@
       }
     },
     {
-      "id": 1108,
+      "id": 1098,
       "components": {
         "IDComponent": {
           "guid": "218c0745ee894b49bda221456709fc3f"
@@ -54814,7 +54814,7 @@
       }
     },
     {
-      "id": 1109,
+      "id": 1099,
       "components": {
         "IDComponent": {
           "guid": "0ceae58eb3eac04cbf8c0970d755e9df"
@@ -54853,7 +54853,7 @@
       }
     },
     {
-      "id": 1110,
+      "id": 1100,
       "components": {
         "IDComponent": {
           "guid": "982641a7acf62b48b2daf5d7bdcae2da"
@@ -54892,7 +54892,7 @@
       }
     },
     {
-      "id": 1111,
+      "id": 1101,
       "components": {
         "IDComponent": {
           "guid": "c86bae1782fe7744ad7b5bcec37a813a"
@@ -54931,7 +54931,7 @@
       }
     },
     {
-      "id": 1112,
+      "id": 1102,
       "components": {
         "IDComponent": {
           "guid": "7e2d5cc5cfa2b74e89b190c39e59d42c"
@@ -54970,7 +54970,7 @@
       }
     },
     {
-      "id": 1113,
+      "id": 1103,
       "components": {
         "IDComponent": {
           "guid": "2b05f675944a914fa2d4bca39d60792b"
@@ -55009,7 +55009,7 @@
       }
     },
     {
-      "id": 1114,
+      "id": 1104,
       "components": {
         "IDComponent": {
           "guid": "683eec6b43110848a2b2422839d18b05"
