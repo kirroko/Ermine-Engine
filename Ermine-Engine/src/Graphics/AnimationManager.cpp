@@ -3,10 +3,10 @@
 \file       AnimationManager.cpp
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
 \co-author  Ridhwan Afandi, moahamedridhwan.b, 2301367, moahamedridhwan.b\@digipen.edu
-\date       27/10/2025
+\date       28/02/2026
 \brief      This file contains the definition of the animation manager.
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -75,10 +75,7 @@ namespace Ermine::graphics
 						graph->current = *it;
 						graph->playing = true;
 
-						animComp.m_animator->PlayAnimation(
-							graph->current->clipName,
-							true // default loop
-						);
+						animComp.m_animator->PlayAnimation(graph->current->clipName, graph->current->loop);
 
 						EE_CORE_INFO("Animation started at state '{}'", graph->current->name);
 					}

@@ -6,13 +6,20 @@ set BUILD_CONFIG=Editor-Release
 set DIST_DIR=dist\Internal
 set VERSION=DEV-%date:~-4,4%%date:~-10,2%%date:~-7,2%
 
+REM Ensure msbuild exists before continuing
+where msbuild >nul 2>&1
+if errorlevel 1 (
+	echo msbuild command not found. Exiting script.
+	goto :eof
+)
+
 REM Clean previous build
 rmdir /S /Q %DIST_DIR% 2>nul
 mkdir %DIST_DIR%
 
 REM Build the solution
-echo Building solution...
-msbuild Ermine.sln /p:COnfiguration=%BUILD_CONFIG% /p:Platform=x64 /m
+echo Building release solution...
+msbuild Ermine.sln /p:Configuration=%BUILD_CONFIG% /p:Platform=x64 /m
 
 REM Copy project folders
 echo Copying project folders...

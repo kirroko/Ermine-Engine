@@ -54080,10 +54080,10 @@
       }
     },
     {
-      "id": 1105,
+      "id": 1095,
       "components": {
         "IDComponent": {
-          "guid": "12ae5cf84bbc7e43839c270501801a9d"
+          "guid": "0a6472817226394bb56c36ccc5ace535"
         },
         "Transform": {
           "position": [
@@ -54166,13 +54166,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.10000000149011612
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.10000000149011612
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -54182,13 +54182,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -54200,11 +54200,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
@@ -54231,10 +54231,10 @@
       }
     },
     {
-      "id": 1106,
+      "id": 1096,
       "components": {
         "IDComponent": {
-          "guid": "ad42326a1c43bf44b3fb77aa954e9183"
+          "guid": "cf0ea7e282f7a1459b12e3a40ac9b6a0"
         },
         "Transform": {
           "position": [
@@ -54260,7 +54260,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "12ae5cf84bbc7e43839c270501801a9d",
+          "parentGuid": "0a6472817226394bb56c36ccc5ace535",
           "depth": 1
         },
         "GlobalTransform": {},
@@ -54275,10 +54275,10 @@
       }
     },
     {
-      "id": 1107,
+      "id": 1097,
       "components": {
         "IDComponent": {
-          "guid": "e354d3a9de30b941aa4da88c635ec7b0"
+          "guid": "3aed6ddbe3301344a9f0d30ace3cc629"
         },
         "Transform": {
           "position": [
@@ -54304,11 +54304,11 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "DavidArmsV2_ALL_fixed.fbx",
+          "model": "DavidArmsV3_ALL.fbx",
           "isSkinFile": false
         },
         "AnimationComponent": {
-          "model": "DavidArmsV2_ALL_fixed.fbx",
+          "model": "DavidArmsV3_ALL.fbx",
           "graph": {
             "playbackSpeed": 1.0,
             "playing": true,
@@ -54322,9 +54322,10 @@
                 "isAttached": true,
                 "speed": 1.0,
                 "blendWeight": 1.0,
+                "loop": true,
                 "editorPos": [
-                  322.394775390625,
-                  -62.2078857421875
+                  434.394775390625,
+                  85.7921142578125
                 ]
               },
               {
@@ -54335,9 +54336,10 @@
                 "isAttached": true,
                 "speed": 1.0,
                 "blendWeight": 1.0,
+                "loop": true,
                 "editorPos": [
-                  16.1590576171875,
-                  -64.4852294921875
+                  120.1590576171875,
+                  84.5147705078125
                 ]
               },
               {
@@ -54348,9 +54350,10 @@
                 "isAttached": true,
                 "speed": 1.0,
                 "blendWeight": 1.0,
+                "loop": true,
                 "editorPos": [
-                  634.3948974609375,
-                  -61.2078857421875
+                  745.3948974609375,
+                  84.7921142578125
                 ]
               },
               {
@@ -54361,9 +54364,10 @@
                 "isAttached": true,
                 "speed": 1.0,
                 "blendWeight": 1.0,
+                "loop": false,
                 "editorPos": [
-                  632.1590576171875,
-                  179.5147705078125
+                  746.1590576171875,
+                  371.5147705078125
                 ]
               },
               {
@@ -54374,9 +54378,10 @@
                 "isAttached": true,
                 "speed": 1.0,
                 "blendWeight": 1.0,
+                "loop": false,
                 "editorPos": [
-                  944.1590576171875,
-                  178.5147705078125
+                  1058.1590576171876,
+                  370.5147705078125
                 ]
               },
               {
@@ -54387,9 +54392,38 @@
                 "isAttached": true,
                 "speed": 1.0,
                 "blendWeight": 1.0,
+                "loop": false,
                 "editorPos": [
-                  630.9998779296875,
-                  419.0000305175781
+                  746.9998779296875,
+                  658.0
+                ]
+              },
+              {
+                "id": 7,
+                "name": "recall",
+                "clipName": "Recall",
+                "isStartState": false,
+                "isAttached": true,
+                "speed": 1.0,
+                "blendWeight": 1.0,
+                "loop": false,
+                "editorPos": [
+                  1370.1590576171876,
+                  659.5147705078125
+                ]
+              },
+              {
+                "id": 8,
+                "name": "explode",
+                "clipName": "Explode",
+                "isStartState": false,
+                "isAttached": true,
+                "speed": 1.0,
+                "blendWeight": 1.0,
+                "loop": false,
+                "editorPos": [
+                  1056.9998779296876,
+                  660.0
                 ]
               }
             ],
@@ -54533,6 +54567,160 @@
                     "boolValue": false
                   }
                 ]
+              },
+              {
+                "fromNodeId": 6,
+                "toNodeId": 8,
+                "exitTime": 0.0,
+                "duration": 0.25,
+                "conditions": [
+                  {
+                    "parameterName": "explode",
+                    "comparison": "==",
+                    "threshold": 0.0,
+                    "boolValue": false
+                  }
+                ]
+              },
+              {
+                "fromNodeId": 6,
+                "toNodeId": 7,
+                "exitTime": 0.0,
+                "duration": 0.25,
+                "conditions": [
+                  {
+                    "parameterName": "recall",
+                    "comparison": "==",
+                    "threshold": 0.0,
+                    "boolValue": false
+                  }
+                ]
+              },
+              {
+                "fromNodeId": 1,
+                "toNodeId": 8,
+                "exitTime": 0.0,
+                "duration": 0.25,
+                "conditions": [
+                  {
+                    "parameterName": "explode",
+                    "comparison": "==",
+                    "threshold": 0.0,
+                    "boolValue": false
+                  }
+                ]
+              },
+              {
+                "fromNodeId": 1,
+                "toNodeId": 7,
+                "exitTime": 0.0,
+                "duration": 0.25,
+                "conditions": [
+                  {
+                    "parameterName": "recall",
+                    "comparison": "==",
+                    "threshold": 0.0,
+                    "boolValue": false
+                  }
+                ]
+              },
+              {
+                "fromNodeId": 3,
+                "toNodeId": 8,
+                "exitTime": 0.0,
+                "duration": 0.25,
+                "conditions": [
+                  {
+                    "parameterName": "explode",
+                    "comparison": "==",
+                    "threshold": 0.0,
+                    "boolValue": false
+                  }
+                ]
+              },
+              {
+                "fromNodeId": 3,
+                "toNodeId": 7,
+                "exitTime": 0.0,
+                "duration": 0.25,
+                "conditions": [
+                  {
+                    "parameterName": "recall",
+                    "comparison": "==",
+                    "threshold": 0.0,
+                    "boolValue": false
+                  }
+                ]
+              },
+              {
+                "fromNodeId": 4,
+                "toNodeId": 8,
+                "exitTime": 0.0,
+                "duration": 0.25,
+                "conditions": [
+                  {
+                    "parameterName": "explode",
+                    "comparison": "==",
+                    "threshold": 0.0,
+                    "boolValue": false
+                  }
+                ]
+              },
+              {
+                "fromNodeId": 4,
+                "toNodeId": 7,
+                "exitTime": 0.0,
+                "duration": 0.25,
+                "conditions": [
+                  {
+                    "parameterName": "recall",
+                    "comparison": "==",
+                    "threshold": 0.0,
+                    "boolValue": false
+                  }
+                ]
+              },
+              {
+                "fromNodeId": 5,
+                "toNodeId": 8,
+                "exitTime": 0.0,
+                "duration": 0.25,
+                "conditions": [
+                  {
+                    "parameterName": "explode",
+                    "comparison": "==",
+                    "threshold": 0.0,
+                    "boolValue": false
+                  }
+                ]
+              },
+              {
+                "fromNodeId": 5,
+                "toNodeId": 7,
+                "exitTime": 0.0,
+                "duration": 0.25,
+                "conditions": [
+                  {
+                    "parameterName": "recall",
+                    "comparison": "==",
+                    "threshold": 0.0,
+                    "boolValue": false
+                  }
+                ]
+              },
+              {
+                "fromNodeId": 8,
+                "toNodeId": 1,
+                "exitTime": 0.0,
+                "duration": 0.25,
+                "conditions": []
+              },
+              {
+                "fromNodeId": 7,
+                "toNodeId": 1,
+                "exitTime": 0.0,
+                "duration": 0.25,
+                "conditions": []
               }
             ],
             "parameters": [
@@ -54559,27 +54747,43 @@
                 "floatValue": 0.0,
                 "intValue": 0,
                 "triggerValue": false
+              },
+              {
+                "name": "explode",
+                "type": 3,
+                "boolValue": false,
+                "floatValue": 0.0,
+                "intValue": 0,
+                "triggerValue": false
+              },
+              {
+                "name": "recall",
+                "type": 3,
+                "boolValue": false,
+                "floatValue": 0.0,
+                "intValue": 0,
+                "triggerValue": false
               }
             ]
           }
         },
         "HierarchyComponent": {
-          "parentGuid": "ad42326a1c43bf44b3fb77aa954e9183",
+          "parentGuid": "cf0ea7e282f7a1459b12e3a40ac9b6a0",
           "depth": 2
         },
         "GlobalTransform": {}
       }
     },
     {
-      "id": 1108,
+      "id": 1098,
       "components": {
         "IDComponent": {
-          "guid": "33541982c1ba4e48bee5b9bb90620635"
+          "guid": "218c0745ee894b49bda221456709fc3f"
         },
         "Transform": {
           "position": [
             0.0,
-            176.6666717529297,
+            0.0,
             0.0
           ],
           "rotation": [
@@ -54589,13 +54793,13 @@
             1.0
           ],
           "scale": [
-            33.333335876464847,
-            33.333335876464847,
-            33.333335876464847
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_DavidArmsV2_ALL_fixed.fbx_David_Arms:Syringe_Body_geo_mesh6",
+          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:Syringe_Body_geo_mesh6",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -54603,17 +54807,17 @@
           "guid": "fe5fb5b305157f458cb0246faba15b60"
         },
         "HierarchyComponent": {
-          "parentGuid": "e354d3a9de30b941aa4da88c635ec7b0",
+          "parentGuid": "3aed6ddbe3301344a9f0d30ace3cc629",
           "depth": 3
         },
         "GlobalTransform": {}
       }
     },
     {
-      "id": 1109,
+      "id": 1099,
       "components": {
         "IDComponent": {
-          "guid": "d4a08f5dd261e94a9bad257d6287501c"
+          "guid": "0ceae58eb3eac04cbf8c0970d755e9df"
         },
         "Transform": {
           "position": [
@@ -54634,7 +54838,46 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_DavidArmsV2_ALL_fixed.fbx_David_Arms:Syringe_Trigger_geo_mesh5",
+          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:Syringe_EmissivePlane_geo_mesh5",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "35f12d35e20f0b43883d219dbd3e8b67"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3aed6ddbe3301344a9f0d30ace3cc629",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1100,
+      "components": {
+        "IDComponent": {
+          "guid": "982641a7acf62b48b2daf5d7bdcae2da"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:Syringe_Trigger_geo_mesh4",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -54642,17 +54885,17 @@
           "guid": "fe5fb5b305157f458cb0246faba15b60"
         },
         "HierarchyComponent": {
-          "parentGuid": "e354d3a9de30b941aa4da88c635ec7b0",
+          "parentGuid": "3aed6ddbe3301344a9f0d30ace3cc629",
           "depth": 3
         },
         "GlobalTransform": {}
       }
     },
     {
-      "id": 1110,
+      "id": 1101,
       "components": {
         "IDComponent": {
-          "guid": "6e7699ebec197d499cc1e4402eb9ccfc"
+          "guid": "c86bae1782fe7744ad7b5bcec37a813a"
         },
         "Transform": {
           "position": [
@@ -54673,7 +54916,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_DavidArmsV2_ALL_fixed.fbx_David_Arms:Syringe_Meter_geo_mesh4",
+          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:Syringe_Meter_geo_mesh3",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -54681,17 +54924,17 @@
           "guid": "fe5fb5b305157f458cb0246faba15b60"
         },
         "HierarchyComponent": {
-          "parentGuid": "e354d3a9de30b941aa4da88c635ec7b0",
+          "parentGuid": "3aed6ddbe3301344a9f0d30ace3cc629",
           "depth": 3
         },
         "GlobalTransform": {}
       }
     },
     {
-      "id": 1111,
+      "id": 1102,
       "components": {
         "IDComponent": {
-          "guid": "d62855d2622ecf4d8252f6ee164d7f0d"
+          "guid": "7e2d5cc5cfa2b74e89b190c39e59d42c"
         },
         "Transform": {
           "position": [
@@ -54712,46 +54955,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_DavidArmsV2_ALL_fixed.fbx_David_Arms:Syringe_EmissivePlane_geo_mesh3",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "ee2ab5fdcbe5cd439f8df8aedf415389"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "e354d3a9de30b941aa4da88c635ec7b0",
-          "depth": 3
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1112,
-      "components": {
-        "IDComponent": {
-          "guid": "d3231f00e24d1846bfda8fb59b3fe90f"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_DavidArmsV2_ALL_fixed.fbx_David_Arms:David_Cuffs_geo_mesh2",
+          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:David_Cuffs_geo_mesh2",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -54759,17 +54963,17 @@
           "guid": "59fa6a60c7ea2849bf6b424fadb266c0"
         },
         "HierarchyComponent": {
-          "parentGuid": "e354d3a9de30b941aa4da88c635ec7b0",
+          "parentGuid": "3aed6ddbe3301344a9f0d30ace3cc629",
           "depth": 3
         },
         "GlobalTransform": {}
       }
     },
     {
-      "id": 1113,
+      "id": 1103,
       "components": {
         "IDComponent": {
-          "guid": "37beee8cbdcfe74595ad452982651881"
+          "guid": "2b05f675944a914fa2d4bca39d60792b"
         },
         "Transform": {
           "position": [
@@ -54790,25 +54994,25 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_DavidArmsV2_ALL_fixed.fbx_David_Arms:David_Sleeves_geo_mesh1",
+          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:David_Sleeves_geo_mesh1",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "1d0d29786ce5b54eb96fc7dee38b1c02"
+          "guid": "8c8237ed3eb91b409a5f40bfb212d647"
         },
         "HierarchyComponent": {
-          "parentGuid": "e354d3a9de30b941aa4da88c635ec7b0",
+          "parentGuid": "3aed6ddbe3301344a9f0d30ace3cc629",
           "depth": 3
         },
         "GlobalTransform": {}
       }
     },
     {
-      "id": 1114,
+      "id": 1104,
       "components": {
         "IDComponent": {
-          "guid": "eb01523599ee484eb0131d56029ffcdd"
+          "guid": "683eec6b43110848a2b2422839d18b05"
         },
         "Transform": {
           "position": [
@@ -54829,15 +55033,15 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_DavidArmsV2_ALL_fixed.fbx_David_Arms:David_Arms_geo_mesh0",
+          "name": "Mesh_DavidArmsV3_ALL.fbx_David_Arms:David_Arms_geo_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "d52a87190370b94fbe5448fa6e9a7841"
+          "guid": "df107739e35dbc439951d41b3d7734cb"
         },
         "HierarchyComponent": {
-          "parentGuid": "e354d3a9de30b941aa4da88c635ec7b0",
+          "parentGuid": "3aed6ddbe3301344a9f0d30ace3cc629",
           "depth": 3
         },
         "GlobalTransform": {}

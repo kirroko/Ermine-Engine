@@ -2,10 +2,10 @@
 /*!
 \file       AnimationGUI.h
 \author     Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
-\date       28/10/2025
+\date       28/02/2026
 \brief      This file contains the declaration of the animation editor GUI.
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -33,10 +33,14 @@ namespace Ermine
         int id = 0;                // Unique identifier for the state node
         std::string name;          // Name of the animation state
         std::string clipName;      // Name of the associated animation clip
+
         bool isStartState = false; // Indicates if this is the start state
         bool isAttached = false;   // Indicates if the state is attached to the graph
+
         float speed = 1.0f;        // Playback speed for the animation
         float blendWeight = 1.0f;  // Blend weight for transitions
+
+        bool loop = true;          // Whether the animation should loop
 
         ImVec2 editorPos = { 100.f, 100.f }; // default placement in editor space
     };
