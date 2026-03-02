@@ -73,6 +73,7 @@
     <Compile Include="AnimationExample.cs" />
     <Compile Include="AttackState.cs" />
     <Compile Include="EndElevator.cs" />
+    <Compile Include="SpotLightTrigger.cs" />
     <Compile Include="MoveState.cs" />
     <Compile Include="ChaseState.cs" />
     <Compile Include="CutscenePlayer.cs" />
