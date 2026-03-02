@@ -19,34 +19,56 @@ namespace ErmineEngine
     {
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void SetExposure(float value);
-
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void SetContrast(float value);
-
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void SetSaturation(float value);
-
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void SetGamma(float value);
-
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void SetVignetteIntensity(float value);
-
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void SetVignetteRadius(float value);
-
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void SetBloomStrength(float value);
-
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void SetGrainIntensity(float value);
-
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void SetGrainSize(float value);
-
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void SetChromaticAberrationIntensity(float value);
 
+        public static bool EnableVignette
+        {
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            set;
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            get;
+        }
+
+        public static bool EnableFlimGrain
+        {
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            get;
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            set;
+        }
+
+        public static bool EnableChromaticAberration
+        {
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            get;
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            set;
+        }
+
+        public static bool EnableBloom
+        {
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            get;
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            set;
+        }
 
         public static float Exposure
         {
