@@ -99,6 +99,7 @@
     <Compile Include="Test2.cs" />
     <Compile Include="TimedDestroy.cs" />
     <Compile Include="VerticalPlatform.cs" />
+    <Compile Include="VoidDeath.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Ermine-ScriptAssembly\Ermine-ScriptAssembly.csproj">
