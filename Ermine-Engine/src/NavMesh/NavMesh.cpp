@@ -807,7 +807,7 @@ namespace Ermine {
         tris.reserve(2048);
 
         // Bake floor's TOP face as walkable
-        AppendCube(e, true, verts, tris);
+        AppendStaticCollider(e, verts, tris);
 
         // Include nearby static colliders as obstacles (skip NavMeshAgents)
         for (EntityID ent = 1; ent < MAX_ENTITIES; ++ent)

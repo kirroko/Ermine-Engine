@@ -188,15 +188,15 @@ namespace Ermine
                 Vec3 feetQuery = pos;
                 feetQuery.y -= agent.centerYOffset; // convert center -> feet for the nav query
 
-                EntityID navE = FindNearestNavMeshEntity(feetQuery);
+                float ext[3] = {
+                    agent.radius * 2.0f,
+                    agent.height * 0.5f + 0.5f,
+                    agent.radius * 2.0f
+                };
+
+                EntityID navE = FindNearestNavMeshEntity(feetQuery, ext);
                 if (navE != 0)
                 {
-                    float ext[3] = {
-                        agent.radius * 2.0f,
-                        agent.height * 0.5f + 0.5f,
-                        agent.radius * 2.0f
-                    };
-
                     Vec3 clampedFeet;
                     auto navSys = ecs.GetSystem<NavMeshSystem>();
                     if (navSys && navSys->ClampToNavMesh(navE, feetQuery, ext, clampedFeet))
@@ -320,8 +320,14 @@ namespace Ermine
             return false;
 
         const auto& agent = ecs.GetComponent<NavMeshAgent>(agentEntity);
+        float ext[3] = {
+            agent.radius * 2.0f,
+            agent.height * 0.5f + 0.5f,
+            agent.radius * 2.0f
+        };
 
-        EntityID nearestNav = FindNearestNavMeshEntity(startPos);
+        EntityID nearestNav = FindNearestNavMeshEntity(startPos, ext);
+        //EntityID nearestNav = FindNearestNavMeshEntity(startPos);
         if (nearestNav == 0 || !ecs.HasComponent<NavMeshComponent>(nearestNav))
             return false;
 
@@ -358,7 +364,7 @@ namespace Ermine
         return navSystem->ComputeStraightPath(nearestNav, startPos, endPos, extents, outPath);
     }
 
-
+    // currently used for finding current nav mesh before jumping
     EntityID NavMeshAgentSystem::FindNearestNavMeshEntity(const Ermine::Vec3& pos)
     {
         auto& ecs = ECS::GetInstance();
@@ -386,6 +392,41 @@ namespace Ermine
         }
         return best;
     }
+    // for moving
+    EntityID NavMeshAgentSystem::FindNearestNavMeshEntity(const Ermine::Vec3& pos, const float ext[3])
+    {
+        auto& ecs = ECS::GetInstance();
+        auto navSys = ecs.GetSystem<NavMeshSystem>();
+        if (!navSys)
+            return 0;
+
+        EntityID best = 0;
+        float bestDistSq = FLT_MAX;
+
+        for (EntityID e = 1; e < MAX_ENTITIES; ++e)
+        {
+            if (!ecs.IsEntityValid(e)) continue;
+            if (!ecs.HasComponent<NavMeshComponent>(e)) continue;
+
+            Ermine::Vec3 clamped;
+            if (!navSys->ClampToNavMesh(e, pos, ext, clamped))
+                continue;
+
+            const float dx = clamped.x - pos.x;
+            const float dy = clamped.y - pos.y;
+            const float dz = clamped.z - pos.z;
+            const float d2 = dx * dx + dy * dy + dz * dz;
+
+            if (d2 < bestDistSq)
+            {
+                bestDistSq = d2;
+                best = e;
+            }
+        }
+
+        return best;
+    }
+    // currently used for finding next nav mesh during jump
     EntityID NavMeshAgentSystem::FindNearestNavMeshEntityExcluding(const Ermine::Vec3& pos, EntityID exclude, EntityID excludePrev) const
     {
         auto& ecs = ECS::GetInstance();
