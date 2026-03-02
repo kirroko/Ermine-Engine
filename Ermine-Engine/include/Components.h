@@ -2023,7 +2023,7 @@ namespace Ermine
 				// Stop current music if we're updating the currently playing track
 				if (currentMusicIndex == index && currentMusicChannelId != -1)
 				{
-					CAudioEngine::StopChannel(currentMusicChannelId);
+					CAudioEngine::StopChannel(currentMusicChannelId, true, 0.3f); // Fade out
 					currentMusicChannelId = -1;
 				}
 
@@ -2076,7 +2076,7 @@ namespace Ermine
 				// Stop current music if we're removing the currently playing track
 				if (currentMusicIndex == index && currentMusicChannelId != -1)
 				{
-					CAudioEngine::StopChannel(currentMusicChannelId);
+					CAudioEngine::StopChannel(currentMusicChannelId, true, 0.3f); // Fade out
 					currentMusicChannelId = -1;
 					currentMusicIndex = -1;
 				}
@@ -2837,6 +2837,7 @@ namespace Ermine
 						js.AddMember("isAttached", s.isAttached, alloc);
 						js.AddMember("speed", s.speed, alloc);
 						js.AddMember("blendWeight", s.blendWeight, alloc);
+						js.AddMember("loop", s.loop, alloc);
 
 						// editorPos as [x, y]
 						rapidjson::Value posArr(rapidjson::kArrayType);
@@ -3007,6 +3008,9 @@ namespace Ermine
 
 					if (js.HasMember("blendWeight") && js["blendWeight"].IsNumber())
 						s->blendWeight = js["blendWeight"].GetFloat();
+
+					if (js.HasMember("loop") && js["loop"].IsBool())
+						s->loop = js["loop"].GetBool();
 
 					if (js.HasMember("editorPos") && js["editorPos"].IsArray() && js["editorPos"].Size() == 2)
 					{

@@ -170,7 +170,7 @@ void GlobalAudioComponent::UpdateAmbienceSource(int index, const std::string& na
     if (index >= 0 && index < static_cast<int>(ambience.size())) {
         // Stop current ambience if we're updating the currently playing track
         if (currentAmbienceIndex == index && currentAmbienceChannelId != -1) {
-            CAudioEngine::StopChannel(currentAmbienceChannelId);
+            CAudioEngine::StopChannel(currentAmbienceChannelId, true, 0.3f); // Fade out
             currentAmbienceChannelId = -1;
         }
 
@@ -193,7 +193,7 @@ void GlobalAudioComponent::RemoveAmbienceSource(int index) {
     if (index >= 0 && index < static_cast<int>(ambience.size())) {
         // Stop current ambience if we're removing the currently playing track
         if (currentAmbienceIndex == index && currentAmbienceChannelId != -1) {
-            CAudioEngine::StopChannel(currentAmbienceChannelId);
+            CAudioEngine::StopChannel(currentAmbienceChannelId, true, 0.3f); // Fade out
             currentAmbienceChannelId = -1;
             currentAmbienceIndex = -1;
         }
@@ -272,7 +272,8 @@ void AudioSystem::StopGlobalAmbience(GlobalAudioComponent& globalAudio)
 {
     if (globalAudio.currentAmbienceChannelId != -1)
     {
-        CAudioEngine::StopChannel(globalAudio.currentAmbienceChannelId);
+        // Use fade-out for ambience (0.5s for smoother transition)
+        CAudioEngine::StopChannel(globalAudio.currentAmbienceChannelId, true, 0.5f);
         globalAudio.currentAmbienceChannelId = -1;
         globalAudio.currentAmbienceIndex = -1;
         std::cout << "Stopped ambience" << std::endl;
@@ -340,13 +341,14 @@ void AudioSystem::Update()
         return;
     }
 
-    // Handle STOPPED state (complete stop)
+    // Handle STOPPED state (complete stop with fade-out)
     if (!isPlaying)
     {
         if (s_WasPlaying)
         {
-            std::cout << "=== STOPPING ALL AUDIO ===" << std::endl;
-            CAudioEngine::StopAllChannels(); // Complete stop
+            std::cout << "=== STOPPING ALL AUDIO (WITH FADE-OUT) ===" << std::endl;
+            // Use fade-out instead of hard stop (0.5s fade for smooth transition)
+            CAudioEngine::StopAllChannels(true, 0.5f);
 
             // Clear entity audio states
             for (EntityID entity : m_Entities)
@@ -382,7 +384,7 @@ void AudioSystem::Update()
                 }
             }
 
-            std::cout << "=== ALL AUDIO STOPPED ===" << std::endl;
+            std::cout << "=== ALL AUDIO STOPPED (FADED OUT) ===" << std::endl;
         }
 
         s_WasPlaying = false;
@@ -738,7 +740,8 @@ void AudioSystem::StopGlobalMusic(GlobalAudioComponent& globalAudio)
 {
     if (globalAudio.currentMusicChannelId != -1)
     {
-        CAudioEngine::StopChannel(globalAudio.currentMusicChannelId);
+        // Use fade-out for music (0.5s for smoother transition)
+        CAudioEngine::StopChannel(globalAudio.currentMusicChannelId, true, 0.5f);
         globalAudio.currentMusicChannelId = -1;
         globalAudio.currentMusicIndex = -1;
     }
@@ -810,11 +813,13 @@ void AudioSystem::StopEntityAudio(AudioComponent& audioComp)
 {
     if (!audioComp.eventName.empty())
     {
-        CAudioEngine::StopEvent(audioComp.eventName);
+        // Use fade-out for events (allowFadeOut = true)
+        CAudioEngine::StopEvent(audioComp.eventName, false); // false = allow fade out
     }
     else if (audioComp.channelId != -1)
     {
-        CAudioEngine::StopChannel(audioComp.channelId);
+        // Use fade-out for regular sounds (default 0.3s fade)
+        CAudioEngine::StopChannel(audioComp.channelId, true, 0.3f);
         audioComp.channelId = -1;
     }
 
