@@ -226,6 +226,9 @@ public class OrbTeleport : MonoBehaviour
         {
             GlobalAudio.PlaySFX("Teleport"); // Or a custom recall sound
 
+            // Play recall animation
+            anim.SetTrigger("recall");
+
             // Remove orb
             Physics.RemovePhysic((ulong)sphere.GetInstanceID());
             HealDamage(recallHealAmt);
