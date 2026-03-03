@@ -876,7 +876,7 @@
         "ObjectMetaData": {
           "name": "GameManager",
           "tag": "Untagged",
-          "selfActive": false
+          "selfActive": true
         },
         "HierarchyComponent": {
           "depth": 0
@@ -25829,11 +25829,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -26661,11 +26661,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -27493,11 +27493,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -28325,11 +28325,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -29157,11 +29157,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -29989,11 +29989,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -30821,11 +30821,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -31653,11 +31653,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -32485,11 +32485,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -33317,11 +33317,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -46340,17 +46340,13 @@
                   "t": 0,
                   "v": 15.0
                 },
-                "eSpeed": {
-                  "t": 0,
-                  "v": 1.0
-                },
                 "doorMoveSpeed": {
                   "t": 0,
                   "v": 1.0
                 },
-                "eDuration": {
+                "eSpeed": {
                   "t": 0,
-                  "v": 15.0
+                  "v": 1.0
                 },
                 "sceneName": {
                   "t": 3,
@@ -46359,6 +46355,10 @@
                 "doorMoveDuration": {
                   "t": 0,
                   "v": 2.0
+                },
+                "eDuration": {
+                  "t": 0,
+                  "v": 15.0
                 },
                 "dSpeed": {
                   "t": 0,
@@ -54083,12 +54083,169 @@
       "id": 1095,
       "components": {
         "IDComponent": {
-          "guid": "0a6472817226394bb56c36ccc5ace535"
+          "guid": "25d699a96c390141a55a45d3c9f2ef76"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -5.0,
+            -20.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "GPUParticleEmitter": {
+          "active": true,
+          "maxParticles": 256,
+          "emissionShape": 3,
+          "localPositionOffset": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "overallScale": 5.710000038146973,
+          "spawnBoxExtents": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "spawnRadius": 2.6700000762939455,
+          "spawnRadiusInner": 0.0,
+          "spawnRate": 50.0,
+          "burstCountMin": 50,
+          "burstCountMax": 100,
+          "burstInterval": 0.0,
+          "burstOnStart": true,
+          "directionMode": 0,
+          "direction": [
+            0.0,
+            0.20000000298023225,
+            0.0
+          ],
+          "coneAngle": 25.0,
+          "coneInnerAngle": 0.0,
+          "speedMin": 0.0,
+          "speedMax": 0.0,
+          "gravity": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "drag": 0.0,
+          "turbulenceStrength": 0.0,
+          "turbulenceScale": 1.0,
+          "boundsMode": 0,
+          "boundsShape": 0,
+          "boundsBoxExtents": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "boundsRadius": 9.630000114440918,
+          "boundsRadiusInner": 0.0,
+          "renderMode": 1,
+          "smokeOpacity": 0.6000000238418579,
+          "smokeSoftness": 0.5,
+          "smokeNoiseScale": 0.15000000596046449,
+          "smokeDistortScale": 0.0,
+          "smokeDistortStrength": 0.0,
+          "smokePuffScale": 0.3499999940395355,
+          "smokePuffStrength": 0.6000000238418579,
+          "smokeStretch": 0.5,
+          "smokeUpBias": 0.20000000298023225,
+          "smokeDepthFade": 6.0,
+          "electricIntensity": 1.0,
+          "electricFrequency": 8.0,
+          "electricBoltThickness": 0.07999999821186066,
+          "electricBoltVariation": 1.5,
+          "electricGlow": 0.5,
+          "electricBoltCount": 3,
+          "colorStart": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "colorEnd": [
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612
+          ],
+          "alphaStart": 1.0,
+          "alphaEnd": 0.0,
+          "sizeStartMin": 0.699999988079071,
+          "sizeStartMax": 1.0,
+          "sizeEndMin": 1.5,
+          "sizeEndMax": 2.0,
+          "lifetimeMin": 1.5,
+          "lifetimeMax": 10.0,
+          "sparkleShape": 0
+        },
+        "ObjectMetaData": {
+          "name": "VoidDeath",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            33.0,
+            5.0,
+            35.0
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "VoidDeath",
+              "enabled": true,
+              "fields": {}
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 1096,
+      "components": {
+        "IDComponent": {
+          "guid": "e3a3ccee38c60b4d83de4f047c2fb28f"
         },
         "Transform": {
           "position": [
             17.5,
-            2.4000000953674318,
+            1.0499999523162842,
             36.0
           ],
           "rotation": [
@@ -54166,13 +54323,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.10000000149011612
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.10000000149011612
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -54182,13 +54339,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -54200,11 +54357,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
@@ -54231,10 +54388,10 @@
       }
     },
     {
-      "id": 1096,
+      "id": 1097,
       "components": {
         "IDComponent": {
-          "guid": "cf0ea7e282f7a1459b12e3a40ac9b6a0"
+          "guid": "28a91a96fc0f844183a6aceb9644677b"
         },
         "Transform": {
           "position": [
@@ -54260,7 +54417,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "0a6472817226394bb56c36ccc5ace535",
+          "parentGuid": "e3a3ccee38c60b4d83de4f047c2fb28f",
           "depth": 1
         },
         "GlobalTransform": {},
@@ -54275,10 +54432,10 @@
       }
     },
     {
-      "id": 1097,
+      "id": 1098,
       "components": {
         "IDComponent": {
-          "guid": "3aed6ddbe3301344a9f0d30ace3cc629"
+          "guid": "391312a00c129346be4c2717bedc87a6"
         },
         "Transform": {
           "position": [
@@ -54768,17 +54925,17 @@
           }
         },
         "HierarchyComponent": {
-          "parentGuid": "cf0ea7e282f7a1459b12e3a40ac9b6a0",
+          "parentGuid": "28a91a96fc0f844183a6aceb9644677b",
           "depth": 2
         },
         "GlobalTransform": {}
       }
     },
     {
-      "id": 1098,
+      "id": 1099,
       "components": {
         "IDComponent": {
-          "guid": "218c0745ee894b49bda221456709fc3f"
+          "guid": "a3956aa328721b4aa82cfaacc468cc53"
         },
         "Transform": {
           "position": [
@@ -54804,20 +54961,20 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79"
+          "guid": "5c9003a9fc5fba4d8d5c71ddbeea1a2e"
         },
         "HierarchyComponent": {
-          "parentGuid": "3aed6ddbe3301344a9f0d30ace3cc629",
+          "parentGuid": "391312a00c129346be4c2717bedc87a6",
           "depth": 3
         },
         "GlobalTransform": {}
       }
     },
     {
-      "id": 1099,
+      "id": 1100,
       "components": {
         "IDComponent": {
-          "guid": "0ceae58eb3eac04cbf8c0970d755e9df"
+          "guid": "35737f9c8c082347ace40470b438d5a9"
         },
         "Transform": {
           "position": [
@@ -54846,17 +55003,17 @@
           "guid": "3c724a694cbac9438c9313a76eb05889"
         },
         "HierarchyComponent": {
-          "parentGuid": "3aed6ddbe3301344a9f0d30ace3cc629",
+          "parentGuid": "391312a00c129346be4c2717bedc87a6",
           "depth": 3
         },
         "GlobalTransform": {}
       }
     },
     {
-      "id": 1100,
+      "id": 1101,
       "components": {
         "IDComponent": {
-          "guid": "982641a7acf62b48b2daf5d7bdcae2da"
+          "guid": "80f65ef72dea174a9ac85bdbeee9aee5"
         },
         "Transform": {
           "position": [
@@ -54882,20 +55039,20 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79"
+          "guid": "5c9003a9fc5fba4d8d5c71ddbeea1a2e"
         },
         "HierarchyComponent": {
-          "parentGuid": "3aed6ddbe3301344a9f0d30ace3cc629",
+          "parentGuid": "391312a00c129346be4c2717bedc87a6",
           "depth": 3
         },
         "GlobalTransform": {}
       }
     },
     {
-      "id": 1101,
+      "id": 1102,
       "components": {
         "IDComponent": {
-          "guid": "c86bae1782fe7744ad7b5bcec37a813a"
+          "guid": "510909ff42bfbb44b2518fafe974dd90"
         },
         "Transform": {
           "position": [
@@ -54921,20 +55078,20 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79"
+          "guid": "5c9003a9fc5fba4d8d5c71ddbeea1a2e"
         },
         "HierarchyComponent": {
-          "parentGuid": "3aed6ddbe3301344a9f0d30ace3cc629",
+          "parentGuid": "391312a00c129346be4c2717bedc87a6",
           "depth": 3
         },
         "GlobalTransform": {}
       }
     },
     {
-      "id": 1102,
+      "id": 1103,
       "components": {
         "IDComponent": {
-          "guid": "7e2d5cc5cfa2b74e89b190c39e59d42c"
+          "guid": "98ca8206a47eb84e8cdc8b0706f94636"
         },
         "Transform": {
           "position": [
@@ -54960,20 +55117,20 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79"
+          "guid": "fd5a36376b7f854ea540c3de12d37e0c"
         },
         "HierarchyComponent": {
-          "parentGuid": "3aed6ddbe3301344a9f0d30ace3cc629",
+          "parentGuid": "391312a00c129346be4c2717bedc87a6",
           "depth": 3
         },
         "GlobalTransform": {}
       }
     },
     {
-      "id": 1103,
+      "id": 1104,
       "components": {
         "IDComponent": {
-          "guid": "2b05f675944a914fa2d4bca39d60792b"
+          "guid": "38f0eb8cf5c1494f9b66cc21dcf7a3bf"
         },
         "Transform": {
           "position": [
@@ -54999,20 +55156,20 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79"
+          "guid": "ff693913b7565247b39b8bcc05c7ae60"
         },
         "HierarchyComponent": {
-          "parentGuid": "3aed6ddbe3301344a9f0d30ace3cc629",
+          "parentGuid": "391312a00c129346be4c2717bedc87a6",
           "depth": 3
         },
         "GlobalTransform": {}
       }
     },
     {
-      "id": 1104,
+      "id": 1105,
       "components": {
         "IDComponent": {
-          "guid": "683eec6b43110848a2b2422839d18b05"
+          "guid": "c377e840eda7474ebafc6a58ac55a46c"
         },
         "Transform": {
           "position": [
@@ -55038,132 +55195,11 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79"
+          "guid": "1b0d4e0fa3306a489349bf72d6e841ca"
         },
         "HierarchyComponent": {
-          "parentGuid": "3aed6ddbe3301344a9f0d30ace3cc629",
+          "parentGuid": "391312a00c129346be4c2717bedc87a6",
           "depth": 3
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1105,
-      "components": {
-        "IDComponent": {
-          "guid": "25d699a96c390141a55a45d3c9f2ef76"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            -4.417164325714111,
-            -17.78171730041504
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "GPUParticleEmitter": {
-          "active": true,
-          "maxParticles": 256,
-          "emissionShape": 3,
-          "localPositionOffset": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "overallScale": 5.710000038146973,
-          "spawnBoxExtents": [
-            0.5,
-            0.5,
-            0.5
-          ],
-          "spawnRadius": 2.6700000762939455,
-          "spawnRadiusInner": 0.0,
-          "spawnRate": 50.0,
-          "burstCountMin": 50,
-          "burstCountMax": 100,
-          "burstInterval": 0.0,
-          "burstOnStart": true,
-          "directionMode": 0,
-          "direction": [
-            0.0,
-            0.20000000298023225,
-            0.0
-          ],
-          "coneAngle": 25.0,
-          "coneInnerAngle": 0.0,
-          "speedMin": 0.0,
-          "speedMax": 0.0,
-          "gravity": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "drag": 0.0,
-          "turbulenceStrength": 0.0,
-          "turbulenceScale": 1.0,
-          "boundsMode": 0,
-          "boundsShape": 0,
-          "boundsBoxExtents": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "boundsRadius": 9.630000114440918,
-          "boundsRadiusInner": 0.0,
-          "renderMode": 1,
-          "smokeOpacity": 0.6000000238418579,
-          "smokeSoftness": 0.5,
-          "smokeNoiseScale": 0.15000000596046449,
-          "smokeDistortScale": 0.0,
-          "smokeDistortStrength": 0.0,
-          "smokePuffScale": 0.3499999940395355,
-          "smokePuffStrength": 0.6000000238418579,
-          "smokeStretch": 0.5,
-          "smokeUpBias": 0.20000000298023225,
-          "smokeDepthFade": 6.0,
-          "electricIntensity": 1.0,
-          "electricFrequency": 8.0,
-          "electricBoltThickness": 0.07999999821186066,
-          "electricBoltVariation": 1.5,
-          "electricGlow": 0.5,
-          "electricBoltCount": 3,
-          "colorStart": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "colorEnd": [
-            0.10000000149011612,
-            0.10000000149011612,
-            0.10000000149011612
-          ],
-          "alphaStart": 1.0,
-          "alphaEnd": 0.0,
-          "sizeStartMin": 0.699999988079071,
-          "sizeStartMax": 1.0,
-          "sizeEndMin": 1.5,
-          "sizeEndMax": 2.0,
-          "lifetimeMin": 1.5,
-          "lifetimeMax": 10.0,
-          "sparkleShape": 0
-        },
-        "ObjectMetaData": {
-          "name": "VoidDeath",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "depth": 0
         },
         "GlobalTransform": {}
       }
