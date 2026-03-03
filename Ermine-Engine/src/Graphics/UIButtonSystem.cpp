@@ -177,8 +177,17 @@ namespace Ermine
 
                 if (globalAudio)
                 {
-                    AudioSystem::PlayGlobalSFX(*globalAudio, "Hover");
-                    EE_CORE_INFO("Playing hover sound");
+                    // Use custom hover sound if specified, otherwise use default
+                    if (!button.hoverSoundName.empty())
+                    {
+                        AudioSystem::PlayGlobalSFX(*globalAudio, button.hoverSoundName);
+                        EE_CORE_INFO("Playing custom hover sound: {0}", button.hoverSoundName);
+                    }
+                    else
+                    {
+                        AudioSystem::PlayGlobalSFX(*globalAudio, "UIHover");
+                        EE_CORE_INFO("Playing default hover sound");
+                    }
                 }
             }
             else if (!inside && button.isHovered)
@@ -193,8 +202,36 @@ namespace Ermine
                 button.isPressed = true;
                 if (globalAudio)
                 {
-                    AudioSystem::PlayGlobalSFX(*globalAudio, "Click");
-                    EE_CORE_INFO("Playing click sound");
+                    // Use custom click sound if specified, otherwise use default
+                    if (!button.clickSoundName.empty())
+                    {
+                        AudioSystem::PlayGlobalSFX(*globalAudio, button.clickSoundName);
+                        EE_CORE_INFO("Playing custom click sound: {0}", button.clickSoundName);
+                    }
+                    else
+                    {
+                        // Check if this is the Play button by entity name
+                        if (ecs.HasComponent<ObjectMetaData>(entity))
+                        {
+                            auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
+                            if (meta.name == "Play Button")
+                            {
+                                // Special sound for Play button
+                                AudioSystem::PlayGlobalSFX(*globalAudio, "UIClickPlay");
+                                EE_CORE_INFO("Playing Play button click sound");
+                            }
+                            else
+                            {
+                                // Default click sound for all other buttons
+                                AudioSystem::PlayGlobalSFX(*globalAudio, "UIClick");
+                                EE_CORE_INFO("Playing default click sound");
+                            }
+                        }
+                        else
+                        {
+                            AudioSystem::PlayGlobalSFX(*globalAudio, "UIClick");
+                        }
+                    }
                 }
 
                 ExecuteButtonAction(button);

@@ -205,6 +205,8 @@ namespace Ermine::graphics
 
         std::vector<glm::vec3> GetSkinnedVertices() const;
 
+        void GetCollisionMesh(std::vector<glm::vec3>& outVerts, std::vector<uint32_t>& outIndices, bool applyLocalTransform = true) const;
+
     private:
         std::string m_directory;                            // Directory of the model
         std::string m_name;                                 // Name of the model

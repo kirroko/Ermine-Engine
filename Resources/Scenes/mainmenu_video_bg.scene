@@ -290,14 +290,19 @@
           ],
           "sfx": [
             {
-              "name": "Hover",
+              "name": "UIHover",
               "path": "../Resources/Audio/UI_Hover 5.wav",
-              "volume": 1.0
+              "volume": 0.550000011920929
             },
             {
-              "name": "Click",
+              "name": "UIClick",
+              "path": "../Resources/Audio/UI_Confirm_Smaller.wav",
+              "volume": 0.6000000238418579
+            },
+            {
+              "name": "UIClickPlay",
               "path": "../Resources/Audio/UI_Confirm.wav",
-              "volume": 1.0
+              "volume": 0.75
             }
           ],
           "ambience": []
