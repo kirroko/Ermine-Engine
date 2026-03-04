@@ -49,7 +49,7 @@ void main()
     vec2 velocity = texture(velocitySampler, TexCoord).rg * u_MotionBlurStrength;
 
     // Clamp UV-space velocity to avoid pathological long streaks.
-    const float MAX_VEL = 0.075;
+    const float MAX_VEL = 0.15;
     float vLen = length(velocity);
     if (vLen > MAX_VEL) {
         velocity *= (MAX_VEL / vLen);
