@@ -119,6 +119,7 @@ void GraphicsDebugGUI::Render()
     DrawLightingControls();
     DrawPerformanceMetrics();
     DrawShaderControls();
+    DrawGBufferViewer();
 
     ImGui::End();
 }
@@ -283,6 +284,17 @@ void GraphicsDebugGUI::DrawPostProcessingControls()
                         "Color fringing effect at screen edges");
         DrawToggleButton("Radial Blur", &renderer->m_RadialBlurEnabled,
                         "Screen-space zoom blur from a configurable center");
+        DrawToggleButton("Motion Blur", &renderer->m_MotionBlurEnabled,
+                        "Per-pixel velocity-based motion blur (camera-attached objects are never blurred)");
+
+        if (renderer->m_MotionBlurEnabled && ImGui::TreeNode("Motion Blur Settings"))
+        {
+            DrawFloatSlider("Strength", &renderer->m_MotionBlurStrength, 0.0f, 5.0f,
+                           "Scale applied to the velocity vector");
+            ImGui::SliderInt("Samples", &renderer->m_MotionBlurSamples, 2, 24);
+            DrawTooltip("Number of samples along the velocity vector (higher = smoother but slower)");
+            ImGui::TreePop();
+        }
 
         ImGui::Separator();
         
@@ -668,4 +680,62 @@ void GraphicsDebugGUI::DrawShaderControls()
     }
     DrawTooltip("Recompile all cached shaders from disk");
     ImGui::Unindent(10.0f);
+}
+
+void GraphicsDebugGUI::DrawGBufferViewer()
+{
+    if (!ImGui::CollapsingHeader("GBuffer Viewer"))
+        return;
+
+    auto renderer = ECS::GetInstance().GetSystem<Renderer>();
+    if (!renderer) return;
+
+    auto gbuffer    = renderer->GetGBuffer();
+    auto ppBuffer   = renderer->GetPostProcessBuffer();
+    auto mbBuffer   = renderer->GetMotionBlurBuffer();
+
+    // Thumbnail size: 2 columns filling available width
+    const float panelWidth = ImGui::GetContentRegionAvail().x;
+    const float thumbW = (panelWidth - ImGui::GetStyle().ItemSpacing.x) * 0.5f;
+    const float thumbH = thumbW * (9.0f / 16.0f);  // 16:9 aspect
+
+    // Helper lambda: draw one texture thumbnail with a label
+    // ImGui::Image expects UV (0,1)→(1,0) to flip OpenGL bottom-left origin to top-left
+    auto DrawThumb = [&](const char* label, unsigned int texID)
+    {
+        ImGui::BeginGroup();
+        ImGui::TextUnformatted(label);
+        if (texID != 0)
+            ImGui::Image((ImTextureID)(intptr_t)texID, ImVec2(thumbW, thumbH), ImVec2(0, 1), ImVec2(1, 0));
+        else
+            ImGui::Dummy(ImVec2(thumbW, thumbH));
+        ImGui::EndGroup();
+    };
+
+    ImGui::Indent(4.0f);
+
+    // Row 1
+    if (gbuffer)
+    {
+        DrawThumb("RT0: Albedo (RGBA8)",      gbuffer->PackedTexture0);
+        ImGui::SameLine();
+        DrawThumb("RT1: Normals (RG16F oct)", gbuffer->PackedTexture1);
+
+        DrawThumb("RT2: Emissive (RGBA8)",    gbuffer->PackedTexture2);
+        ImGui::SameLine();
+        DrawThumb("RT3: Mat Props (RGBA8)",   gbuffer->PackedTexture3);
+
+        DrawThumb("RT4: Velocity (RG16F)",    gbuffer->PackedTexture4);
+        ImGui::SameLine();
+        DrawThumb("Depth (32F)",              gbuffer->DepthTexture);
+    }
+
+    // Row 4: pipeline outputs
+    DrawThumb("Post-Process Output",
+        ppBuffer ? ppBuffer->ColorTexture : 0u);
+    ImGui::SameLine();
+    DrawThumb("Motion Blur Output",
+        mbBuffer ? mbBuffer->ColorTexture : 0u);
+
+    ImGui::Unindent(4.0f);
 }

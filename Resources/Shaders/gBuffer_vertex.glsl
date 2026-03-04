@@ -70,6 +70,7 @@ layout(std430, binding = 3) restrict readonly buffer MaterialBuffer {
 // Transformation matrices
 uniform mat4 view;
 uniform mat4 projection;
+uniform mat4 u_PreviousViewProjection;  // Previous frame's (proj * view), for velocity buffer
 uniform mat3 normalView; // Normal matrix for view (mat3 of view matrix) - calculated once on CPU
 
 // Base draw ID offset for multi-batch rendering
@@ -98,8 +99,9 @@ flat out ivec2 vTextureIndices2;    // ao, emissive
 
 // ========== OPTIMIZATION OUTPUTS ==========
 // Pre-compute per-vertex instead of per-fragment
-out vec2 vTransformedUV;            // UV with scale/offset already applied
-flat out float vMotionBlurFlag;     // Pre-calculated motion blur flag
+out vec2 vTransformedUV;  // UV with scale/offset already applied
+out vec4 vCurrClipPos; // Current clip-space position for per-fragment velocity
+out vec4 vPrevClipPos; // Previous clip-space position for per-fragment velocity
 
 void main()
 {
@@ -223,9 +225,11 @@ void main()
     vTextureIndices2 = ivec2(material.aoMapIndex, material.emissiveMapIndex);
 
     // ========== PRE-COMPUTE OPTIMIZATIONS ==========
-    // OPTIMIZATION 1: Calculate motion blur flag once per vertex instead of per fragment
-    vMotionBlurFlag = ((drawInfo.flags & (1u << 1u)) != 0u) ? 1.0 : 0.0; // FLAG_CAMERA_ATTACHED check
-
-    // OPTIMIZATION 2: Apply UV transform once per vertex instead of per fragment
+    // Apply UV transform once per vertex instead of per fragment
     vTransformedUV = fma(TexCoord, material.uvScale, material.uvOffset);
+
+    // ========== VELOCITY BUFFER INPUTS (RT4) ==========
+    // Pass clip-space positions so velocity is derived per-fragment in gBuffer fragment shader.
+    vCurrClipPos = gl_Position;
+    vPrevClipPos = u_PreviousViewProjection * worldPos;
 }

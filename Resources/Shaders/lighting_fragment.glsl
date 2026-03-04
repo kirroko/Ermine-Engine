@@ -411,15 +411,25 @@ vec3 calculatePBR(int lightIndex, vec3 normal, vec3 viewDir, vec3 fragPosView,
 
 // Unpack albedo from RT0 (RGB16F format)
 vec3 unpackAlbedo(vec3 packedAlbedo) {
-    // Direct read - RGB16F stores albedo directly
+    // Direct read - RGBA8 stores albedo in [0,1]
     return packedAlbedo;
 }
 
-// Unpack normal from RT1 (RGB16F format)
-vec3 unpackNormal(vec3 packedNormal) {
-    // Convert from [0,1] back to [-1,1] range and normalize
-    vec3 normal = packedNormal * 2.0 - 1.0;
-    return normalize(normal);
+// Octahedral decode: reconstruct unit normal from two [0,1] values (RT1 is RG16F)
+vec2 signNotZero(vec2 v) {
+    return vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0);
+}
+
+vec3 octDecode(vec2 e) {
+    e = e * 2.0 - 1.0;  // [0,1] -> [-1,1]
+    vec3 n = vec3(e.xy, 1.0 - abs(e.x) - abs(e.y));
+    if (n.z < 0.0) n.xy = (1.0 - abs(n.yx)) * signNotZero(n.xy);
+    return normalize(n);
+}
+
+// Unpack normal from RT1 (RG16F format, oct-encoded)
+vec3 unpackNormal(vec2 packedNormal) {
+    return octDecode(packedNormal);
 }
 
 // Unpack emissive from RT2 (RGBA8 format)
@@ -440,17 +450,16 @@ void unpackMaterialProperties(vec4 packedMaterial, out float roughness,
     roughness = packedMaterial.r;
     metallic = packedMaterial.g;
     ao = packedMaterial.b;
-    // packedMaterial.a contains motion blur flag (not used in lighting pass)
 }
 
 // Main G-Buffer reading function (call this in lighting fragment shader)
 void readGBuffer(sampler2D gBuffer0, sampler2D gBuffer1, sampler2D gBuffer2, sampler2D gBuffer3,
-                 vec2 texCoords, out vec3 albedo, out vec3 normal, out vec3 emissive, 
+                 vec2 texCoords, out vec3 albedo, out vec3 normal, out vec3 emissive,
                  out float emissiveIntensity, out float roughness, out float metallic, out float ao) {
 
     // Sample all G-Buffer textures
-    vec3 packedAlbedo = texture(gBuffer0, texCoords).rgb;
-    vec3 packedNormal = texture(gBuffer1, texCoords).rgb;
+    vec3 packedAlbedo   = texture(gBuffer0, texCoords).rgb;  // RGBA8, take .rgb
+    vec2 packedNormal   = texture(gBuffer1, texCoords).rg;   // RG16F oct-encoded
     vec4 packedEmissive = texture(gBuffer2, texCoords);
     vec4 packedMaterial = texture(gBuffer3, texCoords);
 

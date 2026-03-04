@@ -492,13 +492,14 @@ namespace Ermine::graphics
             uint64_t HandlePackedTexture1 = 0;
             uint64_t HandlePackedTexture2 = 0;
             uint64_t HandlePackedTexture3 = 0;
+            uint64_t HandlePackedTexture4 = 0;  // Velocity buffer
             uint64_t HandleDepthTexture = 0;
-
 
             unsigned int PackedTexture0 = 0;
             unsigned int PackedTexture1 = 0;
             unsigned int PackedTexture2 = 0;
             unsigned int PackedTexture3 = 0;
+            unsigned int PackedTexture4 = 0;    // Velocity buffer
 
 
 
@@ -632,6 +633,8 @@ namespace Ermine::graphics
 
         std::shared_ptr<OffscreenBuffer> GetOffscreenBuffer() const { return m_OffscreenBuffer; }
         std::shared_ptr<GBuffer> GetGBuffer() const { return m_GBuffer; }
+        std::shared_ptr<PostProcessBuffer> GetPostProcessBuffer() const { return m_PostProcessBuffer; }
+        std::shared_ptr<PostProcessBuffer> GetMotionBlurBuffer() const { return m_MotionBlurBuffer; }
 
         /**
         * @brief Cleanup g-buffer resources
@@ -1027,6 +1030,7 @@ namespace Ermine::graphics
          * @param projection The projection matrix
          */
         void RenderMotionBlurMask(const Mtx44& view, const Mtx44& projection);
+        void RenderMotionBlurPass();
 
         /**
          * @brief Sort opaque custom shader objects by shader pointer (for batching)
