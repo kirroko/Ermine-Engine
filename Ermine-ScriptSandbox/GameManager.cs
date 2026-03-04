@@ -30,7 +30,8 @@ public class GameManager : MonoBehaviour
 
     public void PlayerRespawn()
     {
-        player.transform.position = startPos;
+        player.transform.position = respawnPos;
+        Physics.SetPosition((ulong)player.GetInstanceID(), respawnPos);
     }
 
     public void UpdateRespawnPoint(Vector3 pos)

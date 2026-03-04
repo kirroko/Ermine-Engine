@@ -1095,6 +1095,7 @@ namespace Ermine
 
 		//Physic mesh collider
 		std::vector<glm::vec3> cpuVertices;
+		std::vector<uint32_t> cpuIndices;
 
 		Mesh() = default;
 
@@ -2657,6 +2658,7 @@ namespace Ermine
 		JPH::BodyID bodyID{ JPH::BodyID::cInvalidBodyID };
 		JPH::Body* body{ nullptr };
 		std::vector<glm::vec3> customMeshVertices;   // For custom mesh
+		std::vector<uint32_t> customMeshIndices;
 		JPH::RefConst<JPH::Shape> shapeRef;
 		bool isDead = false;
 

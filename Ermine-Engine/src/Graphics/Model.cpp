@@ -159,7 +159,7 @@ bool Model::LoadMeshFile(const std::string& path)
     // Create GPU buffers
     auto vao = std::make_shared<VertexArray>();
     auto vbo = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(VertexData));
-    auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
+    auto ibo = std::make_shared<IndexBuffer>(indices.data(), (unsigned int)indices.size());
 
     vao->Bind();
     vbo->Bind();
@@ -338,7 +338,7 @@ bool Model::LoadSkinFile(const std::string& path)
     // Create GPU buffers
     auto vao = std::make_shared<VertexArray>();
     auto vbo = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(VertexData));
-    auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
+    auto ibo = std::make_shared<IndexBuffer>(indices.data(), (unsigned int)indices.size());
 
     vao->Bind();
     vbo->Bind();
@@ -632,7 +632,7 @@ MeshData Model::ProcessMesh(aiMesh* mesh)
     // Create GPU buffers
     auto vao = std::make_shared<VertexArray>();
     auto vbo = std::make_shared<VertexBuffer>(vertices.data(), vertices.size() * sizeof(VertexData));
-    auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
+    auto ibo = std::make_shared<IndexBuffer>(indices.data(), (unsigned int)indices.size());
 
     vao->Bind();
     vbo->Bind();
@@ -791,5 +791,50 @@ std::vector<glm::vec3> Model::GetSkinnedVertices() const
     }
 
     return vertices;
+}
+
+void Ermine::graphics::Model::GetCollisionMesh(std::vector<glm::vec3>& outVerts, std::vector<uint32_t>& outIndices, bool applyLocalTransform) const
+{
+    outVerts.clear();
+    outIndices.clear();
+
+    uint32_t baseVertex = 0;
+
+    for (const auto& mesh : m_meshes)
+    {
+        if (!mesh.vbo || !mesh.ibo) continue;
+
+        const VertexData* vtx = reinterpret_cast<const VertexData*>(mesh.vbo->GetDataPointer());
+        if (!vtx) continue;
+
+        const uint32_t vtxCount = static_cast<uint32_t>(mesh.vbo->GetSize() / sizeof(VertexData));
+        if (vtxCount == 0) continue;
+
+        // Append vertices
+        outVerts.reserve(outVerts.size() + vtxCount);
+
+        for (uint32_t i = 0; i < vtxCount; ++i)
+        {
+            glm::vec4 p(vtx[i].position[0], vtx[i].position[1], vtx[i].position[2], 1.0f);
+
+            if (applyLocalTransform)
+                p = mesh.localTransform * p;
+
+            outVerts.emplace_back(p.x, p.y, p.z);
+        }
+
+        // Append indices with base vertex offset
+        const unsigned int* idx = reinterpret_cast<const unsigned int*>(mesh.ibo->GetDataPointer());
+        if (!idx) { baseVertex += vtxCount; continue; }
+
+        const uint32_t idxCount = static_cast<uint32_t>(mesh.ibo->GetCount());
+        if (idxCount < 3) { baseVertex += vtxCount; continue; }
+
+        outIndices.reserve(outIndices.size() + idxCount);
+        for (uint32_t i = 0; i < idxCount; ++i)
+            outIndices.push_back(baseVertex + static_cast<uint32_t>(idx[i]));
+
+        baseVertex += vtxCount;
+    }
 }
 
