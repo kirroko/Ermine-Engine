@@ -81,28 +81,26 @@ vec3 gammaCorrection(vec3 color, float gamma)
 // Vignette effect
 vec3 applyVignette(vec3 color, vec2 texCoord)
 {
-    float falloff = max(u_VignetteFalloff, 0.0001);
-    float proceduralMask = 0.0;
-    float mapMask = 0.0;
-
-    // Procedural fallback when no texture map is assigned.
-    {
-        vec2 procUV = texCoord * 2.0 - 1.0;
-        float dist = length(procUV);
-        float edgeMask = smoothstep(u_VignetteRadius, u_VignetteRadius + falloff, dist);
-        proceduralMask = clamp((1.0 - u_VignetteCoverage) * edgeMask + u_VignetteCoverage, 0.0, 1.0);
-    }
+    float vignetteMask = 0.0;
 
     if (u_HasVignetteMap == 1)
     {
-        // Static map sampling in screen space.
-        // The map modulates the vignette mask; it does not change footprint with radius.
+        // Texture map drives the vignette directly.
+        // UV coords (0-1) stretch the texture to fill the screen.
+        // Alpha channel controls transparency: 0 = no vignette, 1 = full vignette.
         float alphaMask = texture(u_VignetteMap, texCoord).a;
-        mapMask = clamp(alphaMask * clamp(u_VignetteMapStrength, 0.0, 1.0), 0.0, 1.0);
+        vignetteMask = clamp(alphaMask * clamp(u_VignetteMapStrength, 0.0, 1.0), 0.0, 1.0);
+    }
+    else
+    {
+        // Procedural fallback when no texture map is assigned.
+        float falloff = max(u_VignetteFalloff, 0.0001);
+        vec2 procUV = texCoord * 2.0 - 1.0;
+        float dist = length(procUV);
+        float edgeMask = smoothstep(u_VignetteRadius, u_VignetteRadius + falloff, dist);
+        vignetteMask = clamp((1.0 - u_VignetteCoverage) * edgeMask + u_VignetteCoverage, 0.0, 1.0);
     }
 
-    // When present, map acts as a multiplier on the procedural vignette.
-    float vignetteMask = proceduralMask * ((u_HasVignetteMap == 1) ? mapMask : 1.0);
     float darkness = clamp(u_VignetteIntensity * vignetteMask, 0.0, 1.0);
     vec3 tint = clamp(u_VignetteMapRGBModifier, vec3(0.0), vec3(1.0));
     return mix(color, tint, darkness);
