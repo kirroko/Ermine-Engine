@@ -238,85 +238,94 @@ namespace Ermine
             firstRender = false;
         }
 
-        // Render UIImageComponent entities first (fullscreen images, cutscenes, backgrounds)
+        // Render UIImageComponent entities in two passes:
+        // Pass 1: fullscreen images (backgrounds) first
+        // Pass 2: non-fullscreen images (overlays, info panels) on top
         auto& ecs = ECS::GetInstance();
         constexpr EntityID MAX_ENTITIES = 10000;
 
-        for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
+        for (int pass = 0; pass < 2; ++pass)
         {
-            // Check if entity is valid and has UIImageComponent
-            if (!ecs.IsEntityValid(entity))
-                continue;
-
-            if (!ecs.HasComponent<UIImageComponent>(entity))
-                continue;
-
-            // ✅ FIX: Check if entity is active in hierarchy (including parents)
-            if (!IsEntityActiveInHierarchy(entity))
-                continue;
-
-            const auto& imageComp = ecs.GetComponent<UIImageComponent>(entity);
-
-            // Load texture if image path is specified
-            std::shared_ptr<graphics::Texture> texture;
-            if (!imageComp.imagePath.empty())
+            for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
             {
-                auto it = m_textureCache.find(imageComp.imagePath);
-                if (it != m_textureCache.end())
+                // Check if entity is valid and has UIImageComponent
+                if (!ecs.IsEntityValid(entity))
+                    continue;
+
+                if (!ecs.HasComponent<UIImageComponent>(entity))
+                    continue;
+
+                // ✅ FIX: Check if entity is active in hierarchy (including parents)
+                if (!IsEntityActiveInHierarchy(entity))
+                    continue;
+
+                const auto& imageComp = ecs.GetComponent<UIImageComponent>(entity);
+
+                // Pass 0: only fullscreen, Pass 1: only non-fullscreen
+                if (pass == 0 && !imageComp.fullscreen) continue;
+                if (pass == 1 && imageComp.fullscreen) continue;
+
+                // Load texture if image path is specified
+                std::shared_ptr<graphics::Texture> texture;
+                if (!imageComp.imagePath.empty())
                 {
-                    texture = it->second;
-                }
-                else
-                {
-                    texture = AssetManager::GetInstance().LoadTexture(imageComp.imagePath);
-                    if (texture && texture->IsValid())
+                    auto it = m_textureCache.find(imageComp.imagePath);
+                    if (it != m_textureCache.end())
                     {
-                        m_textureCache[imageComp.imagePath] = texture;
+                        texture = it->second;
+                    }
+                    else
+                    {
+                        texture = AssetManager::GetInstance().LoadTexture(imageComp.imagePath);
+                        if (texture && texture->IsValid())
+                        {
+                            m_textureCache[imageComp.imagePath] = texture;
+                        }
                     }
                 }
-            }
 
-            // Render the image (if texture exists)
-            if (texture && texture->IsValid())
-            {
-                if (imageComp.fullscreen)
+                // Render the image (if texture exists)
+                if (texture && texture->IsValid())
                 {
-                    RenderTexturedSquare(0.5f, 0.5f, imageComp.height, texture, imageComp.tintColor, imageComp.alpha);
+                    if (imageComp.fullscreen)
+                    {
+                        RenderTexturedSquare(0.5f, 0.5f, imageComp.height, texture, imageComp.tintColor, imageComp.alpha);
+                    }
+                    else
+                    {
+                        RenderTexturedSquare(
+                            imageComp.position.x,
+                            imageComp.position.y,
+                            imageComp.height,
+                            texture,
+                            imageComp.tintColor,
+                            imageComp.alpha
+                        );
+                    }
                 }
-                else
+
+                // Render caption
+                if (imageComp.showCaption && !imageComp.caption.empty() && m_textRenderer)
                 {
-                    RenderTexturedSquare(
-                        imageComp.position.x,
-                        imageComp.position.y,
-                        imageComp.height,
-                        texture,
-                        imageComp.tintColor,
-                        imageComp.alpha
+                    float textScale = imageComp.captionFontSize / 24.0f;
+                    float textAlpha = imageComp.alpha;
+                    if (imageComp.imagePath.empty() && imageComp.alpha == 0.0f)
+                    {
+                        textAlpha = 1.0f;
+                    }
+
+                    m_textRenderer->RenderText(
+                        m_uiShader,
+                        imageComp.caption,
+                        imageComp.captionPosition.x,
+                        imageComp.captionPosition.y,
+                        textScale,
+                        imageComp.captionColor,
+                        textAlpha,
+                        m_VAO,
+                        m_VBO
                     );
                 }
-            }
-
-            // Render caption
-            if (imageComp.showCaption && !imageComp.caption.empty() && m_textRenderer)
-            {
-                float textScale = imageComp.captionFontSize / 24.0f;
-                float textAlpha = imageComp.alpha;
-                if (imageComp.imagePath.empty() && imageComp.alpha == 0.0f)
-                {
-                    textAlpha = 1.0f;
-                }
-
-                m_textRenderer->RenderText(
-                    m_uiShader,
-                    imageComp.caption,
-                    imageComp.captionPosition.x,
-                    imageComp.captionPosition.y,
-                    textScale,
-                    imageComp.captionColor,
-                    textAlpha,
-                    m_VAO,
-                    m_VBO
-                );
             }
         }
 
