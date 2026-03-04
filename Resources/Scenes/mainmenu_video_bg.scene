@@ -459,12 +459,12 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.125,
+            0.550000011920929,
             0.2849999964237213,
             0.0
           ],
           "size": [
-            0.23999999463558198,
+            0.20999999344348908,
             0.09000000357627869
           ],
           "normalColor": [
@@ -726,12 +726,12 @@
         "GlobalTransform": {},
         "UISliderComponent": {
           "position": [
-            0.7099999785423279,
-            0.6399999856948853,
+            0.699999988079071,
+            0.5899999737739563,
             0.0
           ],
           "size": [
-            0.41999998688697817,
+            0.5,
             0.05000000074505806
           ],
           "trackColor": [
@@ -754,7 +754,7 @@
             0.8999999761581421,
             0.5
           ],
-          "trackAlpha": 0.8999999761581421,
+          "trackAlpha": 1.0,
           "handleSize": 0.03999999910593033,
           "trackImage": ".\\Resources/Textures/UI/Audio_Bar.png",
           "fillImage": ".\\Resources/Textures/UI/Audio_Fill.png",
@@ -764,15 +764,15 @@
           "maxValue": 1.0,
           "target": 5,
           "customTarget": "Gamma",
-          "label": "GAMMA",
+          "label": "BRIGHTNESS",
           "labelColor": [
             0.0,
             0.0,
             0.0
           ],
-          "labelScale": 0.800000011920929,
+          "labelScale": 1.0,
           "labelOffset": [
-            0.0,
+            -0.10000000149011612,
             0.03999999910593033
           ],
           "labelImagePath": "",
@@ -785,19 +785,10 @@
           ],
           "valueScale": 0.5,
           "valueOffset": [
-            0.10000000149011612,
+            0.10999999940395355,
             0.019999999552965165
           ],
-          "valueAsPercentage": true,
-          "showPreview": true,
-          "previewOffset": [
-            0.0,
-            -0.11999999731779099
-          ],
-          "previewSize": [
-            0.30000001192092898,
-            0.15000000596046449
-          ]
+          "valueAsPercentage": true
         }
       }
     },
@@ -940,13 +931,13 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.625,
-            0.7850000262260437,
+            0.6700000166893005,
+            0.7099999785423279,
             0.0
           ],
           "size": [
-            0.23999999463558198,
-            0.09000000357627869
+            0.4300000071525574,
+            0.11999999731779099
           ],
           "normalColor": [
             1.0,
@@ -970,8 +961,8 @@
           ],
           "textScale": 1.0,
           "backgroundAlpha": 1.0,
-          "normalImage": "Resources/Textures/UI/MainMenu/Audio_Unselected.png",
-          "hoverImage": "Resources/Textures/UI/MainMenu/Audio_Selected.png",
+          "normalImage": "Resources/Textures/UI/Audio_Unselected.png",
+          "hoverImage": "Resources/Textures/UI/Audio_Selected.png",
           "pressedImage": "",
           "action": 3,
           "actionData": "OpenSettingsAudio",
@@ -1018,13 +1009,13 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.6650000214576721,
-            0.5899999737739563,
+            0.6899999976158142,
+            0.550000011920929,
             0.0
           ],
           "size": [
-            0.38999998569488528,
-            0.10000000149011612
+            0.4699999988079071,
+            0.11999999731779099
           ],
           "normalColor": [
             1.0,
@@ -1048,8 +1039,8 @@
           ],
           "textScale": 1.0,
           "backgroundAlpha": 1.0,
-          "normalImage": "Resources/Textures/UI/MainMenu/Controls_Unselected.png",
-          "hoverImage": "Resources/Textures/UI/MainMenu/Controls_Selected.png",
+          "normalImage": "Resources/Textures/UI/Contorls_Unselected.png",
+          "hoverImage": "Resources/Textures/UI/Contorls_Selected.png",
           "pressedImage": "",
           "action": 3,
           "actionData": "OpenSettingsControls",
@@ -1197,7 +1188,7 @@
           "hoverImage": "",
           "pressedImage": "",
           "action": 3,
-          "actionData": "BackToSettingsPage",
+          "actionData": "CloseSettingsPage",
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 1.0
@@ -1239,14 +1230,14 @@
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
-          "text": "Video",
+          "text": "",
           "position": [
-            0.6200000047683716,
-            0.38999998569488528,
+            0.6949999928474426,
+            0.3700000047683716,
             0.0
           ],
           "size": [
-            0.20000000298023225,
+            0.4699999988079071,
             0.11999999731779099
           ],
           "normalColor": [
@@ -1270,9 +1261,9 @@
             1.0
           ],
           "textScale": 1.0,
-          "backgroundAlpha": 0.0,
-          "normalImage": "",
-          "hoverImage": "",
+          "backgroundAlpha": 1.0,
+          "normalImage": "Resources/Textures/UI/Brightness_Unselected.png",
+          "hoverImage": "Resources/Textures/UI/Brightness_Selected.png",
           "pressedImage": "",
           "action": 3,
           "actionData": "OpenSettingsVideo",
@@ -1482,16 +1473,7 @@
             0.05999999865889549,
             0.019999999552965165
           ],
-          "valueAsPercentage": true,
-          "showPreview": false,
-          "previewOffset": [
-            0.0,
-            -0.11999999731779099
-          ],
-          "previewSize": [
-            0.30000001192092898,
-            0.15000000596046449
-          ]
+          "valueAsPercentage": true
         }
       }
     },
@@ -1593,16 +1575,7 @@
             0.05999999865889549,
             0.019999999552965165
           ],
-          "valueAsPercentage": true,
-          "showPreview": false,
-          "previewOffset": [
-            0.0,
-            -0.11999999731779099
-          ],
-          "previewSize": [
-            0.30000001192092898,
-            0.15000000596046449
-          ]
+          "valueAsPercentage": true
         }
       }
     },
@@ -1704,16 +1677,7 @@
             0.05999999865889549,
             0.019999999552965165
           ],
-          "valueAsPercentage": true,
-          "showPreview": false,
-          "previewOffset": [
-            0.0,
-            -0.11999999731779099
-          ],
-          "previewSize": [
-            0.30000001192092898,
-            0.15000000596046449
-          ]
+          "valueAsPercentage": true
         }
       }
     },
@@ -2695,41 +2659,6 @@
             0.10000000149011612,
             0.0
           ]
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 39,
-      "components": {
-        "IDComponent": {
-          "guid": "6c9d6b993949d7498cc3aaf3675a9fbd"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "New Entity",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "depth": 0
         },
         "GlobalTransform": {}
       }

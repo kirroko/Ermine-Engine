@@ -135,12 +135,12 @@
         "GlobalTransform": {},
         "UISliderComponent": {
           "position": [
-            0.7099999785423279,
-            0.6399999856948853,
+            0.699999988079071,
+            0.5899999737739563,
             0.0
           ],
           "size": [
-            0.41999998688697817,
+            0.5,
             0.05000000074505806
           ],
           "trackColor": [
@@ -163,7 +163,7 @@
             0.8999999761581421,
             0.5
           ],
-          "trackAlpha": 0.8999999761581421,
+          "trackAlpha": 1.0,
           "handleSize": 0.03999999910593033,
           "trackImage": ".\\Resources/Textures/UI/Audio_Bar.png",
           "fillImage": ".\\Resources/Textures/UI/Audio_Fill.png",
@@ -173,15 +173,15 @@
           "maxValue": 1.0,
           "target": 5,
           "customTarget": "Gamma",
-          "label": "GAMMA",
+          "label": "BRIGHTNESS",
           "labelColor": [
             0.0,
             0.0,
             0.0
           ],
-          "labelScale": 0.800000011920929,
+          "labelScale": 1.0,
           "labelOffset": [
-            0.0,
+            -0.10000000149011612,
             0.03999999910593033
           ],
           "labelImagePath": "",
@@ -194,19 +194,10 @@
           ],
           "valueScale": 0.5,
           "valueOffset": [
-            0.10000000149011612,
+            0.10999999940395355,
             0.019999999552965165
           ],
-          "valueAsPercentage": true,
-          "showPreview": true,
-          "previewOffset": [
-            0.0,
-            -0.11999999731779099
-          ],
-          "previewSize": [
-            0.30000001192092898,
-            0.15000000596046449
-          ]
+          "valueAsPercentage": true
         }
       }
     },

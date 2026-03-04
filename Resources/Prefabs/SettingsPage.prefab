@@ -68,14 +68,14 @@
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
-          "text": "Video",
+          "text": "",
           "position": [
-            0.6200000047683716,
-            0.38999998569488528,
+            0.6949999928474426,
+            0.3700000047683716,
             0.0
           ],
           "size": [
-            0.20000000298023225,
+            0.4699999988079071,
             0.11999999731779099
           ],
           "normalColor": [
@@ -99,9 +99,9 @@
             1.0
           ],
           "textScale": 1.0,
-          "backgroundAlpha": 0.0,
-          "normalImage": "",
-          "hoverImage": "",
+          "backgroundAlpha": 1.0,
+          "normalImage": "Resources/Textures/UI/Brightness_Unselected.png",
+          "hoverImage": "Resources/Textures/UI/Brightness_Selected.png",
           "pressedImage": "",
           "action": 3,
           "actionData": "OpenSettingsVideo",
@@ -290,13 +290,13 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.6650000214576721,
-            0.5899999737739563,
+            0.6899999976158142,
+            0.550000011920929,
             0.0
           ],
           "size": [
-            0.38999998569488528,
-            0.10000000149011612
+            0.4699999988079071,
+            0.11999999731779099
           ],
           "normalColor": [
             1.0,
@@ -320,8 +320,8 @@
           ],
           "textScale": 1.0,
           "backgroundAlpha": 1.0,
-          "normalImage": "Resources/Textures/UI/MainMenu/Controls_Unselected.png",
-          "hoverImage": "Resources/Textures/UI/MainMenu/Controls_Selected.png",
+          "normalImage": "Resources/Textures/UI/Contorls_Unselected.png",
+          "hoverImage": "Resources/Textures/UI/Contorls_Selected.png",
           "pressedImage": "",
           "action": 3,
           "actionData": "OpenSettingsControls",
@@ -367,13 +367,13 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.625,
-            0.7850000262260437,
+            0.6700000166893005,
+            0.7099999785423279,
             0.0
           ],
           "size": [
-            0.23999999463558198,
-            0.09000000357627869
+            0.4300000071525574,
+            0.11999999731779099
           ],
           "normalColor": [
             1.0,
@@ -397,8 +397,8 @@
           ],
           "textScale": 1.0,
           "backgroundAlpha": 1.0,
-          "normalImage": "Resources/Textures/UI/MainMenu/Audio_Unselected.png",
-          "hoverImage": "Resources/Textures/UI/MainMenu/Audio_Selected.png",
+          "normalImage": "Resources/Textures/UI/Audio_Unselected.png",
+          "hoverImage": "Resources/Textures/UI/Audio_Selected.png",
           "pressedImage": "",
           "action": 3,
           "actionData": "OpenSettingsAudio",
