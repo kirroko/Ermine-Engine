@@ -516,8 +516,14 @@ namespace Ermine
                 // Hide main menu buttons
                 SetEntityActiveByName("Play Button", false);
                 SetEntityActiveByName("Settings Button", false);
+                SetEntityActiveByName("Settings_Button", false);
                 SetEntityActiveByName("Quit Button", false);
                 SetEntityActiveByName("Title", false);
+
+                // Hide pause menu buttons
+                SetEntityActiveByName("ResumeButton", false);
+                SetEntityActiveByName("Exit_Game", false);
+                SetEntityActiveByName("PauseBackground", false);
 
                 // Show settings page (Audio/Controls/Video buttons)
                 SetEntityActiveByName("SettingsPage", true);
@@ -531,8 +537,14 @@ namespace Ermine
                 // Show main menu buttons
                 SetEntityActiveByName("Play Button", true);
                 SetEntityActiveByName("Settings Button", true);
+                SetEntityActiveByName("Settings_Button", true);
                 SetEntityActiveByName("Quit Button", true);
                 SetEntityActiveByName("Title", true);
+
+                // Show pause menu buttons
+                SetEntityActiveByName("ResumeButton", true);
+                SetEntityActiveByName("Exit_Game", true);
+                SetEntityActiveByName("PauseBackground", true);
             }
             // Settings Page -> Audio (existing SettingsMenu with sliders)
             else if (button.actionData == "OpenSettingsAudio")
