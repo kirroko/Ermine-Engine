@@ -57,7 +57,7 @@ namespace Ermine
 
             if (!currentValid(fsm))
             {
-                EE_CORE_INFO("[FSM] Current invalid after load, re-init entity {}", entity);
+                //EE_CORE_INFO("[FSM] Current invalid after load, re-init entity {}", entity);
 
                 fsm.Init(entity);
 
