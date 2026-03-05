@@ -1213,6 +1213,13 @@ public:
             return DXGI_FORMAT_BC3_UNORM;
         }
 
+        // Textures explicitly named as having alpha: Use BC3 to preserve transparency gradient
+        if (lowerFilename.find("_alpha") != std::string::npos ||
+            lowerFilename.find("alpha_") != std::string::npos) {
+            std::cout << "      Detected: Alpha Texture → BC3_UNORM" << std::endl;
+            return DXGI_FORMAT_BC3_UNORM;
+        }
+
         // Default: BC1 for simple RGB textures (no alpha)
         // BC1 offers 6:1 compression and is suitable for most color textures
         std::cout << "      Default: Color Texture → BC1_UNORM" << std::endl;

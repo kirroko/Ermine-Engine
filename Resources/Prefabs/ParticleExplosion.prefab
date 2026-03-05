@@ -77,10 +77,10 @@
           ],
           "alphaStart": 1.0,
           "alphaEnd": 0.0,
-          "sizeStartMin": 0.25,
-          "sizeStartMax": 0.45,
+          "sizeStartMin": 0.3,
+          "sizeStartMax": 0.54,
           "sizeEndMin": 0.0,
-          "sizeEndMax": 0.025,
+          "sizeEndMax": 0.03,
           "lifetimeMin": 0.3,
           "lifetimeMax": 0.7,
           "sparkleShape": 1

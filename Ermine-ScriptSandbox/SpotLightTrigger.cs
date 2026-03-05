@@ -85,7 +85,7 @@ public class SpotLightTrigger : MonoBehaviour
 
     bool IsPointInsideSpot(Vector3 point)
     {
-        Vector3 lightPos = transform.position;
+        Vector3 lightPos = transform.worldPosition;
 
         Vector3 toPoint = point - lightPos;
         float distSq = toPoint.x * toPoint.x + toPoint.y * toPoint.y + toPoint.z * toPoint.z;
@@ -100,7 +100,7 @@ public class SpotLightTrigger : MonoBehaviour
         Vector3 dirToPoint = toPoint / dist;
 
         // Forward direction from rotation
-        Vector3 forward = transform.rotation * new Vector3(0f, 0f, 1f);
+        Vector3 forward = transform.worldRotation * new Vector3(0f, 0f, 1f);
 
         float cos = Vector3.Dot(forward.normalized, dirToPoint); // [-1..1]
 
@@ -112,14 +112,14 @@ public class SpotLightTrigger : MonoBehaviour
 
     float GetSpotIntensity01(Vector3 point)
     {
-        Vector3 lightPos = transform.position;
+        Vector3 lightPos = transform.worldPosition;
         Vector3 toPoint = point - lightPos;
 
         float dist = Mathf.Sqrt(toPoint.x * toPoint.x + toPoint.y * toPoint.y + toPoint.z * toPoint.z);
         if (dist < 1e-5f) return 1f;
 
         Vector3 dirToPoint = toPoint / dist;
-        Vector3 forward = (transform.rotation * new Vector3(0f, 0f, 1f)).normalized;
+        Vector3 forward = (transform.worldRotation * new Vector3(0f, 0f, 1f)).normalized;
 
         float cos = Vector3.Dot(forward, dirToPoint);
 
@@ -135,7 +135,7 @@ public class SpotLightTrigger : MonoBehaviour
 
     bool HasLineOfSight(Vector3 targetPos)
     {
-        Vector3 origin = transform.position;
+        Vector3 origin = transform.worldPosition;
         Vector3 dir = targetPos - origin;
         float dist = Mathf.Sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
         if (dist < 1e-5f) return true;

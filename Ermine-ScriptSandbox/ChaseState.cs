@@ -69,7 +69,7 @@ public class Chase : MonoBehaviour
                        + new Vector3(0f, rayHeight, 0f)
                        + transform.forward * rayForwardOffset;
 
-        Vector3 toPlayer = (playerGO.transform.position + new Vector3(0f, rayHeight, 0f)) - origin;
+        Vector3 toPlayer = playerGO.transform.position - origin;
 
         float dist = toPlayer.Magnitude;
         if (dist <= 0.0001f) return true;

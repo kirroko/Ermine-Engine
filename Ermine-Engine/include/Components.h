@@ -1754,6 +1754,11 @@ namespace Ermine
 		float gamma = 2.2f;
 		float vignetteIntensity = 0.3f;
 		float vignetteRadius = 0.8f;
+		float vignetteCoverage = 0.0f;
+		float vignetteFalloff = 0.2f;
+		float vignetteMapStrength = 1.0f;
+		Vec3 vignetteMapRGBModifier = Vec3{ 0.0f, 0.0f, 0.0f };
+		std::string vignetteMapPath{};
 		float bloomStrength = 0.04f;
 
 		// Film grain and chromatic aberration
@@ -1762,6 +1767,11 @@ namespace Ermine
 		float grainScale = 1.5f;
 		bool chromaticAberrationEnabled = false;
 		float chromaticAmount = 0.003f;
+		bool radialBlurEnabled = false;
+		float radialBlurStrength = 0.0f;
+		int radialBlurSamples = 12;
+		float radialBlurCenterX = 0.5f;
+		float radialBlurCenterY = 0.5f;
 
 		// FXAA parameters
 		float fxaaSpanMax = 8.0f;
@@ -1837,6 +1847,11 @@ namespace Ermine
 			xproperty::obj_member<"gamma", &GlobalGraphics::gamma>,
 			xproperty::obj_member<"vignetteIntensity", &GlobalGraphics::vignetteIntensity>,
 			xproperty::obj_member<"vignetteRadius", &GlobalGraphics::vignetteRadius>,
+			xproperty::obj_member<"vignetteCoverage", &GlobalGraphics::vignetteCoverage>,
+			xproperty::obj_member<"vignetteFalloff", &GlobalGraphics::vignetteFalloff>,
+			xproperty::obj_member<"vignetteMapStrength", &GlobalGraphics::vignetteMapStrength>,
+			xproperty::obj_member<"vignetteMapRGBModifier", &GlobalGraphics::vignetteMapRGBModifier>,
+			xproperty::obj_member<"vignetteMapPath", &GlobalGraphics::vignetteMapPath>,
 			xproperty::obj_member<"bloomStrength", &GlobalGraphics::bloomStrength>,
 
 			// Film grain and chromatic aberration
@@ -1845,6 +1860,11 @@ namespace Ermine
 			xproperty::obj_member<"grainScale", &GlobalGraphics::grainScale>,
 			xproperty::obj_member<"chromaticAberrationEnabled", &GlobalGraphics::chromaticAberrationEnabled>,
 			xproperty::obj_member<"chromaticAmount", &GlobalGraphics::chromaticAmount>,
+			xproperty::obj_member<"radialBlurEnabled", &GlobalGraphics::radialBlurEnabled>,
+			xproperty::obj_member<"radialBlurStrength", &GlobalGraphics::radialBlurStrength>,
+			xproperty::obj_member<"radialBlurSamples", &GlobalGraphics::radialBlurSamples>,
+			xproperty::obj_member<"radialBlurCenterX", &GlobalGraphics::radialBlurCenterX>,
+			xproperty::obj_member<"radialBlurCenterY", &GlobalGraphics::radialBlurCenterY>,
 
 			// FXAA
 			xproperty::obj_member<"fxaaSpanMax", &GlobalGraphics::fxaaSpanMax>,
@@ -3014,6 +3034,7 @@ namespace Ermine
 					if (js.HasMember("loop") && js["loop"].IsBool())
 						s->loop = js["loop"].GetBool();
 
+#if defined(EE_EDITOR)
 					if (js.HasMember("editorPos") && js["editorPos"].IsArray() && js["editorPos"].Size() == 2)
 					{
 						s->editorPos.x = js["editorPos"][0].GetFloat();
@@ -3025,6 +3046,7 @@ namespace Ermine
 						s->editorPos = ImVec2{ 100.f, 100.f };
 						ImNodes::SetNodeEditorSpacePos(s->id, s->editorPos);
 					}
+#endif
 
 					m_animationGraph->states.push_back(s);
 
@@ -3466,19 +3488,20 @@ namespace Ermine
 	struct NavMeshComponent
 	{
 		// Recast build config
-		float cellSize = 0.05f;
-		float cellHeight = 0.05f;
+		float cellSize = 1.0f;
+		float cellHeight = 0.5f;
 		float agentHeight = 1.0f;
 		float agentRadius = 0.5f;
 		float bakedAgentRadius = 0.0f;
 		float bakedAgentHeight = 0.0f;
-		float agentMaxClimb = 0.0f;
+		float agentMaxClimb = 0.5f;
 		float agentMaxSlope = 45.0f;
 
 		// Debug toggles
 		bool  drawInputTri = false;
 		bool  drawWalkable = true;
 		bool  drawNavMesh = false;
+		bool bakeUsingCustomMesh = false;
 
 		// Recast transient build data
 		struct BuildData;
@@ -3588,6 +3611,7 @@ namespace Ermine
 			out.AddMember("drawInputTri", drawInputTri, alloc);
 			out.AddMember("drawWalkable", drawWalkable, alloc);
 			out.AddMember("drawNavMesh", drawNavMesh, alloc);
+			out.AddMember("bakeUsingCustomMesh", bakeUsingCustomMesh, alloc);
 
 			rapidjson::Value bakedObj(rapidjson::kObjectType);
 
@@ -3630,6 +3654,7 @@ namespace Ermine
 			if (in.HasMember("drawInputTri")) drawInputTri = in["drawInputTri"].GetBool();
 			if (in.HasMember("drawWalkable")) drawWalkable = in["drawWalkable"].GetBool();
 			if (in.HasMember("drawNavMesh")) drawNavMesh = in["drawNavMesh"].GetBool();
+			if (in.HasMember("bakeUsingCustomMesh")) bakeUsingCustomMesh = in["bakeUsingCustomMesh"].GetBool();
 
 			bakedTiles.clear();
 
