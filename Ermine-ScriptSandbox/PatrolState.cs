@@ -57,7 +57,7 @@ public class Patrol : MonoBehaviour
                        + new Vector3(0f, rayHeight, 0f)
                        + transform.forward * rayForwardOffset;
 
-        Vector3 playerPoint = playerGO.transform.position + new Vector3(0f, rayHeight, 0f);
+        Vector3 playerPoint = playerGO.transform.position;
         Vector3 toPlayer = playerPoint - origin;
 
         float dist = toPlayer.Magnitude;
