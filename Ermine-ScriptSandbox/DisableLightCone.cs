@@ -40,11 +40,19 @@ public class DisableLightCone : MonoBehaviour
             GameObject sphere = GameObject.Find("Sphere");
             if (sphere != null)
             {
+                // Capture light cone position before it is moved off-world
+                Vector3 shockwavePos = transform.position;
+
                 DisableLight();
                 sphere.transform.position = new Vector3(0, -100, 0);
                 Physics.SetPosition((ulong)sphere.GetInstanceID(), sphere.transform.position);
                 Physics.RemovePhysic((ulong)sphere.GetInstanceID());
                 GameObject.Destroy(sphere);
+
+                // Spawn shockwave ring at the light cone's position
+                GameObject shockwave = Prefab.Instantiate("../Resources/Prefabs/LightConeShockwave.prefab");
+                if (shockwave != null)
+                    shockwave.transform.position = shockwavePos;
 
                 // Play explode animation
                 anim.SetTrigger("explode");
