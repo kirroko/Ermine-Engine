@@ -3038,12 +3038,17 @@ namespace Ermine
 					{
 						s->editorPos.x = js["editorPos"][0].GetFloat();
 						s->editorPos.y = js["editorPos"][1].GetFloat();
+#ifdef EE_EDITOR
 						ImNodes::SetNodeEditorSpacePos(s->id, s->editorPos);
+#endif // EE_EDITOR
 					}
 					else
 					{
 						s->editorPos = ImVec2{ 100.f, 100.f };
+#ifdef EE_EDITOR
 						ImNodes::SetNodeEditorSpacePos(s->id, s->editorPos);
+#endif // EE_EDITOR
+
 					}
 
 					m_animationGraph->states.push_back(s);

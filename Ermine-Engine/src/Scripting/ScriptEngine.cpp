@@ -872,6 +872,7 @@ namespace
 	MonoClass* s_AudioComponentClass = nullptr;
 	MonoClass* s_SerializeFieldAttr = nullptr;
 	MonoClass* s_AnimatorClass = nullptr;
+	MonoClass* s_MaterialClass = nullptr;
 
 	MonoClass* s_ObjectClass = nullptr;
 	MonoClassField* s_EntityIDField = nullptr;
@@ -1877,6 +1878,79 @@ namespace
 		return &ECS::GetInstance().GetComponent<AudioComponent>(id);
 	}
 
+	Ermine::Material* GetMaterialComponentFromManaged(MonoObject* thisObj)
+	{
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<Ermine::Material>(id))
+		{
+			return nullptr;
+		}
+		return &ECS::GetInstance().GetComponent<Ermine::Material>(id);
+	}
+
+	float icall_material_get_fill(MonoObject* thisObj)
+	{
+		auto* matComp = GetMaterialComponentFromManaged(thisObj);
+		if (!matComp)
+			return 1.0f;
+
+		auto* material = matComp->GetMaterial();
+		if (!material)
+			return 1.0f;
+
+		if (const auto* param = material->GetParameter("materialFillAmount"))
+		{
+			if (!param->floatValues.empty())
+				return param->floatValues[0];
+		}
+
+		return 1.0f;
+	}
+
+	void icall_material_set_fill(MonoObject* thisObj, float value)
+	{
+		using namespace Ermine;
+		const EntityID id = GetEntityIDFromManaged(thisObj);
+
+		auto* matComp = GetMaterialComponentFromManaged(thisObj);
+		if (!matComp)
+		{
+			EE_CORE_WARN("[Material.Fill] Entity {0}: Material component missing", id);
+			return;
+		}
+
+		auto* material = matComp->GetMaterial();
+		if (!material)
+		{
+			EE_CORE_WARN("[Material.Fill] Entity {0}: graphics::Material missing", id);
+			return;
+		}
+
+		if (value < 0.0f) value = 0.0f;
+		if (value > 1.0f) value = 1.0f;
+		material->SetFloat("materialFillAmount", value);
+
+		// Ensure GPU material buffer is updated immediately after script-side changes.
+		auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
+		if (!renderer)
+			return;
+
+		const int materialIndex = material->GetMaterialIndex();
+		if (materialIndex >= 0)
+		{
+			const auto ssboData = material->GetSSBOData();
+			renderer->UpdateMaterialSSBO(ssboData, static_cast<uint32_t>(materialIndex));
+			EE_CORE_INFO("[Material.Fill] Entity {0}: fill={1}, materialIndex={2}", id, value, materialIndex);
+		}
+		else
+		{
+			// Fallback: force material recompilation path if this material is not indexed yet.
+			EE_CORE_WARN("[Material.Fill] Entity {0}: invalid material index ({1}), marking materials dirty", id, materialIndex);
+			renderer->MarkMaterialsDirty();
+		}
+	}
+
 	mono_bool icall_audiocomponent_get_shouldplay(MonoObject* thisObj)
 	{
 		if (auto* ac = GetAudioComponentFromManaged(thisObj))
@@ -2225,6 +2299,23 @@ namespace
 			return obj;
 		}
 
+		// Handle Material component
+		if (klass == s_MaterialClass)
+		{
+			if (!ECS::GetInstance().HasComponent<Ermine::Material>(id))
+				return nullptr;
+
+			auto* dom = Ermine::ECS::GetInstance()
+				.GetSystem<Ermine::scripting::ScriptSystem>()->m_ScriptEngine->GetGameDomain();
+
+			MonoObject* obj = mono_object_new(dom, s_MaterialClass);
+			mono_runtime_object_init(obj);
+			SetEntityIDOnManaged(obj, id);
+			SetComponentGameObject(obj, id);
+
+			return obj;
+		}
+
 		// return back the obj when requesting MonoBehaviour derived -> Script component
 		if (IsSubclassOf(klass, s_MonoBehaviourClass))
 		{
@@ -2264,6 +2355,9 @@ namespace
 
 		if (klass == s_AnimatorClass)
 			return ECS::GetInstance().HasComponent<AnimationComponent>(id);
+
+		if (klass == s_MaterialClass)
+			return ECS::GetInstance().HasComponent<Ermine::Material>(id);
 
 		if (IsSubclassOf(klass, s_MonoBehaviourClass))
 			return ECS::GetInstance().HasComponent<Script>(id);
@@ -3837,6 +3931,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	if (!s_SerializeFieldAttr)
 		s_SerializeFieldAttr = mono_class_from_name(s_APIImage, "ErmineEngine", "SerializeField");
 	s_AnimatorClass = GetAPIClass("ErmineEngine", "Animator");
+	s_MaterialClass = GetAPIClass("ErmineEngine", "Material");
 
 	s_ObjectClass = GetAPIClass("ErmineEngine", "Object");
 	if (s_ObjectClass && !s_EntityIDField)
@@ -3926,6 +4021,11 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.AudioComponent::set_maxDistance", (const void*)icall_audiocomponent_set_maxdistance);
 	mono_add_internal_call("ErmineEngine.AudioComponent::get_followTransform", (const void*)icall_audiocomponent_get_followtransform);
 	mono_add_internal_call("ErmineEngine.AudioComponent::set_followTransform", (const void*)icall_audiocomponent_set_followtransform);
+#pragma endregion
+
+#pragma region Material ICalls
+	mono_add_internal_call("ErmineEngine.Material::Internal_GetFill", (const void*)icall_material_get_fill);
+	mono_add_internal_call("ErmineEngine.Material::Internal_SetFill", (const void*)icall_material_set_fill);
 #pragma endregion
 
 #pragma region Debug ICalls

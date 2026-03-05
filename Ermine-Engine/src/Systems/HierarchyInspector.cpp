@@ -400,6 +400,37 @@ namespace Ermine::editor {
 		return shaders;
 	}
 
+	static std::string ResolveCustomVertexShaderPath(const std::string& fragmentPath) {
+		constexpr const char* kDefaultVertex = "../Resources/Shaders/vertex.glsl";
+		if (fragmentPath.empty()) {
+			return kDefaultVertex;
+		}
+
+		std::filesystem::path fragmentFile(fragmentPath);
+		std::string fragmentName = fragmentFile.filename().string();
+		std::string vertexName = fragmentName;
+
+		const size_t fragmentPos = vertexName.find("fragment");
+		if (fragmentPos != std::string::npos) {
+			vertexName.replace(fragmentPos, std::string("fragment").size(), "vertex");
+		}
+		else if (fragmentFile.extension() == ".frag") {
+			vertexName = fragmentFile.stem().string() + ".vert";
+		}
+		else {
+			return kDefaultVertex;
+		}
+
+		std::filesystem::path vertexPath = fragmentFile.has_parent_path()
+			? (fragmentFile.parent_path() / vertexName)
+			: (std::filesystem::path("../Resources/Shaders") / vertexName);
+
+		if (std::filesystem::exists(vertexPath)) {
+			return vertexPath.generic_string();
+		}
+		return kDefaultVertex;
+	}
+
 	template<typename T>
 	static bool ComponentHeaderWithRemove(const char* headerLabel, EntityID entity,
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen)
@@ -1277,13 +1308,14 @@ namespace Ermine::editor {
 		if (!matComp.customFragmentShader.empty() &&
 			(!gm->GetShader() || gm->GetShader() == nullptr)) {
 			auto& assetManager = AssetManager::GetInstance();
+			const std::string vertexPath = ResolveCustomVertexShaderPath(matComp.customFragmentShader);
 			auto customShader = assetManager.LoadShader(
-				"../Resources/Shaders/vertex.glsl",
+				vertexPath,
 				matComp.customFragmentShader
 			);
 			if (customShader && customShader->IsValid()) {
 				gm->SetShader(customShader);
-				EE_CORE_INFO("Restored custom fragment shader from scene: {0}", matComp.customFragmentShader);
+				EE_CORE_INFO("Restored custom shader pair: vertex='{}', fragment='{}'", vertexPath, matComp.customFragmentShader);
 			}
 			else {
 				EE_CORE_WARN("Failed to restore custom fragment shader: {0}", matComp.customFragmentShader);
@@ -1451,6 +1483,25 @@ namespace Ermine::editor {
 
 		ImGui::SeparatorText("Rendering");
 
+		// --- Fill Amount / Direction ---
+		{
+			float fill = getFloat("materialFillAmount", nullptr, 1.0f);
+			if (ImGui::SliderFloat("Fill", &fill, 0.0f, 1.0f)) {
+				gm->SetFloat("materialFillAmount", std::clamp(fill, 0.0f, 1.0f));
+			}
+
+			Vec3 fillDir = getVec3("materialFillDirection", nullptr, Vec3(0.0f, 1.0f, 0.0f));
+			float dir[3] = { fillDir.x, fillDir.y, fillDir.z };
+			if (ImGui::DragFloat3("Fill Direction", dir, 0.01f, -1.0f, 1.0f)) {
+				Vec3 d(dir[0], dir[1], dir[2]);
+				const float lenSq = d.x * d.x + d.y * d.y + d.z * d.z;
+				if (lenSq < 1e-8f) {
+					d = Vec3(0.0f, 1.0f, 0.0f);
+				}
+				gm->SetVec3("materialFillDirection", d);
+			}
+		}
+
 		// --- Casts Shadows ---
 		{
 			bool castsShadows = getBool("materialCastsShadows", nullptr, matComp.cacheCastsShadows);
@@ -1520,14 +1571,14 @@ namespace Ermine::editor {
 
 						// Load and set the custom shader on the material
 						auto& assetManager = AssetManager::GetInstance();
-						// Use standard forward pass vertex shader with custom fragment
+						const std::string vertexPath = ResolveCustomVertexShaderPath(shaderPath);
 						auto customShader = assetManager.LoadShader(
-							"../Resources/Shaders/vertex.glsl",
+							vertexPath,
 							shaderPath
 						);
 						if (customShader && customShader->IsValid()) {
 							gm->SetShader(customShader);
-							EE_CORE_INFO("Loaded custom fragment shader: {0}", shaderPath);
+							EE_CORE_INFO("Loaded custom shader pair: vertex='{}', fragment='{}'", vertexPath, shaderPath);
 						}
 						else {
 							EE_CORE_WARN("Failed to load custom fragment shader: {0}", shaderPath);
@@ -1560,8 +1611,9 @@ namespace Ermine::editor {
 						matComp.customFragmentShader = shaderPath.string();
 
 						auto& assetManager = AssetManager::GetInstance();
+						const std::string vertexPath = ResolveCustomVertexShaderPath(matComp.customFragmentShader);
 						auto shader = assetManager.LoadShader(
-							"../Resources/Shaders/vertex.glsl",
+							vertexPath,
 							matComp.customFragmentShader
 						);
 
@@ -1628,6 +1680,8 @@ namespace Ermine::editor {
 
 			gm->SetBool("materialCastsShadows", true);
 			matComp.cacheCastsShadows = true;
+			gm->SetFloat("materialFillAmount", 1.0f);
+			gm->SetVec3("materialFillDirection", Vec3(0.0f, 1.0f, 0.0f));
 
 			gm->SetBool("materialHasAlbedoMap", false);
 			setBoolBoth("materialHasNormalMap", "material.hasNormalMap", false);

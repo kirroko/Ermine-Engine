@@ -45,9 +45,21 @@
             "type": "bool",
             "value": true
         },
+        "materialFillAmount": {
+            "type": "float",
+            "value": 1.0
+        },
+        "materialFillDirection": {
+            "type": "vec3",
+            "value": [
+                -0.5,
+                0.0,
+                1.0
+            ]
+        },
         "materialHasAlbedoMap": {
             "type": "bool",
-            "value": false
+            "value": true
         },
         "materialHasNormalMap": {
             "type": "bool",
@@ -68,6 +80,10 @@
         "materialHasEmissiveMap": {
             "type": "bool",
             "value": false
+        },
+        "materialAlbedoMap": {
+            "type": "texture2d",
+            "value": "Resources\\Textures\\Marble 3_Alpha.png"
         }
     },
     "uvTransform": {
@@ -79,5 +95,6 @@
             0.0,
             0.0
         ]
-    }
+    },
+    "customFragmentShader": "../Resources/Shaders/fill_emissive_scroll_fragment.glsl"
 }
