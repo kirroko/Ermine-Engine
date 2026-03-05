@@ -22,15 +22,15 @@
         },
         "GlobalAudioComponent": {
           "masterVolume": 1.0,
-          "musicVolume": 0.25200000405311587,
+          "musicVolume": 0.23999999463558198,
           "sfxVolume": 1.0,
-          "ambienceVolume": 0.052000001072883609,
+          "ambienceVolume": 0.08900000154972077,
           "autoPlay": true,
           "music": [
             {
               "name": "test_music",
-              "path": "../Resources/Audio/NewBGM.wav",
-              "volume": 1.0
+              "path": "../Resources/Audio/SteampunkWeapon_01.wav",
+              "volume": 0.5
             }
           ],
           "sfx": [
@@ -41,8 +41,8 @@
             },
             {
               "name": "Teleport",
-              "path": "../Resources/Audio/Teleport.wav",
-              "volume": 1.0
+              "path": "../Resources/Audio/Player_Dash_v2 1.wav",
+              "volume": 0.6
             },
             {
               "name": "Jump",
@@ -56,13 +56,13 @@
             },
             {
               "name": "UIClick",
-              "path": "../Resources/Audio/UI_Confirm.wav",
+              "path": "../Resources/Audio/UI_Confirm_Smaller.wav",
               "volume": 1.0
             },
             {
               "name": "UIHover",
               "path": "../Resources/Audio/UI_Hover 5.wav",
-              "volume": 1.0
+              "volume": 0.7
             },
             {
               "name": "SwitchOn",
@@ -78,7 +78,7 @@
           "ambience": [
             {
               "name": "Steampunk",
-              "path": "../Resources/Audio/futuristic-factory-noise-002-311136.mp3",
+              "path": "../Resources/Audio/Ambience_Factory_v2.wav",
               "volume": 1.0
             }
           ]
