@@ -3034,6 +3034,7 @@ namespace Ermine
 					if (js.HasMember("loop") && js["loop"].IsBool())
 						s->loop = js["loop"].GetBool();
 
+#if defined(EE_EDITOR)
 					if (js.HasMember("editorPos") && js["editorPos"].IsArray() && js["editorPos"].Size() == 2)
 					{
 						s->editorPos.x = js["editorPos"][0].GetFloat();
@@ -3045,6 +3046,7 @@ namespace Ermine
 						s->editorPos = ImVec2{ 100.f, 100.f };
 						ImNodes::SetNodeEditorSpacePos(s->id, s->editorPos);
 					}
+#endif
 
 					m_animationGraph->states.push_back(s);
 
