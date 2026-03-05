@@ -3945,19 +3945,6 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 	RenderForwardPass(view, projection);
 
 #if defined(EE_EDITOR)
-	if (m_PostProcessBuffer && ECS::GetInstance().GetSystem<Physics>()->wireframe) {
-		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
-		glViewport(0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height);
-
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LEQUAL);
-		glDisable(GL_CULL_FACE);
-
-		if (auto physics = ECS::GetInstance().GetSystem<Physics>()) {
-			physics->DrawDebugPhysics();
-		}
-		RenderDebugLines(view, projection);
-	}
 
 	if (m_PostProcessBuffer)
 	{
@@ -3968,6 +3955,11 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 		glDepthFunc(GL_LEQUAL);
 		glDisable(GL_CULL_FACE);
 
+		if (auto physics = ECS::GetInstance().GetSystem<Physics>())
+		{
+			if (physics->wireframe)
+				physics->DrawDebugPhysics();
+		}
 		// Light probe volume gizmos
 		{
 			auto& ecs = ECS::GetInstance();

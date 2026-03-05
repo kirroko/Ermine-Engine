@@ -72,6 +72,7 @@
   <ItemGroup>
     <Compile Include="AnimationExample.cs" />
     <Compile Include="AttackState.cs" />
+    <Compile Include="SpotLightTrigger.cs" />
     <Compile Include="ChaseState.cs" />
     <Compile Include="CutscenePlayer.cs" />
     <Compile Include="DamagePlayer.cs" />
@@ -100,6 +101,7 @@
     <Compile Include="Test3.cs" />
     <Compile Include="TimedDestroy.cs" />
     <Compile Include="VerticalPlatform.cs" />
+    <Compile Include="VoidDeath.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Ermine-ScriptAssembly\Ermine-ScriptAssembly.csproj">

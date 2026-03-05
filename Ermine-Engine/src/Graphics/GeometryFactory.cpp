@@ -177,7 +177,7 @@ Ermine::Mesh GeometryFactory::CreateCube(float width, float height, float depth)
     vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, tex));
     vbo->Unbind();
 
-    auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
+    auto ibo = std::make_shared<IndexBuffer>(indices.data(), (unsigned int)indices.size());
 
     vao->Unbind();
 
@@ -259,7 +259,7 @@ Ermine::Mesh GeometryFactory::CreateQuad(float width, float height)
     vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, tex));
     vbo->Unbind();
 
-    auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
+    auto ibo = std::make_shared<IndexBuffer>(indices.data(), (unsigned int)indices.size());
 
     vao->Unbind();
 
@@ -381,7 +381,7 @@ Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, u
     vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, tex));
     vbo->Unbind();
 
-    auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
+    auto ibo = std::make_shared<IndexBuffer>(indices.data(), (unsigned int)indices.size());
 
     vao->Unbind();
 
@@ -555,7 +555,7 @@ Ermine::Mesh GeometryFactory::CreateCone(float radius, float height, unsigned in
     vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, tex));
     vbo->Unbind();
 
-    auto ibo = std::make_shared<IndexBuffer>(indices.data(), indices.size() * sizeof(unsigned int));
+    auto ibo = std::make_shared<IndexBuffer>(indices.data(), (unsigned int)indices.size());
 
     auto mesh = Mesh(vao, vbo, ibo);
     mesh.kind = MeshKind::Primitive;
@@ -592,22 +592,17 @@ Ermine::Mesh GeometryFactory::CreateCone(float radius, float height, unsigned in
 
         //physic
         mesh.cpuVertices.clear();
-        mesh.cpuVertices.reserve(indices.size());
+        mesh.cpuVertices.reserve(vertices.size());
 
-        for (size_t i = 0; i < indices.size(); i += 3)
+        for (const auto& v : vertices)
         {
-            unsigned int i0 = indices[i + 0];
-            unsigned int i1 = indices[i + 1];
-            unsigned int i2 = indices[i + 2];
-
-            const auto& v0 = vertices[i0].pos;
-            const auto& v1 = vertices[i1].pos;
-            const auto& v2 = vertices[i2].pos;
-
-            mesh.cpuVertices.push_back(glm::vec3(v0.x, v0.y, v0.z));
-            mesh.cpuVertices.push_back(glm::vec3(v1.x, v1.y, v1.z));
-            mesh.cpuVertices.push_back(glm::vec3(v2.x, v2.y, v2.z));
+            mesh.cpuVertices.emplace_back(v.pos.x, v.pos.y, v.pos.z);
         }
+
+        mesh.cpuIndices.clear();
+        mesh.cpuIndices.reserve(indices.size());
+        for (unsigned int idx : indices)
+            mesh.cpuIndices.push_back((uint32_t)idx);
 
         std::string meshID = "Cone_" + std::to_string(radius) + "_" + std::to_string(height) + "_" + std::to_string(sectors);
         renderer->m_MeshManager.RegisterMesh(meshVertices, indices, meshID);
