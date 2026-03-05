@@ -40,8 +40,9 @@ public class DisableLightCone : MonoBehaviour
             GameObject sphere = GameObject.Find("Sphere");
             if (sphere != null)
             {
-                // Capture light cone position before it is moved off-world
-                Vector3 shockwavePos = transform.position;
+                // Capture world position before the light cone is moved off-world
+                Rigidbody rb = GetComponent<Rigidbody>();
+                Vector3 shockwavePos = rb != null ? rb.position : transform.position;
 
                 DisableLight();
                 sphere.transform.position = new Vector3(0, -100, 0);
