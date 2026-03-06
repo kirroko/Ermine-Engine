@@ -9684,160 +9684,6 @@
       }
     },
     {
-      "id": 212,
-      "components": {
-        "IDComponent": {
-          "guid": "79653bdf78635c43a49cda47d5233a28"
-        },
-        "Transform": {
-          "position": [
-            20.0,
-            -2.25,
-            -15.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            5.0,
-            5.0,
-            5.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Right Platform",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "Mesh": {
-          "kind": "Primitive",
-          "primitive": {
-            "type": "Cube",
-            "size": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        },
-        "PhysicComponent": {
-          "bodyType": "Rigid",
-          "motionType": "Static",
-          "mass": 0.0,
-          "shapeType": "Box",
-          "colliderpivot": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "posx": false,
-          "posy": false,
-          "posz": false,
-          "colliderrot": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotx": false,
-          "roty": false,
-          "rotz": false,
-          "collidersize": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "Material": {
-          "guid": "4739da791c34d245a35c28bb3ea1d20e"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "7eaab91798495543b79cad6d7cefba2e",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 213,
-      "components": {
-        "IDComponent": {
-          "guid": "02cce280af098745bd8f6890e6e2573c"
-        },
-        "Transform": {
-          "position": [
-            20.0,
-            -2.25,
-            -10.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            5.0,
-            5.0,
-            5.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Right Platform (1)",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "Mesh": {
-          "kind": "Primitive",
-          "primitive": {
-            "type": "Cube",
-            "size": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
-        },
-        "PhysicComponent": {
-          "bodyType": "Rigid",
-          "motionType": "Static",
-          "mass": 0.0,
-          "shapeType": "Box",
-          "colliderpivot": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "posx": false,
-          "posy": false,
-          "posz": false,
-          "colliderrot": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotx": false,
-          "roty": false,
-          "rotz": false,
-          "collidersize": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "Material": {
-          "guid": "18d63d460804844b864577d4fc69ae2a"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "7eaab91798495543b79cad6d7cefba2e",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
       "id": 214,
       "components": {
         "IDComponent": {
@@ -23007,11 +22853,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -23839,11 +23685,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -24671,11 +24517,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -25503,11 +25349,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -26335,11 +26181,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -27167,11 +27013,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -27999,11 +27845,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -28831,11 +28677,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -29663,11 +29509,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -30495,11 +30341,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -43420,13 +43266,17 @@
                   "t": 0,
                   "v": 15.0
                 },
+                "eSpeed": {
+                  "t": 0,
+                  "v": 1.0
+                },
                 "doorMoveSpeed": {
                   "t": 0,
                   "v": 1.0
                 },
-                "eSpeed": {
+                "eDuration": {
                   "t": 0,
-                  "v": 1.0
+                  "v": 15.0
                 },
                 "sceneName": {
                   "t": 3,
@@ -43435,10 +43285,6 @@
                 "doorMoveDuration": {
                   "t": 0,
                   "v": 2.0
-                },
-                "eDuration": {
-                  "t": 0,
-                  "v": 15.0
                 },
                 "dSpeed": {
                   "t": 0,
@@ -50672,11 +50518,11 @@
         },
         "Light": {
           "color": [
-            0.795293390750885,
-            0.9695821404457092,
-            0.37704870104789736
+            0.9960784316062927,
+            0.8470588326454163,
+            0.3490196168422699
           ],
-          "intensity": 0.7620000243186951,
+          "intensity": 2.0969998836517336,
           "type": "Point",
           "castsShadows": false,
           "castsRays": false,
@@ -50839,9 +50685,9 @@
         },
         "Light": {
           "color": [
-            0.795293390750885,
-            0.9695821404457092,
-            0.37704870104789736
+            0.9975786805152893,
+            0.8486749529838562,
+            0.35023948550224306
           ],
           "intensity": 0.6949999928474426,
           "type": "Spot",
@@ -51247,13 +51093,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "jumpHeight": {
-                  "t": 0,
-                  "v": 2.0
-                },
                 "mouseHorSens": {
                   "t": 0,
                   "v": 0.10000000149011612
+                },
+                "jumpHeight": {
+                  "t": 0,
+                  "v": 2.0
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -51263,13 +51109,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "camDefaultY": {
-                  "t": 0,
-                  "v": 4.5
-                },
                 "jumpspeed": {
                   "t": 0,
                   "v": 5.0
+                },
+                "camDefaultY": {
+                  "t": 0,
+                  "v": 4.5
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -51281,11 +51127,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
@@ -64595,7 +64441,7 @@
           "position": [
             -47.465816497802737,
             0.00007213926437543705,
-            -23.7303524017334
+            -23.611156463623048
           ],
           "rotation": [
             0.0,
@@ -64945,407 +64791,6 @@
       }
     },
     {
-      "id": 1322,
-      "components": {
-        "IDComponent": {
-          "guid": "c13a689a2763014a839626186e21625a"
-        },
-        "Transform": {
-          "position": [
-            -47.465816497802737,
-            0.00007213926437543705,
-            -33.03934860229492
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "MachineParentPrefab2 (5)",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1323,
-      "components": {
-        "IDComponent": {
-          "guid": "74a26307294bdd489009efd309ef6a25"
-        },
-        "Transform": {
-          "position": [
-            1.9618873596191407,
-            8.030937194824219,
-            0.182342529296875
-          ],
-          "rotation": [
-            0.306716650724411,
-            0.6048611998558044,
-            -0.45929715037345889,
-            0.573684573173523
-          ],
-          "scale": [
-            1.0007452964782715,
-            1.0829790830612183,
-            1.0312049388885499
-          ]
-        },
-        "Light": {
-          "color": [
-            0.3803921639919281,
-            0.7764706015586853,
-            0.7529411911964417
-          ],
-          "intensity": 2.5350000858306886,
-          "type": "Spot",
-          "castsShadows": true,
-          "castsRays": true,
-          "innerAngle": 9.100000381469727,
-          "outerAngle": 36.599998474121097,
-          "radius": 13.569999694824219
-        },
-        "ObjectMetaData": {
-          "name": "Machine Light 2",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "parentGuid": "c13a689a2763014a839626186e21625a",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1324,
-      "components": {
-        "IDComponent": {
-          "guid": "bd36a905e7df7c44b91d3217a58c3555"
-        },
-        "Transform": {
-          "position": [
-            2.679469108581543,
-            6.959287643432617,
-            -0.03382110595703125
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "Light": {
-          "color": [
-            0.3796616494655609,
-            0.7745097875595093,
-            0.7512834072113037
-          ],
-          "intensity": 1.1979999542236329,
-          "type": "Point",
-          "castsShadows": true,
-          "castsRays": false,
-          "innerAngle": -1.0,
-          "outerAngle": -1.0,
-          "radius": 10.9399995803833
-        },
-        "ObjectMetaData": {
-          "name": "Machine Light 1",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "parentGuid": "c13a689a2763014a839626186e21625a",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1325,
-      "components": {
-        "IDComponent": {
-          "guid": "330f7d78f0262f438581b7ab8ca7c564"
-        },
-        "Transform": {
-          "position": [
-            2.1566877365112306,
-            0.6808373332023621,
-            2.345691680908203
-          ],
-          "rotation": [
-            0.0,
-            0.7071068286895752,
-            0.0,
-            0.7071067094802856
-          ],
-          "scale": [
-            0.029999645426869394,
-            0.029999999329447748,
-            0.029999645426869394
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "machine1 (2)",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "PhysicComponent": {
-          "bodyType": "Rigid",
-          "motionType": "Static",
-          "mass": 0.0,
-          "shapeType": "Capsule",
-          "colliderpivot": [
-            -2.25,
-            4.5,
-            -2.200000047683716
-          ],
-          "posx": false,
-          "posy": false,
-          "posz": false,
-          "colliderrot": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotx": false,
-          "roty": false,
-          "rotz": false,
-          "collidersize": [
-            150.0,
-            250.0,
-            1.0
-          ]
-        },
-        "ModelComponent": {
-          "model": "ART1_machine_low.fbx",
-          "isSkinFile": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "c13a689a2763014a839626186e21625a",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1326,
-      "components": {
-        "IDComponent": {
-          "guid": "9b28936bd4d32e489415881186f08006"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            -542.9864501953125,
-            -2779.45556640625
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            100.0,
-            100.0,
-            100.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "330f7d78f0262f438581b7ab8ca7c564",
-          "depth": 2
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1327,
-      "components": {
-        "IDComponent": {
-          "guid": "a3b279ba733bc743a629de31fc6c92e9"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            -542.9864501953125,
-            -2779.45556640625
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            100.0,
-            100.0,
-            100.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "d1390df6197190429507c752b4df35b6"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "330f7d78f0262f438581b7ab8ca7c564",
-          "depth": 2
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1328,
-      "components": {
-        "IDComponent": {
-          "guid": "57446869c3164c4abaad7e8d66d009b9"
-        },
-        "Transform": {
-          "position": [
-            -47.568687438964847,
-            2.776486396789551,
-            -32.779972076416019
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "GPUParticleEmitter": {
-          "active": true,
-          "maxParticles": 256,
-          "emissionShape": 0,
-          "localPositionOffset": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "overallScale": 1.0,
-          "spawnBoxExtents": [
-            0.5,
-            0.5,
-            0.5
-          ],
-          "spawnRadius": 0.49000000953674319,
-          "spawnRadiusInner": 0.0,
-          "spawnRate": 4.0,
-          "burstCountMin": 0,
-          "burstCountMax": 0,
-          "burstInterval": 0.0,
-          "burstOnStart": false,
-          "directionMode": 1,
-          "direction": [
-            0.0,
-            1.0,
-            0.0
-          ],
-          "coneAngle": 12.100000381469727,
-          "coneInnerAngle": 6.5,
-          "speedMin": 0.07999999821186066,
-          "speedMax": 6.179999828338623,
-          "gravity": [
-            0.0,
-            0.5,
-            0.0
-          ],
-          "drag": 0.6700000166893005,
-          "turbulenceStrength": 0.0,
-          "turbulenceScale": 1.0,
-          "boundsMode": 2,
-          "boundsShape": 1,
-          "boundsBoxExtents": [
-            1.0,
-            4.21999979019165,
-            1.0
-          ],
-          "boundsRadius": 4.610000133514404,
-          "boundsRadiusInner": 0.0,
-          "renderMode": 0,
-          "smokeOpacity": 0.6000000238418579,
-          "smokeSoftness": 0.5,
-          "smokeNoiseScale": 0.15000000596046449,
-          "smokeDistortScale": 0.25,
-          "smokeDistortStrength": 0.3499999940395355,
-          "smokePuffScale": 0.3499999940395355,
-          "smokePuffStrength": 0.6000000238418579,
-          "smokeStretch": 0.5,
-          "smokeUpBias": 0.20000000298023225,
-          "smokeDepthFade": 6.0,
-          "electricIntensity": 1.0,
-          "electricFrequency": 8.0,
-          "electricBoltThickness": 0.07999999821186066,
-          "electricBoltVariation": 1.5,
-          "electricGlow": 0.5,
-          "electricBoltCount": 3,
-          "colorStart": [
-            0.19999998807907105,
-            0.9644443392753601,
-            1.0
-          ],
-          "colorEnd": [
-            0.10000000149011612,
-            0.10000000149011612,
-            0.10000000149011612
-          ],
-          "alphaStart": 1.0,
-          "alphaEnd": 0.0,
-          "sizeStartMin": 0.24400000274181367,
-          "sizeStartMax": 0.3490000069141388,
-          "sizeEndMin": 0.019999999552965165,
-          "sizeEndMax": 0.05999999865889549,
-          "lifetimeMin": 1.7999999523162842,
-          "lifetimeMax": 3.4000000953674318,
-          "sparkleShape": 0
-        },
-        "ObjectMetaData": {
-          "name": "MachineBubbles (3)",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
       "id": 1329,
       "components": {
         "IDComponent": {
@@ -65467,16 +64912,156 @@
       }
     },
     {
-      "id": 1330,
+      "id": 1332,
       "components": {
         "IDComponent": {
-          "guid": "a4b8d064b92f6843a321a96718a044f0"
+          "guid": "ed159bd756d2524b910370bb4cf164d7"
         },
         "Transform": {
           "position": [
-            -47.65281295776367,
-            4.618564128875732,
-            -32.91902542114258
+            16.930131912231447,
+            -5.68583345413208,
+            -17.414756774902345
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.024536537006497384,
+            0.015672309324145318,
+            0.026682615280151368
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "wall11 (68)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            3.1500000953674318,
+            6.449999809265137,
+            2.5999999046325685
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            300.0,
+            500.0,
+            250.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_wall_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1333,
+      "components": {
+        "IDComponent": {
+          "guid": "ba0edb967a6a4c4cbbaf2545f9b7cb55"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "970c7e45e285ad44a690b5aaf79f9d8a"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "ed159bd756d2524b910370bb4cf164d7",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1346,
+      "components": {
+        "IDComponent": {
+          "guid": "1929a6ea24f5f7499a984a07ad9f175e"
+        },
+        "Transform": {
+          "position": [
+            -47.465816497802737,
+            0.00007213926437543705,
+            -33.38175964355469
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "MachineParentPrefab2 (5)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1347,
+      "components": {
+        "IDComponent": {
+          "guid": "51a7efd3cd0602438e1283a4d6a03230"
+        },
+        "Transform": {
+          "position": [
+            -0.20100879669189454,
+            4.552406311035156,
+            0.19293212890625
           ],
           "rotation": [
             0.0,
@@ -65491,7 +65076,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "MachineLiquid (1)",
+          "name": "MachineLiquid",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -65500,16 +65085,17 @@
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "depth": 0
+          "parentGuid": "1929a6ea24f5f7499a984a07ad9f175e",
+          "depth": 1
         },
         "GlobalTransform": {}
       }
     },
     {
-      "id": 1331,
+      "id": 1348,
       "components": {
         "IDComponent": {
-          "guid": "683ba7014acb214aa42da18d336352b0"
+          "guid": "7fcfb1692552c14f9a1414cd06dc96e2"
         },
         "Transform": {
           "position": [
@@ -65538,8 +65124,627 @@
           "guid": "12d919d9a046ed42a644ea39a3360241"
         },
         "HierarchyComponent": {
-          "parentGuid": "a4b8d064b92f6843a321a96718a044f0",
+          "parentGuid": "51a7efd3cd0602438e1283a4d6a03230",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1349,
+      "components": {
+        "IDComponent": {
+          "guid": "999cb3bba624ec4b9aa987ceb50ceeb5"
+        },
+        "Transform": {
+          "position": [
+            1.9618873596191407,
+            8.030937194824219,
+            0.182342529296875
+          ],
+          "rotation": [
+            0.306716650724411,
+            0.6048611998558044,
+            -0.45929715037345889,
+            0.573684573173523
+          ],
+          "scale": [
+            1.0007452964782715,
+            1.0829790830612183,
+            1.0312049388885499
+          ]
+        },
+        "Light": {
+          "color": [
+            0.3803921639919281,
+            0.7764706015586853,
+            0.7529411911964417
+          ],
+          "intensity": 2.5350000858306886,
+          "type": "Spot",
+          "castsShadows": true,
+          "castsRays": true,
+          "innerAngle": 9.100000381469727,
+          "outerAngle": 36.599998474121097,
+          "radius": 13.569999694824219
+        },
+        "ObjectMetaData": {
+          "name": "Machine Light 2",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "1929a6ea24f5f7499a984a07ad9f175e",
           "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1350,
+      "components": {
+        "IDComponent": {
+          "guid": "97720b745c9718479370e202ff4ccfbe"
+        },
+        "Transform": {
+          "position": [
+            2.679469108581543,
+            6.959287643432617,
+            -0.03382110595703125
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            0.3796616494655609,
+            0.7745097875595093,
+            0.7512834072113037
+          ],
+          "intensity": 1.1979999542236329,
+          "type": "Point",
+          "castsShadows": true,
+          "castsRays": false,
+          "innerAngle": -1.0,
+          "outerAngle": -1.0,
+          "radius": 10.9399995803833
+        },
+        "ObjectMetaData": {
+          "name": "Machine Light 1",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "1929a6ea24f5f7499a984a07ad9f175e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1351,
+      "components": {
+        "IDComponent": {
+          "guid": "5d686860c7238f4995adc228bfff1041"
+        },
+        "Transform": {
+          "position": [
+            2.1566877365112306,
+            0.6808373332023621,
+            2.345691680908203
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.029999645426869394,
+            0.029999999329447748,
+            0.029999645426869394
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "machine1 (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Capsule",
+          "colliderpivot": [
+            -2.25,
+            4.5,
+            -2.200000047683716
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            150.0,
+            250.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_machine_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "1929a6ea24f5f7499a984a07ad9f175e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1352,
+      "components": {
+        "IDComponent": {
+          "guid": "b2a1e5a818d67a44a1399ad240469886"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -542.9864501953125,
+            -2779.45556640625
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            100.0,
+            100.0,
+            100.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "5d686860c7238f4995adc228bfff1041",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1353,
+      "components": {
+        "IDComponent": {
+          "guid": "166c29c1864f5749874f361a639fcc3d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -542.9864501953125,
+            -2779.45556640625
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            100.0,
+            100.0,
+            100.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "d1390df6197190429507c752b4df35b6"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "5d686860c7238f4995adc228bfff1041",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1354,
+      "components": {
+        "IDComponent": {
+          "guid": "c130db2d62fc3745b5910491174b2a03"
+        },
+        "Transform": {
+          "position": [
+            -47.568687438964847,
+            2.776486396789551,
+            -33.326560974121097
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "GPUParticleEmitter": {
+          "active": true,
+          "maxParticles": 256,
+          "emissionShape": 0,
+          "localPositionOffset": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "overallScale": 1.0,
+          "spawnBoxExtents": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "spawnRadius": 0.49000000953674319,
+          "spawnRadiusInner": 0.0,
+          "spawnRate": 4.0,
+          "burstCountMin": 0,
+          "burstCountMax": 0,
+          "burstInterval": 0.0,
+          "burstOnStart": false,
+          "directionMode": 1,
+          "direction": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "coneAngle": 12.100000381469727,
+          "coneInnerAngle": 6.5,
+          "speedMin": 0.07999999821186066,
+          "speedMax": 6.179999828338623,
+          "gravity": [
+            0.0,
+            0.5,
+            0.0
+          ],
+          "drag": 0.6700000166893005,
+          "turbulenceStrength": 0.0,
+          "turbulenceScale": 1.0,
+          "boundsMode": 2,
+          "boundsShape": 1,
+          "boundsBoxExtents": [
+            1.0,
+            4.21999979019165,
+            1.0
+          ],
+          "boundsRadius": 4.610000133514404,
+          "boundsRadiusInner": 0.0,
+          "renderMode": 0,
+          "smokeOpacity": 0.6000000238418579,
+          "smokeSoftness": 0.5,
+          "smokeNoiseScale": 0.15000000596046449,
+          "smokeDistortScale": 0.25,
+          "smokeDistortStrength": 0.3499999940395355,
+          "smokePuffScale": 0.3499999940395355,
+          "smokePuffStrength": 0.6000000238418579,
+          "smokeStretch": 0.5,
+          "smokeUpBias": 0.20000000298023225,
+          "smokeDepthFade": 6.0,
+          "electricIntensity": 1.0,
+          "electricFrequency": 8.0,
+          "electricBoltThickness": 0.07999999821186066,
+          "electricBoltVariation": 1.5,
+          "electricGlow": 0.5,
+          "electricBoltCount": 3,
+          "colorStart": [
+            0.19999998807907105,
+            0.9644443392753601,
+            1.0
+          ],
+          "colorEnd": [
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612
+          ],
+          "alphaStart": 1.0,
+          "alphaEnd": 0.0,
+          "sizeStartMin": 0.24400000274181367,
+          "sizeStartMax": 0.3490000069141388,
+          "sizeEndMin": 0.019999999552965165,
+          "sizeEndMax": 0.05999999865889549,
+          "lifetimeMin": 1.7999999523162842,
+          "lifetimeMax": 3.4000000953674318,
+          "sparkleShape": 0
+        },
+        "ObjectMetaData": {
+          "name": "MachineBubbles (3)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1355,
+      "components": {
+        "IDComponent": {
+          "guid": "20f5f1b248a69f429aa3a98eae98dadf"
+        },
+        "Transform": {
+          "position": [
+            -33.381900787353519,
+            8.555654525756836,
+            -47.997657775878909
+          ],
+          "rotation": [
+            0.7105912566184998,
+            0.0,
+            0.0,
+            0.703605055809021
+          ],
+          "scale": [
+            1.0,
+            0.9999998211860657,
+            0.9999997019767761
+          ]
+        },
+        "Light": {
+          "color": [
+            0.9960784316062927,
+            0.8470588326454163,
+            0.3490196168422699
+          ],
+          "intensity": 0.6380000114440918,
+          "type": "Spot",
+          "castsShadows": true,
+          "castsRays": true,
+          "innerAngle": 7.099999904632568,
+          "outerAngle": 48.099998474121097,
+          "radius": 12.789999961853028
+        },
+        "ObjectMetaData": {
+          "name": "AreaSpotlight",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "bd48c4c40ea40e41b2a7641fc822eb95",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1356,
+      "components": {
+        "IDComponent": {
+          "guid": "568db9c64ca28445994b408e457f9641"
+        },
+        "Transform": {
+          "position": [
+            -33.3824462890625,
+            7.7413153648376469,
+            -47.91596221923828
+          ],
+          "rotation": [
+            0.7105912566184998,
+            0.0,
+            0.0,
+            0.703605055809021
+          ],
+          "scale": [
+            1.0,
+            0.9999998211860657,
+            0.9999997019767761
+          ]
+        },
+        "Light": {
+          "color": [
+            0.9960784316062927,
+            0.8470588326454163,
+            0.3490196168422699
+          ],
+          "intensity": 0.39500001072883608,
+          "type": "Point",
+          "castsShadows": true,
+          "castsRays": true,
+          "innerAngle": 7.099999904632568,
+          "outerAngle": 38.29999923706055,
+          "radius": 12.9399995803833
+        },
+        "ObjectMetaData": {
+          "name": "AreaSpotlight (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "bd48c4c40ea40e41b2a7641fc822eb95",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1357,
+      "components": {
+        "IDComponent": {
+          "guid": "fe836c0f1a622c46bcb6ea794d9b83c6"
+        },
+        "Transform": {
+          "position": [
+            -33.401527404785159,
+            10.591036796569825,
+            -46.51630401611328
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.014999999664723874,
+            0.014999999664723874,
+            0.014999999664723874
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Ceiling Lamp",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_CeilingLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "bd48c4c40ea40e41b2a7641fc822eb95",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1358,
+      "components": {
+        "IDComponent": {
+          "guid": "c600391e40ddce47926f164761dbc645"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_CeilingLight.fbx_pCylinder3_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "9951b3d68d7ee04a9141ac9287fc7944"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "fe836c0f1a622c46bcb6ea794d9b83c6",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1359,
+      "components": {
+        "IDComponent": {
+          "guid": "445db8307cbd2040bb757b0fa6d0c140"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_CeilingLight.fbx_pCylinder3_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "96fba8f71323ba4aa5d617b0cffe8d5d"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "fe836c0f1a622c46bcb6ea794d9b83c6",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1360,
+      "components": {
+        "IDComponent": {
+          "guid": "bd48c4c40ea40e41b2a7641fc822eb95"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "CeilingLampParent",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
         },
         "GlobalTransform": {}
       }
