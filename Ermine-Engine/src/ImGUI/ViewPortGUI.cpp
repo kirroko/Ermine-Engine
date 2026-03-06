@@ -57,6 +57,18 @@ namespace
 	ImTextureID gIconStop = 0;
 	bool gIconsLoaded = false;
 
+	void EnterPlayModeWithRendererRebuild()
+	{
+		EditorGUI::s_state = EditorGUI::SimState::playing;
+		SceneManager::GetInstance().SaveTemp();
+
+		if (auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>()) {
+			renderer->MarkMaterialsDirty();
+			renderer->CompileMaterials();
+			renderer->ForceDrawDataRebuild();
+		}
+	}
+
 	struct ViewportRect
 	{
 		ImVec2 min{};
@@ -300,8 +312,7 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 		ImGui::BeginDisabled(playing);
 		if (DrawIconOrTextButton(gIconPlay, "Play", iconSize))
 		{
-			EditorGUI::s_state = EditorGUI::SimState::playing;
-			SceneManager::GetInstance().SaveTemp();
+			EnterPlayModeWithRendererRebuild();
 			EE_CORE_INFO("Simulation: Play");
 		}
 		if (ImGui::IsItemHovered())
@@ -1202,8 +1213,7 @@ void Ermine::ViewPortGUI::Update()
 	}
 	else if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_P))
 	{
-		EditorGUI::s_state = EditorGUI::SimState::playing;
-		SceneManager::GetInstance().SaveTemp();
+		EnterPlayModeWithRendererRebuild();
 	}
 
 	if (Input::IsKeyDownEditor(GLFW_KEY_LEFT_CONTROL) && Input::IsKeyPressedEditor(GLFW_KEY_Z))

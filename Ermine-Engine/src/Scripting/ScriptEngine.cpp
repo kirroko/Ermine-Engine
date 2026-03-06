@@ -1941,7 +1941,6 @@ namespace
 		{
 			const auto ssboData = material->GetSSBOData();
 			renderer->UpdateMaterialSSBO(ssboData, static_cast<uint32_t>(materialIndex));
-			EE_CORE_INFO("[Material.Fill] Entity {0}: fill={1}, materialIndex={2}", id, value, materialIndex);
 		}
 		else
 		{

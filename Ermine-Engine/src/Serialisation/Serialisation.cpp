@@ -991,6 +991,11 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
             renderer->m_GlobalGraphics.Deserialize(d["globalGraphics"]);
             renderer->ApplyFromGlobalGraphics();
         }
+
+        // After deserialization, force material compilation first, then full draw-data rebuild.
+        renderer->MarkMaterialsDirty();
+        renderer->CompileMaterials();
+        renderer->ForceDrawDataRebuild();
     }
 }
 

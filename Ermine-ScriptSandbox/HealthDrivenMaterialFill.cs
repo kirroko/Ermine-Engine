@@ -4,7 +4,6 @@ using ErmineEngine;
 public class HealthDrivenMaterialFill : MonoBehaviour
 {
     public string healthBarName = "Healthbar";
-    public bool enableDebugLogs = true;
 
     private Material targetMaterial;
     private GameObject healthSource;
@@ -17,7 +16,6 @@ public class HealthDrivenMaterialFill : MonoBehaviour
         ResolveHealthSource();
         SubscribeHealthEvent();
         SyncFromCurrentHealth(true);
-        LogDebug("Start complete");
     }
 
     void OnEnable()
@@ -41,11 +39,9 @@ public class HealthDrivenMaterialFill : MonoBehaviour
             targetMaterial = gameObject.GetComponent<Material>();
 
         if (targetMaterial == null)
-            Debug.LogWarning("HealthDrivenMaterialFill: attached entity has no Material component.");
+            return;
         else
-        {
             targetFill = targetMaterial.fill;
-        }
     }
 
     private void ResolveHealthSource()
@@ -96,14 +92,6 @@ public class HealthDrivenMaterialFill : MonoBehaviour
         float ratio = (maxHealth > 0.0f) ? (health / maxHealth) : 0.0f;
         ratio = Mathf.Clamp(ratio, 0.0f, 1.0f);
         targetFill = ratio;
-        LogDebug("ApplyHealth health={0}, max={1}, ratio={2}, immediate={3}", health, maxHealth, ratio, immediate);
         targetMaterial.fill = targetFill;
-        LogDebug("Set material.fill={0}", targetFill);
-    }
-
-    private void LogDebug(string format, params object[] args)
-    {
-        if (!enableDebugLogs) return;
-        Debug.Log("[HealthDrivenMaterialFill] " + string.Format(format, args));
     }
 }

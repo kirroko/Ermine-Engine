@@ -124,6 +124,37 @@ namespace {
 		return std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z);
 	}
 
+	inline std::string ResolveCustomVertexShaderPath(const std::string& fragmentPath)
+	{
+		constexpr const char* kDefaultVertex = "../Resources/Shaders/vertex.glsl";
+		if (fragmentPath.empty()) {
+			return kDefaultVertex;
+		}
+
+		std::filesystem::path fragmentFile(fragmentPath);
+		std::string vertexName = fragmentFile.filename().string();
+
+		const size_t fragmentPos = vertexName.find("fragment");
+		if (fragmentPos != std::string::npos) {
+			vertexName.replace(fragmentPos, std::string("fragment").size(), "vertex");
+		}
+		else if (fragmentFile.extension() == ".frag") {
+			vertexName = fragmentFile.stem().string() + ".vert";
+		}
+		else {
+			return kDefaultVertex;
+		}
+
+		std::filesystem::path vertexPath = fragmentFile.has_parent_path()
+			? (fragmentFile.parent_path() / vertexName)
+			: (std::filesystem::path("../Resources/Shaders") / vertexName);
+
+		if (std::filesystem::exists(vertexPath)) {
+			return vertexPath.generic_string();
+		}
+		return kDefaultVertex;
+	}
+
 	inline glm::vec3 ExtractWorldPosition(const glm::mat4& worldMatrix)
 	{
 		return glm::vec3(worldMatrix[3]);
@@ -5268,10 +5299,6 @@ void Renderer::UpdateMaterialSSBO(const graphics::MaterialSSBO& materialData, ui
 		EE_CORE_ERROR("Failed to update material at index {0}, error: {1}",
 			materialIndex, error);
 	}
-	else
-	{
-		EE_CORE_INFO("[Material.SSBO] Updated index={0}, fillAmount={1}", materialIndex, materialData.fillAmount);
-	}
 
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
@@ -8315,6 +8342,24 @@ void Renderer::CompileMaterials()
 		if (!material) {
 			EE_CORE_WARN("Entity {0} has null material", entity);
 			continue;
+		}
+
+		// Ensure custom shader metadata and shader object are restored outside editor UI code.
+		auto& assets = AssetManager::GetInstance();
+		if (materialComponent.customFragmentShader.empty() && materialComponent.materialGuid.IsValid()) {
+			if (const std::string* frag = assets.GetMaterialCustomFragmentShader(materialComponent.materialGuid)) {
+				materialComponent.customFragmentShader = *frag;
+			}
+		}
+		if (!materialComponent.customFragmentShader.empty() && !HasCustomShader(material)) {
+			const std::string vertexPath = ResolveCustomVertexShaderPath(materialComponent.customFragmentShader);
+			auto shader = assets.LoadShader(vertexPath, materialComponent.customFragmentShader);
+			if (shader && shader->IsValid()) {
+				material->SetShader(shader);
+			}
+		}
+		if (auto param = material->GetParameter("materialCastsShadows"); !param || param->boolValue != materialComponent.cacheCastsShadows) {
+			material->SetBool("materialCastsShadows", materialComponent.cacheCastsShadows);
 		}
 
 		// Check if we've already seen this material
