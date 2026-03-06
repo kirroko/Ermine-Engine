@@ -31,8 +31,10 @@ void main()
 
     float dirLenSq = dot(vFillScrollDirUV, vFillScrollDirUV);
     vec2 scrollDir = (dirLenSq > 1e-8) ? (vFillScrollDirUV * inversesqrt(dirLenSq)) : vec2(0.0);
+    // Keep phase bounded to avoid time-growing UV warping on curved surfaces.
+    float scrollPhase = fract(u_FillScrollSpeed * u_Time);
     // Subtract UV offset so perceived texture motion travels toward fill direction.
-    vec2 uv = vBaseUV - (scrollDir * u_FillScrollSpeed * u_Time);
+    vec2 uv = vBaseUV - (scrollDir * scrollPhase);
 
     vec4 albedo = vAlbedo;
     if ((vTextureFlags & MAT_FLAG_ALBEDO_MAP) != 0u && vAlbedoMapIndex >= 0) {

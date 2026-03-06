@@ -52,8 +52,8 @@
         "materialFillDirection": {
             "type": "vec3",
             "value": [
+                -0.1,
                 -0.5,
-                0.0,
                 1.0
             ]
         },
@@ -83,7 +83,7 @@
         },
         "materialAlbedoMap": {
             "type": "texture2d",
-            "value": "Resources\\Textures\\Marble 3_Alpha.png"
+            "value": "Resources\\Textures\\Marble 10_Alpha.png"
         }
     },
     "uvTransform": {
