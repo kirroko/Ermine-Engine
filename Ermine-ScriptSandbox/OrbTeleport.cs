@@ -306,6 +306,17 @@ public class OrbTeleport : MonoBehaviour
 
         timeSinceLastDamage = 0f; // reset regen timer
         GameplayHUD.SetHealth(healthBar, health);
+
+        // Play health drain SFX based on health percentage after damage
+        float maxHealth = GameplayHUD.GetMaxHealth(healthBar);
+        float healthPercent = maxHealth > 0f ? (health / maxHealth) * 100f : 0f;
+
+        if (healthPercent <= 30f)
+            GlobalAudio.PlaySFX("HealthDrain3");      // danger  - loudest
+        else if (healthPercent <= 60f)
+            GlobalAudio.PlaySFX("HealthDrain2");      // caution - medium
+        else
+            GlobalAudio.PlaySFX("HealthDrain1");      // safe    - softest
     }
 
     void HealDamage(float heal)

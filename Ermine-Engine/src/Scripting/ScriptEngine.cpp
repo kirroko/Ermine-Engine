@@ -1474,6 +1474,67 @@ namespace
 		SetComponentGameObject(obj, children[index]);
 		return obj;
 	}
+	ManagedVector3 icall_transform_get_world_position(MonoObject* thisObj)
+	{
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		auto& ecs = ECS::GetInstance();
+
+		if (id == 0 || !ecs.IsEntityValid(id))
+			return { 0.f, 0.f, 0.f };
+
+		if (auto hs = ecs.GetSystem<HierarchySystem>())
+		{
+			Ermine::Vec3 wp = hs->GetWorldPosition(id);
+			return ToManagedVec(wp);
+		}
+
+		// fallback (no hierarchy system)
+		if (ecs.HasComponent<Transform>(id))
+			return ToManagedVec(ecs.GetComponent<Transform>(id).position);
+
+		return { 0.f, 0.f, 0.f };
+	}
+
+	ManagedQuaternion icall_transform_get_world_rotation(MonoObject* thisObj)
+	{
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		auto& ecs = ECS::GetInstance();
+
+		if (id == 0 || !ecs.IsEntityValid(id))
+			return { .x = 0.f, .y = 0.f, .z = 0.f, .w = 1.f };
+
+		if (auto hs = ecs.GetSystem<HierarchySystem>())
+		{
+			Quaternion wr = hs->GetWorldRotation(id);
+			return ToManagedQuat(wr);
+		}
+
+		// fallback (no hierarchy system)
+		if (ecs.HasComponent<Transform>(id))
+			return ToManagedQuat(ecs.GetComponent<Transform>(id).rotation);
+
+		return { .x = 0.f, .y = 0.f, .z = 0.f, .w = 1.f };
+	}
+
+	ManagedVector3 icall_transform_get_world_scale(MonoObject* thisObj)
+	{
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		auto& ecs = ECS::GetInstance();
+
+		if (id == 0 || !ecs.IsEntityValid(id))
+			return { 1.f, 1.f, 1.f };
+
+		if (auto hs = ecs.GetSystem<HierarchySystem>())
+			return ToManagedVec(hs->GetWorldScale(id));
+
+		if (ecs.HasComponent<Transform>(id))
+			return ToManagedVec(ecs.GetComponent<Transform>(id).scale);
+
+		return { 1.f, 1.f, 1.f };
+	}
 #pragma endregion
 
 #pragma region Rigidbody ICalls
@@ -3957,6 +4018,9 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Transform::Internal_RemoveChild", (const void*)icall_transform_remove_child);
 	mono_add_internal_call("ErmineEngine.Transform::Internal_GetChildTransformByName", (const void*)icall_transform_get_transform_by_name);
 	mono_add_internal_call("ErmineEngine.Transform::Internal_GetChildTransformByIndex", (const void*)icall_transform_get_transform_by_index);
+	mono_add_internal_call("ErmineEngine.Transform::Internal_GetWorldPosition",(const void*)icall_transform_get_world_position);
+	mono_add_internal_call("ErmineEngine.Transform::Internal_GetWorldRotation",(const void*)icall_transform_get_world_rotation);
+	mono_add_internal_call("ErmineEngine.Transform::Internal_GetWorldScale",(const void*)icall_transform_get_world_scale);
 #pragma endregion
 
 #pragma region Rigidbody ICalls

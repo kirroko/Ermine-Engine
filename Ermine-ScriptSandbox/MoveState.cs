@@ -7,7 +7,7 @@ public class Move : MonoBehaviour
     public float reachDist = 0.6f;
 
     public float viewDistance = 15.0f;
-    public float rayHeight = 0.8f;
+    public float rayHeight = 5.5f;
     public float rayForwardOffset = 2.0f;
 
     public float turnCooldown = 0.5f; // prevents spam turning
@@ -35,6 +35,16 @@ public class Move : MonoBehaviour
     public static bool RightClickStunArmed = false;
     private float armTimer = 0.0f;
 
+    public float edgeCheckForward = 1.0f;     // how far ahead to test for ground
+    public float edgeCheckUp = 2.0f;          // how high above to start the downward ray
+    public float edgeCheckDown = 5.0f;        // how far down to raycast
+
+    public float stuckTimeToTurn = 0.6f;      // seconds stuck before turning
+    public float stuckMoveEps = 0.02f;        // how little movement counts as "stuck"
+    private Vector3 lastPos;
+    private float stuckTimer = 0f;
+
+    private GameObject rayDebug;
     private void CachePlayerIfNeeded()
     {
         if (playerGO == null)
@@ -50,7 +60,7 @@ public class Move : MonoBehaviour
                        + new Vector3(0f, rayHeight, 0f)
                        + transform.forward * rayForwardOffset;
 
-        Vector3 playerPoint = playerGO.transform.position + new Vector3(0f, rayHeight, 0f);
+        Vector3 playerPoint = playerGO.transform.position;
         Vector3 toPlayer = playerPoint - origin;
 
         float dist = toPlayer.Magnitude;
@@ -60,6 +70,7 @@ public class Move : MonoBehaviour
         Vector3 dirToPlayer = toPlayer / dist;
 
         RaycastHit hit;
+        
         bool didHit = Physics.Raycast(origin, dirToPlayer, out hit, dist);
         if (!didHit) return false;
 
@@ -83,6 +94,13 @@ public class Move : MonoBehaviour
     void Start()
     {
         entityID = (ulong)gameObject.GetInstanceID();
+
+        lastPos = transform.position;
+
+        // this can be used for the enemy lightcone to damage player
+        //rayDebug = Prefab.Instantiate("../Resources/Prefabs/Sphere.prefab");
+        //rayDebug.name = "RayDebug";
+        //rayDebug.transform.scale = new Vector3(0.2f, 0.2f, 0.2f);
 
         Vector3 f = transform.forward;
         if (Math.Abs(f.x) >= Math.Abs(f.z))
@@ -136,14 +154,32 @@ public class Move : MonoBehaviour
         if (repathTimer > 0f) repathTimer -= Time.deltaTime;
 
         // only check turning if cooldown is over
-        if (turnTimer <= 0f && HitsSomethingInFront())
-        {
-            TurnAround();
-            FaceDir();
-            PushTargetForward(true);
+        //if (turnTimer <= 0f && HitsSomethingInFront())
+        //{
+        //    TurnAround();
+        //    FaceDir();
+        //    PushTargetForward(true);
 
-            turnTimer = turnCooldown;  // lock turning for a moment
-            return;
+        //    turnTimer = turnCooldown;  // lock turning for a moment
+        //    return;
+        //}
+
+        if (turnTimer <= 0f)
+        {
+            bool obstacle = HitsObstacleInFront();
+            bool edge = !obstacle && IsEdgeAhead(); // only treat "no hit" as bad if it's an edge
+            bool stuck = IsStuck();
+
+            if (obstacle || edge || stuck)
+            {
+                TurnAround();
+                FaceDir();
+                PushTargetForward(true);
+
+                stuckTimer = 0f;      // reset stuck state after turning
+                turnTimer = turnCooldown;
+                return;
+            }
         }
 
         float dist = (target - transform.position).Magnitude;
@@ -158,32 +194,96 @@ public class Move : MonoBehaviour
         }
     }
 
-    private bool HitsSomethingInFront()
+    //private bool HitsSomethingInFront()
+    //{
+    //    Vector3 origin = transform.position
+    //                   + new Vector3(0f, rayHeight, 0f)
+    //                   + dir * rayForwardOffset;
+
+    //    //if (rayDebug != null)
+    //    //{
+    //    //    rayDebug.transform.position = origin;
+    //    //}
+
+    //    RaycastHit hit;
+    //    bool didHit = Physics.Raycast(origin, dir, out hit, 0.8f);
+
+    //    if (!didHit)
+    //        return false;
+    //    //else
+    //    //    Debug.Log(hit.transform.gameObject.name);
+
+    //    var hitGO = hit.transform.gameObject;
+
+    //    // Ignore self-hit
+    //    ulong hitID = (ulong)hit.transform.gameObject.GetInstanceID();
+    //    if (hitID == entityID) return false;
+
+    //    string n = hitGO.name;
+    //    if (n == playerName) return false;
+    //    if (n == "Sphere") return false;
+    //    //if (n == "RayDebug") return false;
+
+    //    // Debug.Log("Hit: " + hit.transform.gameObject.name);
+    //    return true;
+    //}
+
+    private bool HitsObstacleInFront()
     {
         Vector3 origin = transform.position
                        + new Vector3(0f, rayHeight, 0f)
                        + dir * rayForwardOffset;
+
+        if (rayDebug != null)
+            rayDebug.transform.position = origin;
 
         RaycastHit hit;
         bool didHit = Physics.Raycast(origin, dir, out hit, 0.8f);
 
         if (!didHit)
             return false;
-        //else
-        //    Debug.Log(hit.transform.gameObject.name);
 
         var hitGO = hit.transform.gameObject;
 
         // Ignore self-hit
-        ulong hitID = (ulong)hit.transform.gameObject.GetInstanceID();
+        ulong hitID = (ulong)hitGO.GetInstanceID();
         if (hitID == entityID) return false;
 
         string n = hitGO.name;
         if (n == playerName) return false;
         if (n == "Sphere") return false;
+        if (n == "RayDebug") return false;
 
-        // Debug.Log("Hit: " + hit.transform.gameObject.name);
         return true;
+    }
+
+    private bool IsEdgeAhead()
+    {
+        // Probe a point forward (roughly where we're about to step)
+        Vector3 probePoint = transform.position + dir * edgeCheckForward;
+
+        // Raycast downward to see if there is ground/navmesh collider below
+        Vector3 origin = probePoint + Vector3.up * edgeCheckUp;
+
+        RaycastHit hit;
+        bool hasGround = Physics.Raycast(origin, Vector3.down, out hit, edgeCheckDown);
+
+        // If your world has "RayDebug"/enemy colliders, you can add ignores here if needed.
+        return !hasGround;
+    }
+
+    private bool IsStuck()
+    {
+        float moved = (transform.position - lastPos).Magnitude;
+
+        if (moved <= stuckMoveEps)
+            stuckTimer += Time.deltaTime;
+        else
+            stuckTimer = 0f;
+
+        lastPos = transform.position;
+
+        return stuckTimer >= stuckTimeToTurn;
     }
 
     private void PushTargetForward(bool force)

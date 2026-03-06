@@ -3034,6 +3034,7 @@ namespace Ermine
 					if (js.HasMember("loop") && js["loop"].IsBool())
 						s->loop = js["loop"].GetBool();
 
+#if defined(EE_EDITOR)
 					if (js.HasMember("editorPos") && js["editorPos"].IsArray() && js["editorPos"].Size() == 2)
 					{
 						s->editorPos.x = js["editorPos"][0].GetFloat();
@@ -3050,6 +3051,7 @@ namespace Ermine
 #endif // EE_EDITOR
 
 					}
+#endif
 
 					m_animationGraph->states.push_back(s);
 
@@ -3491,19 +3493,20 @@ namespace Ermine
 	struct NavMeshComponent
 	{
 		// Recast build config
-		float cellSize = 0.05f;
-		float cellHeight = 0.05f;
+		float cellSize = 1.0f;
+		float cellHeight = 0.5f;
 		float agentHeight = 1.0f;
 		float agentRadius = 0.5f;
 		float bakedAgentRadius = 0.0f;
 		float bakedAgentHeight = 0.0f;
-		float agentMaxClimb = 0.0f;
+		float agentMaxClimb = 0.5f;
 		float agentMaxSlope = 45.0f;
 
 		// Debug toggles
 		bool  drawInputTri = false;
 		bool  drawWalkable = true;
 		bool  drawNavMesh = false;
+		bool bakeUsingCustomMesh = false;
 
 		// Recast transient build data
 		struct BuildData;
@@ -3613,6 +3616,7 @@ namespace Ermine
 			out.AddMember("drawInputTri", drawInputTri, alloc);
 			out.AddMember("drawWalkable", drawWalkable, alloc);
 			out.AddMember("drawNavMesh", drawNavMesh, alloc);
+			out.AddMember("bakeUsingCustomMesh", bakeUsingCustomMesh, alloc);
 
 			rapidjson::Value bakedObj(rapidjson::kObjectType);
 
@@ -3655,6 +3659,7 @@ namespace Ermine
 			if (in.HasMember("drawInputTri")) drawInputTri = in["drawInputTri"].GetBool();
 			if (in.HasMember("drawWalkable")) drawWalkable = in["drawWalkable"].GetBool();
 			if (in.HasMember("drawNavMesh")) drawNavMesh = in["drawNavMesh"].GetBool();
+			if (in.HasMember("bakeUsingCustomMesh")) bakeUsingCustomMesh = in["bakeUsingCustomMesh"].GetBool();
 
 			bakedTiles.clear();
 
