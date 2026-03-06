@@ -31,14 +31,21 @@ void main()
 
     float dirLenSq = dot(vFillScrollDirUV, vFillScrollDirUV);
     vec2 scrollDir = (dirLenSq > 1e-8) ? (vFillScrollDirUV * inversesqrt(dirLenSq)) : vec2(0.0);
-    // Keep phase bounded to avoid time-growing UV warping on curved surfaces.
-    float scrollPhase = fract(u_FillScrollSpeed * u_Time);
-    // Subtract UV offset so perceived texture motion travels toward fill direction.
-    vec2 uv = vBaseUV - (scrollDir * scrollPhase);
-
     vec4 albedo = vAlbedo;
     if ((vTextureFlags & MAT_FLAG_ALBEDO_MAP) != 0u && vAlbedoMapIndex >= 0) {
-        albedo *= texture(sampler2D(textureHandles[vAlbedoMapIndex]), uv);
+        // Dual-phase scrolling removes visible reset pop from a single fract() wrap.
+        float t = u_FillScrollSpeed * u_Time;
+        float phaseA = fract(t);
+        float phaseB = fract(t + 0.5);
+        vec2 uvA = vBaseUV - (scrollDir * phaseA);
+        vec2 uvB = vBaseUV - (scrollDir * phaseB);
+        float blend = abs(phaseA * 2.0 - 1.0);
+        vec4 scrolled = mix(
+            texture(sampler2D(textureHandles[vAlbedoMapIndex]), uvA),
+            texture(sampler2D(textureHandles[vAlbedoMapIndex]), uvB),
+            blend
+        );
+        albedo *= scrolled;
     }
 
     vec3 emissive = (vEmissive * vEmissiveIntensity) * albedo.rgb;
