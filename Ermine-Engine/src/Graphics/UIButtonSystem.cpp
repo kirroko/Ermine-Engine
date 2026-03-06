@@ -857,9 +857,10 @@ namespace Ermine
         {
             if (slider.customTarget == "Gamma")
             {
-                // Gamma range: slider 0.0-1.0 maps to gamma 1.6-2.8
-                // 2.2 is standard, lower = brighter, higher = darker
-                float gamma = 1.6f + (slider.value * 1.2f);
+                // Gamma range: slider 0.0-1.0 maps to gamma 2.8-1.6
+                // 2.2 is standard, lower gamma = brighter, higher gamma = darker
+                // Inverted so sliding right = brighter (lower gamma)
+                float gamma = 2.8f - (slider.value * 1.2f);
                 ecs.GetSystem<graphics::Renderer>()->m_Gamma = gamma;
                 EE_CORE_INFO("Gamma slider: value={}, gamma={}", slider.value, gamma);
             }

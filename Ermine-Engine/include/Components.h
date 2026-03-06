@@ -4039,6 +4039,7 @@ namespace Ermine
 		Vec3 textColor = { 1.0f, 1.0f, 1.0f };
 		float textScale = 1.0f;
 		float backgroundAlpha = 1.0f;  // Button background transparency (0.0 = invisible, 1.0 = opaque)
+		int renderOrder = 0;           // Render order (lower = behind, higher = on top)
 
 		// Button state images (optional - if set, overrides color-based rendering)
 		std::string normalImage = "";   // Image shown in normal state
@@ -4096,6 +4097,7 @@ namespace Ermine
 			rapidjson::Value clickSoundVal(clickSoundName.c_str(), alloc);
 			out.AddMember("clickSoundName", clickSoundVal, alloc);
 			out.AddMember("soundVolume", soundVolume, alloc);
+			out.AddMember("renderOrder", renderOrder, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in)
@@ -4146,6 +4148,8 @@ namespace Ermine
 				clickSoundName = in["clickSoundName"].GetString();
 			if (in.HasMember("soundVolume") && in["soundVolume"].IsNumber())
 				soundVolume = in["soundVolume"].GetFloat();
+			if (in.HasMember("renderOrder") && in["renderOrder"].IsInt())
+				renderOrder = in["renderOrder"].GetInt();
 		}
 
 		XPROPERTY_DEF("UIButtonComponent", UIButtonComponent)
@@ -4178,6 +4182,7 @@ namespace Ermine
 		Vec3 handleHoverColor = { 0.9f, 0.9f, 0.5f }; // Handle color when hovered
 		float trackAlpha = 0.9f;
 		float handleSize = 0.04f;  // Handle diameter (normalized)
+		int renderOrder = 0;       // Render order (lower = behind, higher = on top)
 
 		// Slider images (optional - overrides color-based rendering)
 		std::string trackImage = "";   // Background track image
@@ -4272,6 +4277,7 @@ namespace Ermine
 			out.AddMember("valueOffset", valueOffsetVal, alloc);
 
 			out.AddMember("valueAsPercentage", valueAsPercentage, alloc);
+			out.AddMember("renderOrder", renderOrder, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in)
@@ -4356,6 +4362,8 @@ namespace Ermine
 			}
 			if (in.HasMember("valueAsPercentage") && in["valueAsPercentage"].IsBool())
 				valueAsPercentage = in["valueAsPercentage"].GetBool();
+			if (in.HasMember("renderOrder") && in["renderOrder"].IsInt())
+				renderOrder = in["renderOrder"].GetInt();
 		}
 
 		XPROPERTY_DEF("UISliderComponent", UISliderComponent)
@@ -5354,6 +5362,7 @@ namespace Ermine
 		Ermine::Vec3 tintColor = { 1.0f, 1.0f, 1.0f }; ///< Color tint (1,1,1 = no tint)
 		float alpha = 1.0f;                   ///< Alpha transparency (0-1)
 		bool maintainAspectRatio = true;      ///< Preserve image aspect ratio
+		int renderOrder = 0;                  ///< Render order (lower = behind, higher = on top)
 
 		// Caption/Text overlay
 		std::string caption = "";             ///< Caption text to display
@@ -5379,6 +5388,7 @@ namespace Ermine
 			out.AddMember("captionColor", Vec3ToJson(captionColor, alloc), alloc);
 			out.AddMember("captionFontSize", captionFontSize, alloc);
 			out.AddMember("captionPosition", Vec3ToJson(captionPosition, alloc), alloc);
+			out.AddMember("renderOrder", renderOrder, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in)
@@ -5409,6 +5419,8 @@ namespace Ermine
 				captionFontSize = in["captionFontSize"].GetFloat();
 			if (in.HasMember("captionPosition") && in["captionPosition"].IsArray())
 				captionPosition = JsonToVec3(in["captionPosition"]);
+			if (in.HasMember("renderOrder") && in["renderOrder"].IsInt())
+				renderOrder = in["renderOrder"].GetInt();
 		}
 
 		XPROPERTY_DEF(
@@ -5425,7 +5437,67 @@ namespace Ermine
 			xproperty::obj_member<"showCaption", &UIImageComponent::showCaption>,
 			xproperty::obj_member<"captionColor", &UIImageComponent::captionColor>,
 			xproperty::obj_member<"captionFontSize", &UIImageComponent::captionFontSize>,
-			xproperty::obj_member<"captionPosition", &UIImageComponent::captionPosition>
+			xproperty::obj_member<"captionPosition", &UIImageComponent::captionPosition>,
+			xproperty::obj_member<"renderOrder", &UIImageComponent::renderOrder>
+		)
+	};
+
+	/*!***********************************************************************
+	\brief
+		UI Text Component for standalone text display (labels, subtitles, HUD text).
+		Supports left, center, and right alignment.
+	*************************************************************************/
+	struct UITextComponent
+	{
+		std::string text = "";
+		Vec3 position = { 0.5f, 0.5f, 0.0f };  // Normalized screen position
+		float fontSize = 1.0f;
+		Vec3 color = { 1.0f, 1.0f, 1.0f };
+		float alpha = 1.0f;
+		int alignment = 1;  // 0 = Left, 1 = Center, 2 = Right
+		int renderOrder = 0;  // Render order (lower = behind, higher = on top)
+
+		template<typename Alloc>
+		void Serialize(rapidjson::Value& out, Alloc& alloc) const
+		{
+			out.SetObject();
+			rapidjson::Value textVal(text.c_str(), alloc);
+			out.AddMember("text", textVal, alloc);
+			out.AddMember("position", Vec3ToJson(position, alloc), alloc);
+			out.AddMember("fontSize", fontSize, alloc);
+			out.AddMember("color", Vec3ToJson(color, alloc), alloc);
+			out.AddMember("alpha", alpha, alloc);
+			out.AddMember("alignment", alignment, alloc);
+			out.AddMember("renderOrder", renderOrder, alloc);
+		}
+
+		void Deserialize(const rapidjson::Value& in)
+		{
+			if (in.HasMember("text") && in["text"].IsString())
+				text = in["text"].GetString();
+			if (in.HasMember("position") && in["position"].IsArray())
+				position = JsonToVec3(in["position"]);
+			if (in.HasMember("fontSize") && in["fontSize"].IsNumber())
+				fontSize = in["fontSize"].GetFloat();
+			if (in.HasMember("color") && in["color"].IsArray())
+				color = JsonToVec3(in["color"]);
+			if (in.HasMember("alpha") && in["alpha"].IsNumber())
+				alpha = in["alpha"].GetFloat();
+			if (in.HasMember("alignment") && in["alignment"].IsInt())
+				alignment = in["alignment"].GetInt();
+			if (in.HasMember("renderOrder") && in["renderOrder"].IsInt())
+				renderOrder = in["renderOrder"].GetInt();
+		}
+
+		XPROPERTY_DEF(
+			"UITextComponent", UITextComponent,
+			xproperty::obj_member<"text", &UITextComponent::text>,
+			xproperty::obj_member<"position", &UITextComponent::position>,
+			xproperty::obj_member<"fontSize", &UITextComponent::fontSize>,
+			xproperty::obj_member<"color", &UITextComponent::color>,
+			xproperty::obj_member<"alpha", &UITextComponent::alpha>,
+			xproperty::obj_member<"alignment", &UITextComponent::alignment>,
+			xproperty::obj_member<"renderOrder", &UITextComponent::renderOrder>
 		)
 	};
 

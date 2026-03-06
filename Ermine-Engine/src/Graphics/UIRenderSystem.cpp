@@ -238,101 +238,28 @@ namespace Ermine
             firstRender = false;
         }
 
-        // Render UIImageComponent entities in two passes:
-        // Pass 1: fullscreen images (backgrounds) first
-        // Pass 2: non-fullscreen images (overlays, info panels) on top
         auto& ecs = ECS::GetInstance();
         constexpr EntityID MAX_ENTITIES = 10000;
 
-        for (int pass = 0; pass < 2; ++pass)
+        // Phase 1: Fullscreen UIImageComponent backgrounds (always render first)
+        for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
         {
-            for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
-            {
-                // Check if entity is valid and has UIImageComponent
-                if (!ecs.IsEntityValid(entity))
-                    continue;
+            if (!ecs.IsEntityValid(entity))
+                continue;
+            if (!ecs.HasComponent<UIImageComponent>(entity))
+                continue;
+            if (!IsEntityActiveInHierarchy(entity))
+                continue;
 
-                if (!ecs.HasComponent<UIImageComponent>(entity))
-                    continue;
+            const auto& imageComp = ecs.GetComponent<UIImageComponent>(entity);
+            if (!imageComp.fullscreen) continue;
 
-                // ✅ FIX: Check if entity is active in hierarchy (including parents)
-                if (!IsEntityActiveInHierarchy(entity))
-                    continue;
-
-                const auto& imageComp = ecs.GetComponent<UIImageComponent>(entity);
-
-                // Pass 0: only fullscreen, Pass 1: only non-fullscreen
-                if (pass == 0 && !imageComp.fullscreen) continue;
-                if (pass == 1 && imageComp.fullscreen) continue;
-
-                // Load texture if image path is specified
-                std::shared_ptr<graphics::Texture> texture;
-                if (!imageComp.imagePath.empty())
-                {
-                    auto it = m_textureCache.find(imageComp.imagePath);
-                    if (it != m_textureCache.end())
-                    {
-                        texture = it->second;
-                    }
-                    else
-                    {
-                        texture = AssetManager::GetInstance().LoadTexture(imageComp.imagePath);
-                        if (texture && texture->IsValid())
-                        {
-                            m_textureCache[imageComp.imagePath] = texture;
-                        }
-                    }
-                }
-
-                // Render the image (if texture exists)
-                if (texture && texture->IsValid())
-                {
-                    if (imageComp.fullscreen)
-                    {
-                        RenderTexturedSquare(0.5f, 0.5f, imageComp.height, texture, imageComp.tintColor, imageComp.alpha);
-                    }
-                    else
-                    {
-                        RenderTexturedSquare(
-                            imageComp.position.x,
-                            imageComp.position.y,
-                            imageComp.height,
-                            texture,
-                            imageComp.tintColor,
-                            imageComp.alpha
-                        );
-                    }
-                }
-
-                // Render caption
-                if (imageComp.showCaption && !imageComp.caption.empty() && m_textRenderer)
-                {
-                    float textScale = imageComp.captionFontSize / 24.0f;
-                    float textAlpha = imageComp.alpha;
-                    if (imageComp.imagePath.empty() && imageComp.alpha == 0.0f)
-                    {
-                        textAlpha = 1.0f;
-                    }
-
-                    m_textRenderer->RenderText(
-                        m_uiShader,
-                        imageComp.caption,
-                        imageComp.captionPosition.x,
-                        imageComp.captionPosition.y,
-                        textScale,
-                        imageComp.captionColor,
-                        textAlpha,
-                        m_VAO,
-                        m_VBO
-                    );
-                }
-            }
+            RenderImage(imageComp);
         }
 
-        // Render UI for all entities with UIComponent (legacy support)
+        // Phase 2: Legacy UIComponent
         for (EntityID entity : m_Entities)
         {
-            // ✅ FIX: Check hierarchy before rendering UIComponent elements
             if (!IsEntityActiveInHierarchy(entity))
                 continue;
 
@@ -354,7 +281,7 @@ namespace Ermine
                 RenderCrosshair(ui);
         }
 
-        // Render new separate UI components (skip when game is paused — pause background covers them)
+        // Phase 3: Gameplay HUD components (skip when game is paused)
         if (!UIButtonSystem::IsGamePaused())
         for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
         {
@@ -364,7 +291,6 @@ namespace Ermine
             if (!IsEntityActiveInHierarchy(entity))
                 continue;
 
-            // Render UIHealthbarComponent
             if (ecs.HasComponent<UIHealthbarComponent>(entity))
             {
                 const auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entity);
@@ -372,7 +298,6 @@ namespace Ermine
                     RenderHealthBarNew(healthbar);
             }
 
-            // Render UICrosshairComponent
             if (ecs.HasComponent<UICrosshairComponent>(entity))
             {
                 const auto& crosshair = ecs.GetComponent<UICrosshairComponent>(entity);
@@ -380,7 +305,6 @@ namespace Ermine
                     RenderCrosshairNew(crosshair);
             }
 
-            // Render UISkillsComponent
             if (ecs.HasComponent<UISkillsComponent>(entity))
             {
                 const auto& skills = ecs.GetComponent<UISkillsComponent>(entity);
@@ -388,7 +312,6 @@ namespace Ermine
                     RenderSkillSlotsNew(skills, entity);
             }
 
-            // Render UIManaBarComponent
             if (ecs.HasComponent<UIManaBarComponent>(entity))
             {
                 const auto& manaBar = ecs.GetComponent<UIManaBarComponent>(entity);
@@ -396,7 +319,6 @@ namespace Ermine
                     RenderManaBarNew(manaBar);
             }
 
-            // Render UIBookCounterComponent
             if (ecs.HasComponent<UIBookCounterComponent>(entity))
             {
                 const auto& bookCounter = ecs.GetComponent<UIBookCounterComponent>(entity);
@@ -405,37 +327,75 @@ namespace Ermine
             }
         }
 
-        // Render UIButtonComponent entities
+        // Phase 4: Sorted render queue for editable UI components
+        std::vector<UIRenderEntry> renderQueue;
+        renderQueue.reserve(256);
+
         for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
         {
             if (!ecs.IsEntityValid(entity))
                 continue;
-
-            if (!ecs.HasComponent<UIButtonComponent>(entity))
-                continue;
-
-            // ✅ FIX: Check hierarchy before rendering buttons
             if (!IsEntityActiveInHierarchy(entity))
                 continue;
 
-            const auto& button = ecs.GetComponent<UIButtonComponent>(entity);
-            RenderButton(button);
+            if (ecs.HasComponent<UIImageComponent>(entity))
+            {
+                const auto& comp = ecs.GetComponent<UIImageComponent>(entity);
+                if (!comp.fullscreen)
+                    renderQueue.push_back({ entity, UIComponentType::Image, comp.renderOrder });
+            }
+            if (ecs.HasComponent<UIButtonComponent>(entity))
+            {
+                const auto& comp = ecs.GetComponent<UIButtonComponent>(entity);
+                renderQueue.push_back({ entity, UIComponentType::Button, comp.renderOrder });
+            }
+            if (ecs.HasComponent<UISliderComponent>(entity))
+            {
+                const auto& comp = ecs.GetComponent<UISliderComponent>(entity);
+                renderQueue.push_back({ entity, UIComponentType::Slider, comp.renderOrder });
+            }
+            if (ecs.HasComponent<UITextComponent>(entity))
+            {
+                const auto& comp = ecs.GetComponent<UITextComponent>(entity);
+                renderQueue.push_back({ entity, UIComponentType::Text, comp.renderOrder });
+            }
         }
 
-        // Render UISliderComponent entities
-        for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
+        // Stable sort: lower renderOrder renders first (behind), higher renders on top
+        std::stable_sort(renderQueue.begin(), renderQueue.end(),
+            [](const UIRenderEntry& a, const UIRenderEntry& b) {
+                return a.renderOrder < b.renderOrder;
+            });
+
+        for (const auto& entry : renderQueue)
         {
-            if (!ecs.IsEntityValid(entity))
-                continue;
-
-            if (!ecs.HasComponent<UISliderComponent>(entity))
-                continue;
-
-            if (!IsEntityActiveInHierarchy(entity))
-                continue;
-
-            const auto& slider = ecs.GetComponent<UISliderComponent>(entity);
-            RenderSlider(slider);
+            switch (entry.type)
+            {
+            case UIComponentType::Image:
+            {
+                const auto& imageComp = ecs.GetComponent<UIImageComponent>(entry.entity);
+                RenderImage(imageComp);
+                break;
+            }
+            case UIComponentType::Button:
+            {
+                const auto& button = ecs.GetComponent<UIButtonComponent>(entry.entity);
+                RenderButton(button);
+                break;
+            }
+            case UIComponentType::Slider:
+            {
+                const auto& slider = ecs.GetComponent<UISliderComponent>(entry.entity);
+                RenderSlider(slider);
+                break;
+            }
+            case UIComponentType::Text:
+            {
+                const auto& textComp = ecs.GetComponent<UITextComponent>(entry.entity);
+                RenderTextComponent(textComp);
+                break;
+            }
+            }
         }
 
         // Re-enable depth test
@@ -1726,6 +1686,105 @@ namespace Ermine
                 m_VBO
             );
         }
+    }
+
+    void UIRenderSystem::RenderImage(const UIImageComponent& imageComp)
+    {
+        // Load texture if image path is specified
+        std::shared_ptr<graphics::Texture> texture;
+        if (!imageComp.imagePath.empty())
+        {
+            auto it = m_textureCache.find(imageComp.imagePath);
+            if (it != m_textureCache.end())
+            {
+                texture = it->second;
+            }
+            else
+            {
+                texture = AssetManager::GetInstance().LoadTexture(imageComp.imagePath);
+                if (texture && texture->IsValid())
+                {
+                    m_textureCache[imageComp.imagePath] = texture;
+                }
+            }
+        }
+
+        // Render the image (if texture exists)
+        if (texture && texture->IsValid())
+        {
+            if (imageComp.fullscreen)
+            {
+                RenderTexturedSquare(0.5f, 0.5f, imageComp.height, texture, imageComp.tintColor, imageComp.alpha);
+            }
+            else
+            {
+                RenderTexturedSquare(
+                    imageComp.position.x,
+                    imageComp.position.y,
+                    imageComp.height,
+                    texture,
+                    imageComp.tintColor,
+                    imageComp.alpha
+                );
+            }
+        }
+
+        // Render caption
+        if (imageComp.showCaption && !imageComp.caption.empty() && m_textRenderer)
+        {
+            float textScale = imageComp.captionFontSize / 24.0f;
+            float textAlpha = imageComp.alpha;
+            if (imageComp.imagePath.empty() && imageComp.alpha == 0.0f)
+            {
+                textAlpha = 1.0f;
+            }
+
+            m_textRenderer->RenderText(
+                m_uiShader,
+                imageComp.caption,
+                imageComp.captionPosition.x,
+                imageComp.captionPosition.y,
+                textScale,
+                imageComp.captionColor,
+                textAlpha,
+                m_VAO,
+                m_VBO
+            );
+        }
+    }
+
+    void UIRenderSystem::RenderTextComponent(const UITextComponent& textComp)
+    {
+        if (!m_textRenderer || textComp.text.empty())
+            return;
+
+        float textWidth = m_textRenderer->GetTextWidth(textComp.text, textComp.fontSize);
+        float textX = textComp.position.x;
+
+        // Apply alignment
+        switch (textComp.alignment)
+        {
+        case 0: // Left
+            break;
+        case 1: // Center
+            textX -= textWidth * 0.5f;
+            break;
+        case 2: // Right
+            textX -= textWidth;
+            break;
+        }
+
+        m_textRenderer->RenderText(
+            m_uiShader,
+            textComp.text,
+            textX,
+            textComp.position.y,
+            textComp.fontSize,
+            textComp.color,
+            textComp.alpha,
+            m_VAO,
+            m_VBO
+        );
     }
 
 } // namespace Ermine

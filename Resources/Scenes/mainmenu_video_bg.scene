@@ -764,7 +764,7 @@
           "maxValue": 1.0,
           "target": 5,
           "customTarget": "Gamma",
-          "label": "BRIGHTNESS",
+          "label": "GAMMA",
           "labelColor": [
             0.0,
             0.0,
