@@ -143,8 +143,6 @@ namespace Ermine
         char m_newStateName[64] = "";   // Buffer for new state name input
         std::vector<int> nodesToDelete; // Nodes marked for deletion
 
-        char m_clipSearch[128] = "";    // Buffer for animation clip search input
-
         // Rename popup state
         bool m_isRenaming = false;      // Whether we are currently renaming a node inline
         int m_renameNodeId = -1;        // Node ID being renamed
