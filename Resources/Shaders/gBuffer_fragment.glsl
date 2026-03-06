@@ -96,6 +96,8 @@ flat in vec3 vEmissive;
 flat in uint vTextureFlags;
 flat in ivec4 vTextureIndices;     // albedo, normal, roughness, metallic
 flat in ivec2 vTextureIndices2;    // ao, emissive
+flat in float vFillAmount;
+in float vFillCoord;
 
 in vec2 vTransformedUV;   // UV with scale/offset already applied
 in vec4 vCurrClipPos; // Current clip-space position
@@ -119,6 +121,12 @@ vec2 computeVelocity()
 
 void main()
 {
+    if (vFillCoord > vFillAmount) {
+        // Keep geometry/depth coverage intact, but black out the unfilled portion.
+        writeGBuffer(vec3(0.0), ViewNormal, vec3(0.0), 0.0, 1.0, 0.0, 0.0, computeVelocity());
+        return;
+    }
+
     // Unpack material data from varyings (NO SSBO ACCESS!)
     vec3 albedo = vAlbedo.rgb;
     float metallic = vAlbedo.a;

@@ -124,6 +124,37 @@ namespace {
 		return std::isfinite(v.x) && std::isfinite(v.y) && std::isfinite(v.z);
 	}
 
+	inline std::string ResolveCustomVertexShaderPath(const std::string& fragmentPath)
+	{
+		constexpr const char* kDefaultVertex = "../Resources/Shaders/vertex.glsl";
+		if (fragmentPath.empty()) {
+			return kDefaultVertex;
+		}
+
+		std::filesystem::path fragmentFile(fragmentPath);
+		std::string vertexName = fragmentFile.filename().string();
+
+		const size_t fragmentPos = vertexName.find("fragment");
+		if (fragmentPos != std::string::npos) {
+			vertexName.replace(fragmentPos, std::string("fragment").size(), "vertex");
+		}
+		else if (fragmentFile.extension() == ".frag") {
+			vertexName = fragmentFile.stem().string() + ".vert";
+		}
+		else {
+			return kDefaultVertex;
+		}
+
+		std::filesystem::path vertexPath = fragmentFile.has_parent_path()
+			? (fragmentFile.parent_path() / vertexName)
+			: (std::filesystem::path("../Resources/Shaders") / vertexName);
+
+		if (std::filesystem::exists(vertexPath)) {
+			return vertexPath.generic_string();
+		}
+		return kDefaultVertex;
+	}
+
 	inline glm::vec3 ExtractWorldPosition(const glm::mat4& worldMatrix)
 	{
 		return glm::vec3(worldMatrix[3]);
@@ -5242,10 +5273,22 @@ void Renderer::UpdateMaterialSSBO(const graphics::MaterialSSBO& materialData, ui
 		return;
 	}
 
+	if (materialIndex >= m_CompiledMaterials.size())
+	{
+		EE_CORE_WARN("UpdateMaterialSSBO: materialIndex {0} out of range (compiled={1}). Marking materials dirty.",
+			materialIndex, m_CompiledMaterials.size());
+		MarkMaterialsDirty();
+		return;
+	}
+
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MaterialSSBO);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, MATERIAL_SSBO_BINDING, m_MaterialSSBO);
 
 	const size_t materialSize = sizeof(graphics::MaterialSSBO);
 	const size_t offset = materialSize * materialIndex;
+
+	// Keep CPU mirror coherent with the GPU update path.
+	m_CompiledMaterials[materialIndex] = materialData;
 
 	// Upload to specific index in the array
 	glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, materialSize, &materialData);
@@ -5342,8 +5385,8 @@ void Renderer::SetMaterialIndex(EntityID entity, const std::shared_ptr<Shader>& 
 }
 
 /**
- * @brief Binds the MaterialBlock uniform block to the specified shader program if it has not been bound before.
- * @param shader The shader program to which the material block should be bound.
+ * @brief Binds the MaterialBlock shader storage block to the specified shader program if it has not been bound before.
+ * @param shader The shader program to which the material SSBO block should be bound.
  */
 void Renderer::BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader)
 {
@@ -5354,7 +5397,7 @@ void Renderer::BindMaterialBlockIfPresent(const std::shared_ptr<Shader>& shader)
 	if (m_MaterialBlockBoundPrograms.find(program) != m_MaterialBlockBoundPrograms.end())
 		return;
 
-	// Get the shader storage block index instead of uniform block index
+	// Resolve SSBO block index and bind it to the global material binding slot.
 	GLuint blockIndex = glGetProgramResourceIndex(program, GL_SHADER_STORAGE_BLOCK, "MaterialBlock");
 	if (blockIndex != GL_INVALID_INDEX)
 	{
@@ -5390,6 +5433,15 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 	{
 		CompileMaterials();
 	}
+
+	// Rebind global SSBOs every frame so custom shaders always see valid data.
+	if (m_MaterialSSBO != 0) {
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, MATERIAL_SSBO_BINDING, m_MaterialSSBO);
+	}
+	if (m_TextureArraySSBO != 0) {
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, TEXTURE_SSBO_BINDING, m_TextureArraySSBO);
+	}
+
 	if (m_UseDeferredRendering)
 	{
 		// Use deferred rendering pipeline (now includes transparency)
@@ -6290,6 +6342,46 @@ void Renderer::SortTransparentObjects(const Vec3& cameraPos, bool fullRebuild)
  */
 void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& projection)
 {
+	static bool s_DisableOpaqueCustomMDI = false;
+	auto drawCustomBatch = [&](const std::vector<CustomShaderDrawItem>& items,
+		size_t batchStart,
+		size_t batchEnd,
+		const std::shared_ptr<graphics::Shader>& shaderToBind) {
+		const size_t batchSize = batchEnd - batchStart;
+		if (batchSize == 0 || !shaderToBind) {
+			return;
+		}
+
+		const size_t byteOffset = batchStart * sizeof(DrawElementsIndirectCommand);
+		if (!s_DisableOpaqueCustomMDI) {
+			glMultiDrawElementsIndirect(
+				GL_TRIANGLES,
+				GL_UNSIGNED_INT,
+				reinterpret_cast<const void*>(byteOffset),
+				static_cast<GLsizei>(batchSize),
+				0
+			);
+			if (glGetError() != GL_NO_ERROR) {
+				s_DisableOpaqueCustomMDI = true;
+			}
+		}
+
+		if (s_DisableOpaqueCustomMDI) {
+			for (size_t drawIdx = batchStart; drawIdx < batchEnd; ++drawIdx) {
+				const auto& cmd = items[drawIdx].command;
+				shaderToBind->SetUniform1ui("baseDrawID", static_cast<uint32_t>(drawIdx));
+				glDrawElementsInstancedBaseVertexBaseInstance(
+					GL_TRIANGLES,
+					static_cast<GLsizei>(cmd.count),
+					GL_UNSIGNED_INT,
+					reinterpret_cast<const void*>(static_cast<uintptr_t>(cmd.firstIndex) * sizeof(uint32_t)),
+					static_cast<GLsizei>(cmd.instanceCount),
+					static_cast<GLint>(cmd.baseVertex),
+					cmd.baseInstance
+				);
+			}
+		}
+	};
 	// Skip if no opaque custom shader meshes uploaded to GPU
 	if (m_ForwardOpaqueCustomStandardUploadedCount == 0 && m_ForwardOpaqueCustomSkinnedUploadedCount == 0) {
 		return;
@@ -6313,7 +6405,9 @@ void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& project
 	glCullFace(GL_BACK);
 
 	// ========== RENDER OPAQUE CUSTOM STANDARD MESHES (NON-SKINNED) ==========
-	if (m_ForwardOpaqueCustomStandardUploadedCount > 0) {
+	if (m_ForwardOpaqueCustomStandardUploadedCount > 0 && !m_ForwardOpaqueCustomStandardItems.empty()) {
+		const auto& items = m_ForwardOpaqueCustomStandardItems;
+		const size_t renderCount = std::min(m_ForwardOpaqueCustomStandardUploadedCount, items.size());
 		GLuint standardVAO = m_MeshManager.GetStandardVAO();
 		// Check that VAO and GPU buffers are valid before binding
 		if (standardVAO != 0 && m_ForwardOpaqueCustomStandardInfoBuffer != 0 && m_ForwardOpaqueCustomStandardCmdBuffer != 0) {
@@ -6323,18 +6417,19 @@ void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& project
 
 			// Batch draws by shader
 			size_t batchStart = 0;
-			std::shared_ptr<graphics::Shader> currentShader = m_ForwardOpaqueCustomStandardItems[0].shader;
+			std::shared_ptr<graphics::Shader> currentShader = items[0].shader;
 
-			for (size_t i = 0; i <= m_ForwardOpaqueCustomStandardUploadedCount; ++i) {
+			for (size_t i = 0; i <= renderCount; ++i) {
 				// Check if we've reached end or shader changed
-				bool shaderChanged = (i < m_ForwardOpaqueCustomStandardUploadedCount && m_ForwardOpaqueCustomStandardItems[i].shader != currentShader);
-				bool isEnd = (i == m_ForwardOpaqueCustomStandardUploadedCount);
+				bool shaderChanged = (i < renderCount && items[i].shader != currentShader);
+				bool isEnd = (i == renderCount);
 
 				if (shaderChanged || isEnd) {
 					// Bind shader
 					std::shared_ptr<graphics::Shader> shaderToBind = currentShader;
 					if (shaderToBind && shaderToBind->IsValid()) {
 						shaderToBind->Bind();
+						BindMaterialBlockIfPresent(shaderToBind);
 						shaderToBind->SetUniformMatrix4fv("view", &view.m2[0][0]);
 						shaderToBind->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 						shaderToBind->SetUniform1ui("baseDrawID", static_cast<uint32_t>(batchStart));
@@ -6351,22 +6446,13 @@ void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& project
 						}
 						shaderToBind->SetUniform2f("u_IGNResolution", m_IGNTextureSize);
 
-						// Execute multi-draw for this batch
-						size_t batchSize = i - batchStart;
-						size_t byteOffset = batchStart * sizeof(DrawElementsIndirectCommand);
-						glMultiDrawElementsIndirect(
-							GL_TRIANGLES,
-							GL_UNSIGNED_INT,
-							reinterpret_cast<const void*>(byteOffset),
-							static_cast<GLsizei>(batchSize),
-							0
-						);
+						drawCustomBatch(items, batchStart, i, shaderToBind);
 					}
 
 					// Start new batch
-					if (i < m_ForwardOpaqueCustomStandardUploadedCount) {
+					if (i < renderCount) {
 						batchStart = i;
-						currentShader = m_ForwardOpaqueCustomStandardItems[i].shader;
+						currentShader = items[i].shader;
 					}
 				}
 			}
@@ -6377,7 +6463,9 @@ void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& project
 	}
 
 	// ========== RENDER OPAQUE CUSTOM SKINNED MESHES ==========
-	if (m_ForwardOpaqueCustomSkinnedUploadedCount > 0) {
+	if (m_ForwardOpaqueCustomSkinnedUploadedCount > 0 && !m_ForwardOpaqueCustomSkinnedItems.empty()) {
+		const auto& items = m_ForwardOpaqueCustomSkinnedItems;
+		const size_t renderCount = std::min(m_ForwardOpaqueCustomSkinnedUploadedCount, items.size());
 		GLuint skinnedVAO = m_MeshManager.GetSkinnedVAO();
 		// Check that VAO and GPU buffers are valid before binding
 		if (skinnedVAO != 0 && m_ForwardOpaqueCustomSkinnedInfoBuffer != 0 && m_ForwardOpaqueCustomSkinnedCmdBuffer != 0) {
@@ -6387,18 +6475,19 @@ void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& project
 
 			// Batch draws by shader
 			size_t batchStart = 0;
-			std::shared_ptr<graphics::Shader> currentShader = m_ForwardOpaqueCustomSkinnedItems[0].shader;
+			std::shared_ptr<graphics::Shader> currentShader = items[0].shader;
 
-			for (size_t i = 0; i <= m_ForwardOpaqueCustomSkinnedUploadedCount; ++i) {
+			for (size_t i = 0; i <= renderCount; ++i) {
 				// Check if we've reached end or shader changed
-				bool shaderChanged = (i < m_ForwardOpaqueCustomSkinnedUploadedCount && m_ForwardOpaqueCustomSkinnedItems[i].shader != currentShader);
-				bool isEnd = (i == m_ForwardOpaqueCustomSkinnedUploadedCount);
+				bool shaderChanged = (i < renderCount && items[i].shader != currentShader);
+				bool isEnd = (i == renderCount);
 
 				if (shaderChanged || isEnd) {
 					// Bind shader
 					std::shared_ptr<graphics::Shader> shaderToBind = currentShader;
 					if (shaderToBind && shaderToBind->IsValid()) {
 						shaderToBind->Bind();
+						BindMaterialBlockIfPresent(shaderToBind);
 						shaderToBind->SetUniformMatrix4fv("view", &view.m2[0][0]);
 						shaderToBind->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 						shaderToBind->SetUniform1ui("baseDrawID", static_cast<uint32_t>(batchStart));
@@ -6415,22 +6504,13 @@ void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& project
 						}
 						shaderToBind->SetUniform2f("u_IGNResolution", m_IGNTextureSize);
 
-						// Execute multi-draw for this batch
-						size_t batchSize = i - batchStart;
-						size_t byteOffset = batchStart * sizeof(DrawElementsIndirectCommand);
-						glMultiDrawElementsIndirect(
-							GL_TRIANGLES,
-							GL_UNSIGNED_INT,
-							reinterpret_cast<const void*>(byteOffset),
-							static_cast<GLsizei>(batchSize),
-							0
-						);
+						drawCustomBatch(items, batchStart, i, shaderToBind);
 					}
 
 					// Start new batch
-					if (i < m_ForwardOpaqueCustomSkinnedUploadedCount) {
+					if (i < renderCount) {
 						batchStart = i;
-						currentShader = m_ForwardOpaqueCustomSkinnedItems[i].shader;
+						currentShader = items[i].shader;
 					}
 				}
 			}
@@ -6453,6 +6533,46 @@ void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& project
  */
 void Renderer::RenderTransparentCustomShaders(const Mtx44& view, const Mtx44& projection)
 {
+	static bool s_DisableTransparentCustomMDI = false;
+	auto drawCustomBatch = [&](const std::vector<CustomShaderDrawItem>& items,
+		size_t batchStart,
+		size_t batchEnd,
+		const std::shared_ptr<graphics::Shader>& shaderToBind) {
+		const size_t batchSize = batchEnd - batchStart;
+		if (batchSize == 0 || !shaderToBind) {
+			return;
+		}
+
+		const size_t byteOffset = batchStart * sizeof(DrawElementsIndirectCommand);
+		if (!s_DisableTransparentCustomMDI) {
+			glMultiDrawElementsIndirect(
+				GL_TRIANGLES,
+				GL_UNSIGNED_INT,
+				reinterpret_cast<const void*>(byteOffset),
+				static_cast<GLsizei>(batchSize),
+				0
+			);
+			if (glGetError() != GL_NO_ERROR) {
+				s_DisableTransparentCustomMDI = true;
+			}
+		}
+
+		if (s_DisableTransparentCustomMDI) {
+			for (size_t drawIdx = batchStart; drawIdx < batchEnd; ++drawIdx) {
+				const auto& cmd = items[drawIdx].command;
+				shaderToBind->SetUniform1ui("baseDrawID", static_cast<uint32_t>(drawIdx));
+				glDrawElementsInstancedBaseVertexBaseInstance(
+					GL_TRIANGLES,
+					static_cast<GLsizei>(cmd.count),
+					GL_UNSIGNED_INT,
+					reinterpret_cast<const void*>(static_cast<uintptr_t>(cmd.firstIndex) * sizeof(uint32_t)),
+					static_cast<GLsizei>(cmd.instanceCount),
+					static_cast<GLint>(cmd.baseVertex),
+					cmd.baseInstance
+				);
+			}
+		}
+	};
 	// Skip if no transparent custom shader meshes uploaded to GPU
 	if (m_ForwardTransparentCustomStandardUploadedCount == 0 && m_ForwardTransparentCustomSkinnedUploadedCount == 0) {
 		return;
@@ -6462,26 +6582,29 @@ void Renderer::RenderTransparentCustomShaders(const Mtx44& view, const Mtx44& pr
 	// Buffers were already uploaded in CompileDrawData - just bind and draw
 
 	// ========== RENDER TRANSPARENT CUSTOM STANDARD MESHES (NON-SKINNED) ==========
-	if (m_ForwardTransparentCustomStandardUploadedCount > 0 && m_MeshManager.GetStandardVAO() != 0
+	if (m_ForwardTransparentCustomStandardUploadedCount > 0 && !m_ForwardTransparentCustomStandardItems.empty() && m_MeshManager.GetStandardVAO() != 0
 		&& m_ForwardTransparentCustomStandardInfoBuffer != 0 && m_ForwardTransparentCustomStandardCmdBuffer != 0) {
+		const auto& items = m_ForwardTransparentCustomStandardItems;
+		const size_t renderCount = std::min(m_ForwardTransparentCustomStandardUploadedCount, items.size());
 		glBindVertexArray(m_MeshManager.GetStandardVAO());
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardTransparentCustomStandardInfoBuffer);
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
 
 		// Batch draws by shader (each unique shader gets its own draw call)
 		size_t batchStart = 0;
-		std::shared_ptr<graphics::Shader> currentShader = m_ForwardTransparentCustomStandardItems[0].shader;
+		std::shared_ptr<graphics::Shader> currentShader = items[0].shader;
 
-		for (size_t i = 0; i <= m_ForwardTransparentCustomStandardUploadedCount; ++i) {
+		for (size_t i = 0; i <= renderCount; ++i) {
 			// Check if we've reached end or shader changed
-			bool shaderChanged = (i < m_ForwardTransparentCustomStandardUploadedCount && m_ForwardTransparentCustomStandardItems[i].shader != currentShader);
-			bool isEnd = (i == m_ForwardTransparentCustomStandardUploadedCount);
+			bool shaderChanged = (i < renderCount && items[i].shader != currentShader);
+			bool isEnd = (i == renderCount);
 
 			if (shaderChanged || isEnd) {
 				// Bind shader
 				std::shared_ptr<graphics::Shader> shaderToBind = currentShader;
 				if (shaderToBind && shaderToBind->IsValid()) {
 					shaderToBind->Bind();
+					BindMaterialBlockIfPresent(shaderToBind);
 					shaderToBind->SetUniformMatrix4fv("view", &view.m2[0][0]);
 					shaderToBind->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 					shaderToBind->SetUniform1ui("baseDrawID", static_cast<uint32_t>(batchStart));
@@ -6498,22 +6621,13 @@ void Renderer::RenderTransparentCustomShaders(const Mtx44& view, const Mtx44& pr
 					}
 					shaderToBind->SetUniform2f("u_IGNResolution", m_IGNTextureSize);
 
-					// Execute multi-draw for this batch
-					size_t batchSize = i - batchStart;
-					size_t byteOffset = batchStart * sizeof(DrawElementsIndirectCommand);
-					glMultiDrawElementsIndirect(
-						GL_TRIANGLES,
-						GL_UNSIGNED_INT,
-						reinterpret_cast<const void*>(byteOffset),
-						static_cast<GLsizei>(batchSize),
-						0
-					);
+					drawCustomBatch(items, batchStart, i, shaderToBind);
 				}
 
 				// Start new batch
-				if (i < m_ForwardTransparentCustomStandardUploadedCount) {
+				if (i < renderCount) {
 					batchStart = i;
-					currentShader = m_ForwardTransparentCustomStandardItems[i].shader;
+					currentShader = items[i].shader;
 				}
 			}
 		}
@@ -6523,26 +6637,29 @@ void Renderer::RenderTransparentCustomShaders(const Mtx44& view, const Mtx44& pr
 	}
 
 	// ========== RENDER TRANSPARENT CUSTOM SKINNED MESHES ==========
-	if (m_ForwardTransparentCustomSkinnedUploadedCount > 0 && m_MeshManager.GetSkinnedVAO() != 0
+	if (m_ForwardTransparentCustomSkinnedUploadedCount > 0 && !m_ForwardTransparentCustomSkinnedItems.empty() && m_MeshManager.GetSkinnedVAO() != 0
 		&& m_ForwardTransparentCustomSkinnedInfoBuffer != 0 && m_ForwardTransparentCustomSkinnedCmdBuffer != 0) {
+		const auto& items = m_ForwardTransparentCustomSkinnedItems;
+		const size_t renderCount = std::min(m_ForwardTransparentCustomSkinnedUploadedCount, items.size());
 		glBindVertexArray(m_MeshManager.GetSkinnedVAO());
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardTransparentCustomSkinnedInfoBuffer);
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
 
 		// Batch draws by shader
 		size_t batchStart = 0;
-		std::shared_ptr<graphics::Shader> currentShader = m_ForwardTransparentCustomSkinnedItems[0].shader;
+		std::shared_ptr<graphics::Shader> currentShader = items[0].shader;
 
-		for (size_t i = 0; i <= m_ForwardTransparentCustomSkinnedUploadedCount; ++i) {
+		for (size_t i = 0; i <= renderCount; ++i) {
 			// Check if we've reached end or shader changed
-			bool shaderChanged = (i < m_ForwardTransparentCustomSkinnedUploadedCount && m_ForwardTransparentCustomSkinnedItems[i].shader != currentShader);
-			bool isEnd = (i == m_ForwardTransparentCustomSkinnedUploadedCount);
+			bool shaderChanged = (i < renderCount && items[i].shader != currentShader);
+			bool isEnd = (i == renderCount);
 
 			if (shaderChanged || isEnd) {
 				// Bind shader
 				std::shared_ptr<graphics::Shader> shaderToBind = currentShader;
 				if (shaderToBind && shaderToBind->IsValid()) {
 					shaderToBind->Bind();
+					BindMaterialBlockIfPresent(shaderToBind);
 					shaderToBind->SetUniformMatrix4fv("view", &view.m2[0][0]);
 					shaderToBind->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 					shaderToBind->SetUniform1ui("baseDrawID", static_cast<uint32_t>(batchStart));
@@ -6559,22 +6676,13 @@ void Renderer::RenderTransparentCustomShaders(const Mtx44& view, const Mtx44& pr
 					}
 					shaderToBind->SetUniform2f("u_IGNResolution", m_IGNTextureSize);
 
-					// Execute multi-draw for this batch
-					size_t batchSize = i - batchStart;
-					size_t byteOffset = batchStart * sizeof(DrawElementsIndirectCommand);
-					glMultiDrawElementsIndirect(
-						GL_TRIANGLES,
-						GL_UNSIGNED_INT,
-						reinterpret_cast<const void*>(byteOffset),
-						static_cast<GLsizei>(batchSize),
-						0
-					);
+					drawCustomBatch(items, batchStart, i, shaderToBind);
 				}
 
 				// Start new batch
-				if (i < m_ForwardTransparentCustomSkinnedUploadedCount) {
+				if (i < renderCount) {
 					batchStart = i;
-					currentShader = m_ForwardTransparentCustomSkinnedItems[i].shader;
+					currentShader = items[i].shader;
 				}
 			}
 		}
@@ -8236,6 +8344,24 @@ void Renderer::CompileMaterials()
 			continue;
 		}
 
+		// Ensure custom shader metadata and shader object are restored outside editor UI code.
+		auto& assets = AssetManager::GetInstance();
+		if (materialComponent.customFragmentShader.empty() && materialComponent.materialGuid.IsValid()) {
+			if (const std::string* frag = assets.GetMaterialCustomFragmentShader(materialComponent.materialGuid)) {
+				materialComponent.customFragmentShader = *frag;
+			}
+		}
+		if (!materialComponent.customFragmentShader.empty() && !HasCustomShader(material)) {
+			const std::string vertexPath = ResolveCustomVertexShaderPath(materialComponent.customFragmentShader);
+			auto shader = assets.LoadShader(vertexPath, materialComponent.customFragmentShader);
+			if (shader && shader->IsValid()) {
+				material->SetShader(shader);
+			}
+		}
+		if (auto param = material->GetParameter("materialCastsShadows"); !param || param->boolValue != materialComponent.cacheCastsShadows) {
+			material->SetBool("materialCastsShadows", materialComponent.cacheCastsShadows);
+		}
+
 		// Check if we've already seen this material
 		if (materialToIndex.find(material) != materialToIndex.end()) {
 			// Reuse existing index
@@ -8418,6 +8544,9 @@ void Renderer::UploadMaterialsToGPU()
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_MaterialSSBO);
 	}
 
+	// Keep SSBO binding point 3 valid for all passes and custom shaders.
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, MATERIAL_SSBO_BINDING, m_MaterialSSBO);
+
 	// Calculate total size needed
 	const size_t materialSize = sizeof(graphics::MaterialSSBO);
 	const size_t requiredSize = m_CompiledMaterials.size();
@@ -8541,6 +8670,9 @@ void Renderer::BuildTextureArray()
 	{
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_TextureArraySSBO);
 	}
+
+	// Keep SSBO binding point 5 valid for all passes and custom shaders.
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, TEXTURE_SSBO_BINDING, m_TextureArraySSBO);
 
 	// Create bindless texture handles for all textures
 	std::vector<GLuint64> textureHandles;
