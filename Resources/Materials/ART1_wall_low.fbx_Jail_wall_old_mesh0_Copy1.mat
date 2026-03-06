@@ -1,33 +1,16 @@
 {
     "parameters": {
-        "materialAlbedo": {
-            "type": "vec4",
-            "value": [
-                1.0,
-                1.0,
-                1.0,
-                1.0
-            ]
-        },
-        "materialMetallic": {
-            "type": "float",
-            "value": 0.0
-        },
-        "materialRoughness": {
-            "type": "float",
-            "value": 0.5
-        },
         "materialEmissive": {
             "type": "vec3",
             "value": [
-                0.0,
-                0.0,
-                0.0
+                0.5259259343147278,
+                0.5259259343147278,
+                0.5259259343147278
             ]
         },
         "materialEmissiveIntensity": {
             "type": "float",
-            "value": 1.0
+            "value": 0.0
         },
         "materialCastsShadows": {
             "type": "bool",
@@ -39,12 +22,12 @@
         },
         "materialAlbedoMap": {
             "type": "texture2d",
-            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Resources\\Textures\\Report.png"
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Resources\\Textures\\ART1_wall_BC.png"
         }
     },
     "uvTransform": {
         "scale": [
-            -1.0,
+            1.0,
             1.0
         ],
         "offset": [
