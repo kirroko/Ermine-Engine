@@ -72,13 +72,13 @@
   <ItemGroup>
     <Compile Include="AnimationExample.cs" />
     <Compile Include="AttackState.cs" />
+    <Compile Include="CutsceneVideo.cs" />
     <Compile Include="SpotLightTrigger.cs" />
     <Compile Include="ChaseState.cs" />
     <Compile Include="CutscenePlayer.cs" />
     <Compile Include="DamagePlayer.cs" />
     <Compile Include="DisableLightCone.cs" />
     <Compile Include="EndElevator.cs" />
-    <Compile Include="EnvironmentAnimation\TemplateScript.cs" />
     <Compile Include="FakePlayer.cs" />
     <Compile Include="GameManager.cs" />
     <Compile Include="GearRotateAnimation.cs" />
@@ -108,6 +108,9 @@
       <Project>{E76B644C-53D8-1F47-1CCC-B7A488F741AF}</Project>
       <Name>Ermine-ScriptAssembly</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="EnvironmentAnimation\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

@@ -370,8 +370,7 @@ void Renderer::Init(const int& screenWidth, const int& screenHeight)
 	m_BloomShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/bloom_vertex.glsl", "../Resources/Shaders/bloom_fragment.glsl");
 	m_PostProcessShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/postprocess_vertex.glsl", "../Resources/Shaders/postprocess_fragment.glsl");
 	m_AAShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/FXAA_vertex.glsl", "../Resources/Shaders/FXAA_fragment.glsl");
-	// m_MotionBlurShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/motionblur_vertex.glsl", "../Resources/Shaders/motionblur_fragment.glsl");
-	// m_MotionBlurMaskShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/motionblur_mask_vertex.glsl", "../Resources/Shaders/motionblur_mask_fragment.glsl");
+	m_MotionBlurShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/motionblur_vertex.glsl", "../Resources/Shaders/motionblur_fragment.glsl");
 	m_ProbeBakeComputeShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/gi_probe_bake_compute.glsl");
 	m_ProbeVoxelizeComputeShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/gi_probe_voxelize_compute.glsl");
 	m_ProbeLightInjectComputeShader = AssetManager::GetInstance().LoadShader("../Resources/Shaders/gi_probe_light_inject_compute.glsl");
@@ -818,20 +817,20 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 	glGenFramebuffers(1, &gBuffer.FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer.FBO);
 
-	// Create RT0 Texture: RGBA16F (48 bits) - Albedo RGB
+	// Create RT0 Texture: RGBA8 (32 bits) - Albedo RGB (albedo is always [0,1], 8bpc is sufficient)
 	glGenTextures(1, &gBuffer.PackedTexture0);
 	glBindTexture(GL_TEXTURE_2D, gBuffer.PackedTexture0);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gBuffer.PackedTexture0, 0);
 
-	// Create RT1 Texture: RGB16F (48 bits) - Normals XYZ
+	// Create RT1 Texture: RG16F (32 bits) - Normals oct-encoded (unit vector has 2 DOF, saves 16 bits vs RGB16F)
 	glGenTextures(1, &gBuffer.PackedTexture1);
 	glBindTexture(GL_TEXTURE_2D, gBuffer.PackedTexture1);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_HALF_FLOAT, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, width, height, 0, GL_RG, GL_HALF_FLOAT, nullptr);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -858,7 +857,18 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, gBuffer.PackedTexture3, 0);
 
-	// Create depth texture for depth testing and reconstruction. 24 bits
+	// Create RT4 Texture: RG16F (32 bits) - Screen-space velocity XY
+	// Savings from RT0 (48→32) + RT1 (48→32) = 32 bits freed, exactly covering this new buffer
+	glGenTextures(1, &gBuffer.PackedTexture4);
+	glBindTexture(GL_TEXTURE_2D, gBuffer.PackedTexture4);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, width, height, 0, GL_RG, GL_HALF_FLOAT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, gBuffer.PackedTexture4, 0);
+
+	// Create depth texture: 32-bit float required for near=0.1/far=1000 range (10000:1 ratio)
 	glGenTextures(1, &gBuffer.DepthTexture);
 	glBindTexture(GL_TEXTURE_2D, gBuffer.DepthTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
@@ -868,9 +878,9 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gBuffer.DepthTexture, 0);
 
-	// Set up MRTs - all 4 color attachments
-	GLenum drawBuffers[4] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3 };
-	glDrawBuffers(4, drawBuffers);
+	// Set up MRTs - 5 color attachments (RT0-RT3 + RT4 velocity)
+	GLenum drawBuffers[5] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4 };
+	glDrawBuffers(5, drawBuffers);
 
 	// Check framebuffer completeness
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -897,12 +907,16 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 	gBuffer.HandlePackedTexture3 = glGetTextureHandleARB(gBuffer.PackedTexture3);
 	glMakeTextureHandleResidentARB(gBuffer.HandlePackedTexture3);
 
+	gBuffer.HandlePackedTexture4 = glGetTextureHandleARB(gBuffer.PackedTexture4);
+	glMakeTextureHandleResidentARB(gBuffer.HandlePackedTexture4);
+
 	gBuffer.HandleDepthTexture = glGetTextureHandleARB(gBuffer.DepthTexture);
 	glMakeTextureHandleResidentARB(gBuffer.HandleDepthTexture);
 
 	m_GBuffer = std::make_shared<GBuffer>(gBuffer);
 
-	EE_CORE_INFO("Created G-Buffer: {0}x{1}, 176 bits per pixel", width, height);
+	// RT0: RGBA8(32) + RT1: RG16F(32) + RT2: RGBA8(32) + RT3: RGBA8(32) + RT4 velocity: RG16F(32) + Depth: 32F(32) = 192 bits
+	EE_CORE_INFO("Created G-Buffer: {0}x{1}, 192 bits per pixel (velocity buffer included at same cost as before)", width, height);
 }
 
 /**
@@ -1496,6 +1510,9 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 	m_GBufferShader->SetUniformMatrix4fv("view", &view.m2[0][0]);
 	m_GBufferShader->SetUniformMatrix4fv("projection", &projection.m2[0][0]);
 
+	// Pass previous frame's view-projection for velocity buffer computation
+	m_GBufferShader->SetUniformMatrix4fv("u_PreviousViewProjection", glm::value_ptr(m_PreviousViewProjectionMatrix));
+
 	// Calculate and pass normal matrix for view (mat3 extracted from view matrix)
 	// Reuse glmView calculated above for camera position
 	// This avoids extracting mat3(view) per-vertex in the shader
@@ -1554,6 +1571,15 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 	// - Fast update: Sort by distance ONLY within existing shader groups
 	SortTransparentObjects(cameraPos, m_NeedsTransparentSort);
 	m_NeedsTransparentSort = false;  // Reset flag after sorting
+
+	// Save current VP for next frame's velocity computation
+	glm::mat4 glmProjection = glm::mat4(
+		projection.m00, projection.m01, projection.m02, projection.m03,
+		projection.m10, projection.m11, projection.m12, projection.m13,
+		projection.m20, projection.m21, projection.m22, projection.m23,
+		projection.m30, projection.m31, projection.m32, projection.m33
+	);
+	m_PreviousViewProjectionMatrix = glmProjection * glmView;
 
 	EndGeometryPass();
 }
@@ -3477,6 +3503,91 @@ void Renderer::RenderLightingPass(const Mtx44& view, const Mtx44& projection)
 }
 
 /**
+ * @brief Render motion blur using the per-pixel velocity GBuffer.
+ *        Reads from m_PostProcessBuffer, writes to m_MotionBlurBuffer.
+ *        Camera-attached objects have zero velocity (written in vertex shader) so they're never blurred.
+ */
+void Renderer::RenderMotionBlurPass()
+{
+	if (!m_MotionBlurEnabled || !m_MotionBlurShader || !m_MotionBlurShader->IsValid())
+		return;
+	if (!m_MotionBlurBuffer || !m_PostProcessBuffer || !m_GBuffer)
+		return;
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_MotionBlurBuffer->FBO);
+	glViewport(0, 0, m_MotionBlurBuffer->width, m_MotionBlurBuffer->height);
+	glDisable(GL_DEPTH_TEST);
+
+	m_MotionBlurShader->Bind();
+
+	// Input color from lighting/forward pass
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, m_PostProcessBuffer->ColorTexture);
+	m_MotionBlurShader->SetUniform1i("u_ColorTexture", 0);
+
+	// Bindless depth handle
+	GLint locDepth = glGetUniformLocation(m_MotionBlurShader->GetRendererID(), "u_DepthHandle");
+	if (locDepth != -1)
+	{
+		glUniform2ui(locDepth,
+			static_cast<GLuint>(m_GBuffer->HandleDepthTexture),
+			static_cast<GLuint>(m_GBuffer->HandleDepthTexture >> 32));
+	}
+
+	// Bindless velocity handle (RT4)
+	GLint locVel = glGetUniformLocation(m_MotionBlurShader->GetRendererID(), "u_VelocityHandle");
+	if (locVel != -1)
+	{
+		glUniform2ui(locVel,
+			static_cast<GLuint>(m_GBuffer->HandlePackedTexture4),
+			static_cast<GLuint>(m_GBuffer->HandlePackedTexture4 >> 32));
+	}
+
+	m_MotionBlurShader->SetUniform1f("u_MotionBlurStrength", m_MotionBlurStrength);
+	m_MotionBlurShader->SetUniform1i("u_NumSamples", m_MotionBlurSamples);
+	m_MotionBlurShader->SetUniform1i("u_FirstFrame", (frameCounter == 0) ? 1 : 0);
+
+	// Camera near/far for depth linearization in depth-aware blur rejection
+	float nearClip = 0.1f;
+	float farClip = 1000.0f;
+	auto& ecs = ECS::GetInstance();
+#if defined(EE_EDITOR)
+	if (editor::EditorGUI::isPlaying)
+	{
+		auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
+		if (gameCamera && gameCamera->HasValidCamera())
+		{
+			nearClip = gameCamera->GetNearClip();
+			farClip = gameCamera->GetFarClip();
+		}
+		else
+		{
+			const auto& editorCamera = editor::EditorCamera::GetInstance();
+			nearClip = editorCamera.GetNearClip();
+			farClip = editorCamera.GetFarClip();
+		}
+	}
+	else
+	{
+		const auto& editorCamera = editor::EditorCamera::GetInstance();
+		nearClip = editorCamera.GetNearClip();
+		farClip = editorCamera.GetFarClip();
+	}
+#else
+	auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
+	if (gameCamera && gameCamera->HasValidCamera())
+	{
+		nearClip = gameCamera->GetNearClip();
+		farClip = gameCamera->GetFarClip();
+	}
+#endif
+	m_MotionBlurShader->SetUniform1f("u_NearClip", nearClip);
+	m_MotionBlurShader->SetUniform1f("u_FarClip", farClip);
+
+	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
+}
+
+/**
  * @brief Render post-processing effects using the lighting pass output
  * @param view The view matrix
  * @param projection The projection matrix
@@ -3628,7 +3739,7 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 
 	m_PostProcessShader->Bind();
 
-	// Bind main scene texture
+	// Bind main scene texture (already includes motion blur if enabled in deferred stage)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_PostProcessBuffer->ColorTexture);
 	m_PostProcessShader->SetUniform1i("u_LightingTexture", 0);
@@ -3682,6 +3793,10 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 	m_PostProcessShader->SetUniform1f("u_GrainScale", m_GrainScale);
 	m_PostProcessShader->SetUniform1i("u_ChromaticAberration", m_ChromaticAberrationEnabled ? 1 : 0);
 	m_PostProcessShader->SetUniform1f("u_ChromaticAmount", m_ChromaticAmount);
+	m_PostProcessShader->SetUniform1i("u_RadialBlur", m_RadialBlurEnabled ? 1 : 0);
+	m_PostProcessShader->SetUniform1f("u_RadialBlurStrength", m_RadialBlurStrength);
+	m_PostProcessShader->SetUniform1i("u_RadialBlurSamples", m_RadialBlurSamples);
+	m_PostProcessShader->SetUniform2f("u_RadialBlurCenter", m_RadialBlurCenter.x, m_RadialBlurCenter.y);
 
 	// Bind noise texture for film grain (use texture unit 3 to avoid conflict with outline mask on unit 2)
 	glActiveTexture(GL_TEXTURE3);
@@ -3689,6 +3804,17 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 	m_PostProcessShader->SetUniform1i("u_NoiseTexture", 3);
 	// Animate noise by offsetting UV based on time
 	m_PostProcessShader->SetUniform2f("u_NoiseOffset", std::fmod(m_ElapsedTime * 10.0f, 1.0f), std::fmod(m_ElapsedTime * 7.0f, 1.0f));
+
+	// Bind optional vignette map texture on texture unit 4
+	const bool hasVignetteMap = (m_VignetteMapTexture && m_VignetteMapTexture->IsValid());
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, hasVignetteMap ? m_VignetteMapTexture->GetRendererID() : 0);
+	m_PostProcessShader->SetUniform1i("u_VignetteMap", 4);
+	m_PostProcessShader->SetUniform1i("u_HasVignetteMap", hasVignetteMap ? 1 : 0);
+	m_PostProcessShader->SetUniform1f("u_VignetteCoverage", m_VignetteCoverage);
+	m_PostProcessShader->SetUniform1f("u_VignetteFalloff", m_VignetteFalloff);
+	m_PostProcessShader->SetUniform1f("u_VignetteMapStrength", m_VignetteMapStrength);
+	m_PostProcessShader->SetUniform3f("u_VignetteMapRGBModifier", m_VignetteMapRGBModifier);
 
 	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
 
@@ -3797,12 +3923,26 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 		glDepthMask(GL_FALSE);
 	}
 
+	// Motion blur pass - apply to deferred/skybox layer only.
+	// Forward-rendered content (including camera-attached objects) is composited after this, unblurred.
+	RenderMotionBlurPass();
+
+	// When motion blur is enabled, copy blurred base back into post-process buffer before forward pass.
+	if (m_MotionBlurEnabled && m_MotionBlurShader && m_MotionBlurShader->IsValid() &&
+		m_MotionBlurBuffer && m_PostProcessBuffer)
+	{
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_MotionBlurBuffer->FBO);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+		glBlitFramebuffer(
+			0, 0, m_MotionBlurBuffer->width, m_MotionBlurBuffer->height,
+			0, 0, m_PostProcessBuffer->width, m_PostProcessBuffer->height,
+			GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glBindFramebuffer(GL_FRAMEBUFFER, m_PostProcessBuffer->FBO);
+	}
+
 	// FORWARD PASS - render all custom shaders (opaque + transparent) and transparent standard
 	// This handles: opaque custom shaders, transparent custom shaders, and transparent standard
 	RenderForwardPass(view, projection);
-
-	// Render camera-attached mask for forward-rendered objects (motion blur)
-	// RenderMotionBlurMask(view, projection);
 
 #if defined(EE_EDITOR)
 
@@ -3865,7 +4005,7 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 
 #endif
 
-	// Post-processing pass - read from lighting + transparency pass output
+	// Post-processing pass - read final composited scene output
 	RenderPostProcessPass(view, projection);
 }
 
@@ -3948,6 +4088,10 @@ void Renderer::CleanupGBuffer()
 			glMakeTextureHandleNonResidentARB(m_GBuffer->HandlePackedTexture3);
 			m_GBuffer->HandlePackedTexture3 = 0;
 		}
+		if (m_GBuffer->HandlePackedTexture4 != 0) {
+			glMakeTextureHandleNonResidentARB(m_GBuffer->HandlePackedTexture4);
+			m_GBuffer->HandlePackedTexture4 = 0;
+		}
 		if (m_GBuffer->HandleDepthTexture != 0) {
 			glMakeTextureHandleNonResidentARB(m_GBuffer->HandleDepthTexture);
 			m_GBuffer->HandleDepthTexture = 0;
@@ -3971,6 +4115,10 @@ void Renderer::CleanupGBuffer()
 		if (m_GBuffer->PackedTexture3 != 0)
 		{
 			glDeleteTextures(1, &m_GBuffer->PackedTexture3);
+		}
+		if (m_GBuffer->PackedTexture4 != 0)
+		{
+			glDeleteTextures(1, &m_GBuffer->PackedTexture4);
 		}
 		if (m_GBuffer->DepthTexture != 0)
 		{
@@ -7849,6 +7997,15 @@ void Renderer::SyncToGlobalGraphics()
 	m_GlobalGraphics.gamma = m_Gamma;
 	m_GlobalGraphics.vignetteIntensity = m_VignetteIntensity;
 	m_GlobalGraphics.vignetteRadius = m_VignetteRadius;
+	m_GlobalGraphics.vignetteCoverage = m_VignetteCoverage;
+	m_GlobalGraphics.vignetteFalloff = m_VignetteFalloff;
+	m_GlobalGraphics.vignetteMapStrength = m_VignetteMapStrength;
+	m_GlobalGraphics.vignetteMapRGBModifier = Ermine::Vec3(
+		m_VignetteMapRGBModifier.r,
+		m_VignetteMapRGBModifier.g,
+		m_VignetteMapRGBModifier.b
+	);
+	m_GlobalGraphics.vignetteMapPath = m_VignetteMapPath;
 	m_GlobalGraphics.bloomStrength = m_BloomStrength;
 
 	m_GlobalGraphics.filmGrainEnabled = m_FilmGrainEnabled;
@@ -7856,6 +8013,11 @@ void Renderer::SyncToGlobalGraphics()
 	m_GlobalGraphics.grainScale = m_GrainScale;
 	m_GlobalGraphics.chromaticAberrationEnabled = m_ChromaticAberrationEnabled;
 	m_GlobalGraphics.chromaticAmount = m_ChromaticAmount;
+	m_GlobalGraphics.radialBlurEnabled = m_RadialBlurEnabled;
+	m_GlobalGraphics.radialBlurStrength = m_RadialBlurStrength;
+	m_GlobalGraphics.radialBlurSamples = m_RadialBlurSamples;
+	m_GlobalGraphics.radialBlurCenterX = m_RadialBlurCenter.x;
+	m_GlobalGraphics.radialBlurCenterY = m_RadialBlurCenter.y;
 
 	m_GlobalGraphics.fxaaSpanMax = m_FXAASpanMax;
 	m_GlobalGraphics.fxaaReduceMin = m_FXAAReduceMin;
@@ -7918,6 +8080,25 @@ void Renderer::ApplyFromGlobalGraphics()
 	m_Gamma = m_GlobalGraphics.gamma;
 	m_VignetteIntensity = m_GlobalGraphics.vignetteIntensity;
 	m_VignetteRadius = m_GlobalGraphics.vignetteRadius;
+	m_VignetteCoverage = m_GlobalGraphics.vignetteCoverage;
+	m_VignetteFalloff = m_GlobalGraphics.vignetteFalloff;
+	m_VignetteMapStrength = m_GlobalGraphics.vignetteMapStrength;
+	m_VignetteMapRGBModifier = glm::vec3(
+		m_GlobalGraphics.vignetteMapRGBModifier.x,
+		m_GlobalGraphics.vignetteMapRGBModifier.y,
+		m_GlobalGraphics.vignetteMapRGBModifier.z
+	);
+	m_VignetteMapPath = m_GlobalGraphics.vignetteMapPath;
+	if (!m_VignetteMapPath.empty()) {
+		m_VignetteMapTexture = AssetManager::GetInstance().LoadTexture(m_VignetteMapPath);
+		if (!m_VignetteMapTexture || !m_VignetteMapTexture->IsValid()) {
+			EE_CORE_WARN("Failed to load vignette map texture: {}", m_VignetteMapPath);
+			m_VignetteMapTexture.reset();
+		}
+	}
+	else {
+		m_VignetteMapTexture.reset();
+	}
 	m_BloomStrength = m_GlobalGraphics.bloomStrength;
 
 	m_FilmGrainEnabled = m_GlobalGraphics.filmGrainEnabled;
@@ -7925,6 +8106,13 @@ void Renderer::ApplyFromGlobalGraphics()
 	m_GrainScale = m_GlobalGraphics.grainScale;
 	m_ChromaticAberrationEnabled = m_GlobalGraphics.chromaticAberrationEnabled;
 	m_ChromaticAmount = m_GlobalGraphics.chromaticAmount;
+	m_RadialBlurEnabled = m_GlobalGraphics.radialBlurEnabled;
+	m_RadialBlurStrength = std::clamp(m_GlobalGraphics.radialBlurStrength, 0.0f, 0.35f);
+	m_RadialBlurSamples = std::clamp(m_GlobalGraphics.radialBlurSamples, 4, 24);
+	m_RadialBlurCenter = glm::vec2(
+		std::clamp(m_GlobalGraphics.radialBlurCenterX, 0.0f, 1.0f),
+		std::clamp(m_GlobalGraphics.radialBlurCenterY, 0.0f, 1.0f)
+	);
 
 	m_FXAASpanMax = m_GlobalGraphics.fxaaSpanMax;
 	m_FXAAReduceMin = m_GlobalGraphics.fxaaReduceMin;
