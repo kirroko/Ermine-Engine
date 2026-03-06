@@ -4291,8 +4291,6 @@ void Renderer::CleanupPostProcessBuffer()
  */
 void Renderer::UpdateLightsUBO(const Mtx44& view)
 {
-	(void)view;
-
 	const auto& ecs = Ermine::ECS::GetInstance();
 	if (!m_LightSystem) {
 		return;
@@ -4360,6 +4358,16 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 	Frustum frustum;
 	glm::mat4 viewProj = projGlm * viewGlm;
 	frustum.ExtractFromViewProjection(viewProj);
+	const glm::mat4 sortView = ToGlm(view);
+
+	struct SortedLightCandidate
+	{
+		EntityID entity;
+		float viewZ;
+	};
+
+	std::vector<SortedLightCandidate> visibleLights;
+	visibleLights.reserve(m_LightSystem->m_Entities.size());
 
 	std::vector<LightGPU> lights;
 	lights.reserve(MAX_LIGHTS);
@@ -4367,7 +4375,6 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 	// Clear and prepare shadow casting light list and layer allocator
 	m_ShadowCastingLights.clear();
 	int currentLayer = 0;
-	int lightIndex = 0;
 
 	for (EntityID e : m_LightSystem->m_Entities)
 	{
@@ -4402,6 +4409,32 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		{
 			continue;
 		}
+
+		const glm::vec4 viewPosition = sortView * glm::vec4(lightPos, 1.0f);
+		visibleLights.push_back({ e, viewPosition.z });
+	}
+
+	std::stable_sort(visibleLights.begin(), visibleLights.end(),
+		[](const SortedLightCandidate& a, const SortedLightCandidate& b)
+		{
+			// View-space forward is -Z, so the light with the larger Z value is nearer.
+			return a.viewZ > b.viewZ;
+		});
+	if (visibleLights.size() > MAX_LIGHTS)
+	{
+		visibleLights.resize(MAX_LIGHTS);
+	}
+
+	for (const SortedLightCandidate& candidate : visibleLights)
+	{
+		EntityID e = candidate.entity;
+		auto& light = ecs.GetComponent<Light>(e);
+		const glm::mat4 lightWorld = GetEntityWorldMatrix(e);
+
+		// Derive light transform from world matrix so parenting is respected.
+		const glm::vec3 lightPos = ExtractWorldPosition(lightWorld);
+		const glm::vec3 dirWorld = ExtractWorldForward(lightWorld);
+
 		// Allocate shadow layers for this light (if any)
 		int shadowLayersNeeded = 0;
 		if (light.castsShadows) {
@@ -4453,12 +4486,6 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 			gpu.pointLightMatrices[i] = light.pointLightMatrices[i];
 		}
 		lights.emplace_back(gpu);
-
-		// Stop adding more lights if we've reached the maximum allowed (excess lights will simply not be rendered)
-		if (lights.size() >= MAX_LIGHTS)
-			break;
-
-		lightIndex++;
 	}
 
 	// Calculate total shadow instances for cascade rendering

@@ -21,7 +21,7 @@ public class OrbTeleport : MonoBehaviour
     private float timeSinceLastDamage = 0f;
     public float regenDelay = 2.0f; // seconds before regen starts
 
-    private float teleportDashDuration = 0.2f; // total dash travel duration in seconds
+    private float teleportDashDuration = 0.4f; // total dash travel duration in seconds
     private float teleportDashRadialBlurBaseStrength = 0.015f; // baseline radial blur during dash
     private float teleportDashRadialBlurPeakStrength = 0.3f; // max radial blur near dash end
     private float teleportDashRadialBlurSpikeStart = 0.70f; // normalized time when blur spike starts
