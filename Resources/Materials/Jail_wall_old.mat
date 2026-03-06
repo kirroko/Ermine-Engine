@@ -3,9 +3,9 @@
         "materialAlbedo": {
             "type": "vec4",
             "value": [
-                1.0,
-                1.0,
-                1.0,
+                0.4000000059604645,
+                0.4000000059604645,
+                0.4000000059604645,
                 1.0
             ]
         },
@@ -17,6 +17,10 @@
             "type": "float",
             "value": 0.5
         },
+        "materialAo": {
+            "type": "float",
+            "value": 0.0
+        },
         "materialEmissive": {
             "type": "vec3",
             "value": [
@@ -27,7 +31,15 @@
         },
         "materialEmissiveIntensity": {
             "type": "float",
+            "value": 0.0
+        },
+        "materialNormalStrength": {
+            "type": "float",
             "value": 1.0
+        },
+        "materialShadingModel": {
+            "type": "int",
+            "value": 0
         },
         "materialCastsShadows": {
             "type": "bool",
@@ -35,16 +47,32 @@
         },
         "materialHasAlbedoMap": {
             "type": "bool",
-            "value": true
+            "value": false
         },
-        "materialAlbedoMap": {
-            "type": "texture2d",
-            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Resources\\Textures\\Report.png"
+        "materialHasNormalMap": {
+            "type": "bool",
+            "value": false
+        },
+        "materialHasRoughnessMap": {
+            "type": "bool",
+            "value": false
+        },
+        "materialHasMetallicMap": {
+            "type": "bool",
+            "value": false
+        },
+        "materialHasAoMap": {
+            "type": "bool",
+            "value": false
+        },
+        "materialHasEmissiveMap": {
+            "type": "bool",
+            "value": false
         }
     },
     "uvTransform": {
         "scale": [
-            -1.0,
+            1.0,
             1.0
         ],
         "offset": [
