@@ -274,14 +274,7 @@ namespace Ermine
             // Clip attach
             if (!n.isAttached) {
                 if (ImGui::BeginCombo(("Attach##" + std::to_string(n.id)).c_str(), "Select Clip...")) {
-                    std::string search = m_clipSearch;
-                    std::transform(search.begin(), search.end(), search.begin(), ::tolower);
                     for (auto& clip : animator->GetClips()) {
-                        std::string nameLower = clip.name;
-                        std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
-                        if (!search.empty() && nameLower.find(search) == std::string::npos)
-                            continue;
-
                         if (ImGui::Selectable(clip.name.c_str())) {
                             n.clipName = clip.name;
                             n.isAttached = true;
@@ -408,7 +401,7 @@ namespace Ermine
      */
     void AnimationEditorImGUI::DrawStateInspector(const std::shared_ptr<AnimationGraph>& graph, const std::shared_ptr<graphics::Animator>& animator)
     {
-        ImGui::BeginChild("StateInspector", ImVec2(0, 200), true);
+        ImGui::BeginChild("StateInspector", ImVec2(0, 160), true);
 
         // State creation
         ImGui::InputTextWithHint("##NewState", "New state name...", m_newStateName, IM_ARRAYSIZE(m_newStateName));
@@ -417,9 +410,6 @@ namespace Ermine
             CreateState(m_newStateName);
             m_newStateName[0] = '\0';
         }
-
-        // Clip search
-        ImGui::InputTextWithHint("##SearchClip", "Search clip...", m_clipSearch, IM_ARRAYSIZE(m_clipSearch));
 
         if (auto clip = animator->GetCurrentClip()) {
             // Small timeline scrubber
@@ -524,7 +514,7 @@ namespace Ermine
      */
     void AnimationEditorImGUI::DrawTransitionInspector(const std::shared_ptr<AnimationGraph>& graph)
     {
-        ImGui::BeginChild("TransitionInspector", ImVec2(0, 200), true);
+        ImGui::BeginChild("TransitionInspector", ImVec2(0, 0), true);
 
         if (graph->transitions.empty()) {
             ImGui::TextDisabled("No transitions yet. Connect states in the graph.");
@@ -727,10 +717,14 @@ namespace Ermine
                     ImGui::EndTabItem();
                 }
 
-                // States
+                // States + Node Editor
                 if (ImGui::BeginTabItem("States")) {
+                    // States
                     DrawStateInspector(graph, animator);
                     ImGui::EndTabItem();
+
+                    // Node Editor
+                    DrawNodeEditor(graph, animator);
                 }
 
                 // Transitions
@@ -741,9 +735,6 @@ namespace Ermine
 
                 ImGui::EndTabBar();
             }
-
-            // Node Editor
-            DrawNodeEditor(graph, animator);
         }
         ImGui::EndChild(); // RightColumn end
 
