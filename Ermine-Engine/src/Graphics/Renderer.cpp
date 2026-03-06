@@ -4298,6 +4298,13 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		return;
 	}
 
+	// Ensure UBO is initialized before trying to update it
+	if (m_LightsUBO == 0)
+	{
+		EE_CORE_ERROR("Lights UBO not initialized!");
+		return;
+	}
+
 	// ========== FRUSTUM CULLING SETUP ==========
 	// Get camera view and projection matrices
 	// Use GameCamera if active (playing), otherwise use EditorCamera
@@ -4446,6 +4453,11 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 			gpu.pointLightMatrices[i] = light.pointLightMatrices[i];
 		}
 		lights.emplace_back(gpu);
+
+		// Stop adding more lights if we've reached the maximum allowed (excess lights will simply not be rendered)
+		if (lights.size() >= MAX_LIGHTS)
+			break;
+
 		lightIndex++;
 	}
 
