@@ -2962,6 +2962,7 @@ namespace Ermine::editor {
 		ImGui::DragFloat("Max Climb", &nav.agentMaxClimb, 0.01f, 0.0f, 2.0f);
 		ImGui::DragFloat("Max Slope", &nav.agentMaxSlope, 0.1f, 0.0f, 89.0f);
 
+		ImGui::Checkbox("Bake CustomMesh Shape", &nav.bakeUsingCustomMesh);
 		ImGui::Separator();
 
 		if (ImGui::Button("Bake Nav Mesh"))
@@ -3050,8 +3051,8 @@ namespace Ermine::editor {
 
 					a.radius = r;
 					// Total capsule height = cylinder(2*halfH) + two hemispheres(2*r)
-					a.height = 2.0f * halfH + 2.0f * r;
-					a.centerYOffset = halfH + r;
+					a.height = 2.0f * halfH;
+					a.centerYOffset = halfH;
 					break;
 				}
 
@@ -3087,6 +3088,10 @@ namespace Ermine::editor {
 				if (a.stoppingDistance < a.radius)
 					a.stoppingDistance = a.radius;
 
+				agent.radius = std::clamp(agent.radius, 0.05f, 2.0f);
+				agent.height = std::clamp(agent.height, 0.2f, 6.0f);
+				agent.centerYOffset = std::clamp(agent.centerYOffset, 0.0f, agent.height);
+
 				return true;
 		};
 
@@ -3110,6 +3115,7 @@ namespace Ermine::editor {
 		ImGui::Checkbox("Auto Fit From Collider", &agent.autoFitFromCollider);
 		ImGui::DragFloat("Radius", &agent.radius, 0.01f, 0.01f, 10.0f);
 		ImGui::DragFloat("Height", &agent.height, 0.01f, 0.01f, 20.0f);
+		agent.centerYOffset = std::max(agent.radius, agent.height * 0.5f);
 
 		if (ImGui::Button("Refit From Collider"))
 			agent.didAutoFit = false;

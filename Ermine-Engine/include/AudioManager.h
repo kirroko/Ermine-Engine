@@ -24,6 +24,15 @@ using namespace std;
 namespace Ermine {
     // Remove the separate Vector3 struct since we're using Vector3D from Math.h
 
+    struct FadeOutInfo
+    {
+        FMOD::Channel* channel;
+        int channelId;          // Track the channel ID for lookup
+        float startVolume;
+        float fadeDuration;
+        float elapsedTime;
+    };
+
     struct Implementation {
         Implementation();
         ~Implementation();
@@ -39,6 +48,7 @@ namespace Ermine {
         EventMap mEvents;
         SoundMap mSounds;
         ChannelMap mChannels;
+        vector<FadeOutInfo> mFadeOutChannels; // Channels currently fading out
     };
 
     class CAudioEngine {
@@ -57,8 +67,8 @@ namespace Ermine {
         static void SetChannelVolume(int nChannelId, float fVolumedB);
         static void SetChannelPaused(int nChannelId, bool paused);
         static bool IsPlaying(int nChannelId);
-        static void StopChannel(int nChannelId);
-        static void StopAllChannels();
+        static void StopChannel(int nChannelId, bool fadeOut = false, float fadeDuration = 0.3f);
+        static void StopAllChannels(bool fadeOut = false, float fadeDuration = 0.3f);
         static void PauseAllChannels();
         static void ResumeAllChannels();
 

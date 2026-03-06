@@ -3,31 +3,36 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "48ab75fc47e44644a348fadabc3cf38b"
+          "guid": "618b3fbaca931742b5b675ff1871c7e6"
+        },
+        "ObjectMetaData": {
+          "name": "GlobalAudio",
+          "tag": "Audio",
+          "selfActive": false
         },
         "GlobalAudioComponent": {
           "masterVolume": 1.0,
-          "musicVolume": 0.0860000029206276,
+          "musicVolume": 0.23999999463558198,
           "sfxVolume": 1.0,
-          "ambienceVolume": 0.052000001072883609,
+          "ambienceVolume": 0.08900000154972077,
           "autoPlay": true,
           "music": [
             {
               "name": "test_music",
-              "path": "../Resources/Audio/231113-industrial-noise-dark-176107.mp3",
+              "path": "../Resources/Audio/NewBGM.wav",
               "volume": 1.0
             }
           ],
           "sfx": [
             {
               "name": "Shoot",
-              "path": "../Resources/Audio/Shoot_Orb.wav",
-              "volume": 1.0
+              "path": "../Resources/Audio/SteampunkWeapon_01.wav",
+              "volume": 0.5
             },
             {
               "name": "Teleport",
-              "path": "../Resources/Audio/Teleport.wav",
-              "volume": 1.0
+              "path": "../Resources/Audio/Player_Dash_v2 1.wav",
+              "volume": 0.6000000238418579
             },
             {
               "name": "Jump",
@@ -41,13 +46,13 @@
             },
             {
               "name": "UIClick",
-              "path": "../Resources/Audio/UI_Confirm.wav",
+              "path": "../Resources/Audio/UI_Confirm_Smaller.wav",
               "volume": 1.0
             },
             {
               "name": "UIHover",
               "path": "../Resources/Audio/UI_Hover 5.wav",
-              "volume": 1.0
+              "volume": 0.699999988079071
             },
             {
               "name": "SwitchOn",
@@ -63,15 +68,10 @@
           "ambience": [
             {
               "name": "Steampunk",
-              "path": "../Resources/Audio/futuristic-factory-noise-002-311136.mp3",
+              "path": "../Resources/Audio/Ambience_Factory_v2.wav",
               "volume": 1.0
             }
           ]
-        },
-        "ObjectMetaData": {
-          "name": "GlobalAudio",
-          "tag": "Audio",
-          "selfActive": false
         },
         "HierarchyComponent": {
           "depth": 0

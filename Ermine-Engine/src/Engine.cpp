@@ -685,6 +685,8 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 		while (FrameController::ShouldUpdateFixed())
 		{
 			ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->FixedUpdate();
+			ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());		// FSM update
+			ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());	// AI NavMesh Agent update
 			ECS::GetInstance().GetSystem<Physics>()->Update(FrameController::GetFixedDeltaTime());
 		}
 
@@ -692,8 +694,6 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 		ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();									// Game logic updates transforms, forces, etc
 		ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();									// Update hierarchy transforms first
 		ECS::GetInstance().GetSystem<GISystem>()->Update();													// Assign GI probe indices
-		ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());		// FSM update
-		ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());	// AI NavMesh Agent update
 		ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());// Animation Update
 		ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
 		ECS::GetInstance().GetSystem<GPUParticleSystem>()->Update(FrameController::GetDeltaTime());

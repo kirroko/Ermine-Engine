@@ -129,6 +129,14 @@ namespace Ermine {
 
         m_Initialized = true;
         EE_CORE_INFO("GPU Orb Particle System initialized");
+
+        // Load Swirl01.png for shockwave effect (renderMode 3)
+        m_Swirl01TexRef = AssetManager::GetInstance().LoadTexture("../Resources/Textures/Swirl01.png");
+        if (m_Swirl01TexRef && m_Swirl01TexRef->IsValid()) {
+            m_Swirl01Tex = m_Swirl01TexRef->GetRendererID();
+        } else {
+            EE_CORE_WARN("Failed to load Swirl01.png for shockwave effect.");
+        }
     }
 
     void GPUParticleSystem::InitializeEmitter(GPUParticleEmitter& emitter)
@@ -455,6 +463,12 @@ namespace Ermine {
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             } else if (emitter.renderMode == 2) {
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive for electric
+            } else if (emitter.renderMode == 3) {
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive for shockwave sprite
+                // Bind Swirl01.png to texture unit 7
+                glActiveTexture(GL_TEXTURE7);
+                glBindTexture(GL_TEXTURE_2D, m_Swirl01Tex);
+                glUniform1i(glGetUniformLocation(program, "u_SpriteTexture"), 7);
             } else {
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE);
             }
@@ -527,6 +541,10 @@ namespace Ermine {
             glDeleteTextures(1, &m_SmokePuffTex);
             m_SmokePuffTex = 0;
         }
+
+        // Release Swirl01 reference (AssetManager owns the GL texture, don't delete it)
+        m_Swirl01TexRef = nullptr;
+        m_Swirl01Tex = 0;
 
         m_Initialized = false;
         EE_CORE_INFO("GPU Orb Particle System cleaned up");
