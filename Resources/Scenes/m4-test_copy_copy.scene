@@ -51772,7 +51772,25 @@
           "parentGuid": "391312a00c129346be4c2717bedc87a6",
           "depth": 3
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "HealthDrivenMaterialFill",
+              "enabled": true,
+              "fields": {
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
+                },
+                "enableDebugLogs": {
+                  "t": 2,
+                  "v": true
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
