@@ -82,6 +82,7 @@
     <Compile Include="CoreModule\GlobalAudio.cs" />
     <Compile Include="CoreModule\Input.cs" />
     <Compile Include="CoreModule\Mathf.cs" />
+    <Compile Include="CoreModule\Material.cs" />
     <Compile Include="CoreModule\Matrix4x4.cs" />
     <Compile Include="CoreModule\PostEffects.cs" />
     <Compile Include="CoreModule\Prefab.cs" />
