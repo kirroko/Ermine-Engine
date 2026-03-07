@@ -18,6 +18,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Texture.h"
 #include "Cubemap.h"
 #include "MathVector.h"
+#include <algorithm>
+#include <cmath>
 
 namespace Ermine::graphics
 {
@@ -96,7 +98,7 @@ namespace Ermine::graphics
         int shadingModel{ 0 };                   // 4 bytes (48-51)
         uint32_t textureFlags{ 0 };              // 4 bytes (52-55) - Packed bitfield for all texture flags
         int castsShadows{ 1 };                   // 4 bytes (56-59) - Whether this material casts shadows (1=true, 0=false)
-        float _pad0{};                           // 4 bytes (60-63) - padding for alignment
+        float fillAmount{ 1.0f };                // 4 bytes (60-63) - Mesh fill amount [0,1]
 
         // UV Scale and Offset
         Vec2 uvScale{ 1.0f, 1.0f };             // 8 bytes (64-71)
@@ -110,8 +112,8 @@ namespace Ermine::graphics
 
         int aoMapIndex{ -1 };                   // 4 bytes (96-99)
         int emissiveMapIndex{ -1 };             // 4 bytes (100-103)
-        int _pad1{};                            // 4 bytes (104-107) - padding
-        int _pad2{};                            // 4 bytes (108-111) - padding for vec4 alignment
+        float fillDirOctX{ 0.0f };              // 4 bytes (104-107) - Oct-encoded fill direction X
+        float fillDirOctY{ 1.0f };              // 4 bytes (108-111) - Oct-encoded fill direction Y
         // Total: 112 bytes (down from 128 bytes) - 12.5% reduction
     };
 
@@ -140,7 +142,9 @@ namespace Ermine::graphics
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
                 {"materialHasEmissiveMap", false},
-                {"materialCastsShadows", true}
+                {"materialCastsShadows", true},
+                {"materialFillAmount", 1.0f},
+                {"materialFillDirection", Vec3(0.0f, 1.0f, 0.0f)}
             };
         }
         // Returns a parameter map for a metallic PBR material.
@@ -161,7 +165,9 @@ namespace Ermine::graphics
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
                 {"materialHasEmissiveMap", false},
-                {"materialCastsShadows", true}
+                {"materialCastsShadows", true},
+                {"materialFillAmount", 1.0f},
+                {"materialFillDirection", Vec3(0.0f, 1.0f, 0.0f)}
             };
         }
 
@@ -183,7 +189,9 @@ namespace Ermine::graphics
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
                 {"materialHasEmissiveMap", false},
-                {"materialCastsShadows", true}
+                {"materialCastsShadows", true},
+                {"materialFillAmount", 1.0f},
+                {"materialFillDirection", Vec3(0.0f, 1.0f, 0.0f)}
             };
         }
 		// Emissive material
@@ -204,7 +212,9 @@ namespace Ermine::graphics
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
                 {"materialHasEmissiveMap", false},
-                {"materialCastsShadows", true}
+                {"materialCastsShadows", true},
+                {"materialFillAmount", 1.0f},
+                {"materialFillDirection", Vec3(0.0f, 1.0f, 0.0f)}
             };
         }
 
@@ -226,7 +236,9 @@ namespace Ermine::graphics
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
                 {"materialHasEmissiveMap", false},
-                {"materialCastsShadows", true}
+                {"materialCastsShadows", true},
+                {"materialFillAmount", 1.0f},
+                {"materialFillDirection", Vec3(0.0f, 1.0f, 0.0f)}
             };
         }
 
@@ -248,7 +260,9 @@ namespace Ermine::graphics
                 {"materialHasMetallicMap", false},
                 {"materialHasAoMap", false},
                 {"materialHasEmissiveMap", false},
-                {"materialCastsShadows", true}
+                {"materialCastsShadows", true},
+                {"materialFillAmount", 1.0f},
+                {"materialFillDirection", Vec3(0.0f, 1.0f, 0.0f)}
             };
         }
 
@@ -261,6 +275,38 @@ namespace Ermine::graphics
     class Material
     {
     private:
+        static float Clamp01(const float value)
+        {
+            return std::max(0.0f, std::min(1.0f, value));
+        }
+
+        static Vec2 OctEncodeDirection(Vec3 direction)
+        {
+            const float lenSq = direction.x * direction.x + direction.y * direction.y + direction.z * direction.z;
+            if (lenSq < 1e-12f) {
+                direction = Vec3(0.0f, 1.0f, 0.0f);
+            }
+            else {
+                const float invLen = 1.0f / std::sqrt(lenSq);
+                direction = direction * invLen;
+            }
+
+            const float invL1 = 1.0f / (std::fabs(direction.x) + std::fabs(direction.y) + std::fabs(direction.z));
+            Vec2 encoded(direction.x * invL1, direction.y * invL1);
+
+            if (direction.z < 0.0f)
+            {
+                const float signX = (encoded.x >= 0.0f) ? 1.0f : -1.0f;
+                const float signY = (encoded.y >= 0.0f) ? 1.0f : -1.0f;
+                const float oldX = encoded.x;
+                const float oldY = encoded.y;
+                encoded.x = (1.0f - std::fabs(oldY)) * signX;
+                encoded.y = (1.0f - std::fabs(oldX)) * signY;
+            }
+
+            return encoded;
+        }
+
         std::map<std::string, MaterialParam> m_parameters;
         std::shared_ptr<Shader> m_shader;
 
@@ -336,6 +382,32 @@ namespace Ermine::graphics
 
             if (auto param = GetParameter("materialCastsShadows"))
                 m_materialData.castsShadows = param->boolValue ? 1 : 0;
+
+            // Mesh fill controls
+            float fillAmount = 1.0f;
+            if (auto param = GetParameter("materialFillAmount"))
+            {
+                if (!param->floatValues.empty()) {
+                    fillAmount = param->floatValues[0];
+                }
+            }
+            m_materialData.fillAmount = Clamp01(fillAmount);
+
+            Vec3 fillDirection(0.0f, 1.0f, 0.0f);
+            if (auto param = GetParameter("materialFillDirection"))
+            {
+                if (param->floatValues.size() >= 3)
+                {
+                    fillDirection = Vec3(
+                        param->floatValues[0],
+                        param->floatValues[1],
+                        param->floatValues[2]
+                    );
+                }
+            }
+            const Vec2 fillDirOct = OctEncodeDirection(fillDirection);
+            m_materialData.fillDirOctX = fillDirOct.x;
+            m_materialData.fillDirOctY = fillDirOct.y;
 
             // Update texture flags (packed into bitfield for efficiency)
             m_materialData.textureFlags = 0;

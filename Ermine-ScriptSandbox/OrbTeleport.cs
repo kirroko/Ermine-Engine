@@ -21,7 +21,7 @@ public class OrbTeleport : MonoBehaviour
     private float timeSinceLastDamage = 0f;
     public float regenDelay = 2.0f; // seconds before regen starts
 
-    private float teleportDashDuration = 0.2f; // total dash travel duration in seconds
+    private float teleportDashDuration = 0.4f; // total dash travel duration in seconds
     private float teleportDashRadialBlurBaseStrength = 0.015f; // baseline radial blur during dash
     private float teleportDashRadialBlurPeakStrength = 0.3f; // max radial blur near dash end
     private float teleportDashRadialBlurSpikeStart = 0.70f; // normalized time when blur spike starts
@@ -306,6 +306,17 @@ public class OrbTeleport : MonoBehaviour
 
         timeSinceLastDamage = 0f; // reset regen timer
         GameplayHUD.SetHealth(healthBar, health);
+
+        // Play health drain SFX based on health percentage after damage
+        float maxHealth = GameplayHUD.GetMaxHealth(healthBar);
+        float healthPercent = maxHealth > 0f ? (health / maxHealth) * 100f : 0f;
+
+        if (healthPercent <= 30f)
+            GlobalAudio.PlaySFX("HealthDrain3");      // danger  - loudest
+        else if (healthPercent <= 60f)
+            GlobalAudio.PlaySFX("HealthDrain2");      // caution - medium
+        else
+            GlobalAudio.PlaySFX("HealthDrain1");      // safe    - softest
     }
 
     void HealDamage(float heal)
