@@ -26,9 +26,6 @@ public class Chase : MonoBehaviour
     // counts down while LOS is lost; resets while LOS is true
     private float loseSightTimer = 0f;
 
-    private bool jumping = false;
-    private ulong jumpLinkEntityID = 0;
-
     // stun guard
     public float stunDuration = 5.0f;
     private bool isStunned = false;
@@ -107,17 +104,6 @@ public class Chase : MonoBehaviour
             return; // do NOTHING while stunned
         }
 
-        if (jumping)
-        {
-            //Debug.Log("CALL StartJump: me=" + entityID + " link=" + jumpLinkEntityID);
-            NavAgent.StartJump(entityID, jumpLinkEntityID);
-
-            jumping = false;
-            jumpLinkEntityID = 0;
-
-            return;
-        }
-
         CachePlayerIfNeeded();
         if (playerGO == null) return;
 
@@ -158,13 +144,6 @@ public class Chase : MonoBehaviour
         //if (col.gameObject.name == playerName)
         //    collidingWithPlayer = true;
 
-        if (jumping) return;
-        if (col.gameObject.name == "JumpArea")
-        {
-            jumping = true;
-            jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
-        }
-
         if (!RightClickStunArmed) return;
         if (col.gameObject.name == "Sphere")
         {
@@ -179,13 +158,6 @@ public class Chase : MonoBehaviour
         //if (col.gameObject.name == playerName)
         //    collidingWithPlayer = true;
 
-        if (jumping) return;
-        if (col.gameObject.name == "JumpArea")
-        {
-            jumping = true;
-            jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
-        }
-
         if (!RightClickStunArmed) return;
         if (col.gameObject.name == "Sphere")
         {
@@ -199,12 +171,5 @@ public class Chase : MonoBehaviour
     {
         //if (col.gameObject.name == playerName)
         //    collidingWithPlayer = false;
-
-        if (jumping) return;
-        if (col.gameObject.name == "JumpArea")
-        {
-            jumping = true;
-            jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
-        }
     }
 }
