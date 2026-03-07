@@ -63,6 +63,21 @@
               "name": "SwitchOff",
               "path": "../Resources/Audio/Switch_Off.wav",
               "volume": 1.0
+            },
+            {
+              "name": "HealthDrain1",
+              "path": "../Resources/Audio/HealthDrain_v2_Part1.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "HealthDrain2",
+              "path": "../Resources/Audio/HealthDrain_v2_Part2.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "HealthDrain3",
+              "path": "../Resources/Audio/HealthDrain_v2_Part3.wav",
+              "volume": 1.0
             }
           ],
           "ambience": [
