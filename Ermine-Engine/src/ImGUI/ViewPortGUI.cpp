@@ -56,6 +56,7 @@ namespace
 	ImTextureID gIconPlay = 0;
 	ImTextureID gIconStop = 0;
 	bool gIconsLoaded = false;
+	bool gShowGrid = false;
 
 	void EnterPlayModeWithRendererRebuild()
 	{
@@ -374,12 +375,18 @@ void Ermine::ViewPortGUI::TopBarSimulationControl(const ImVec2 iconSize)
 	}
 	ImGui::EndGroup();
 
-	float rightOffset = ImGui::GetContentRegionAvail().x - 150.0f;
+	float rightOffset = ImGui::GetContentRegionAvail().x - 275.0f;
 	ImGui::SameLine(ImGui::GetCursorPosX() + rightOffset);
 
 	ImGui::Checkbox("Physics Wireframe", &ECS::GetInstance().GetSystem<Physics>()->wireframe);
 	if (ImGui::IsItemHovered())
 		ImGui::SetTooltip("Requires Physics Component");
+
+	ImGui::SameLine();
+
+	ImGui::Checkbox("Grid", &gShowGrid);
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("Toggle reference grid");
 
 	ImGui::PopStyleVar();
 }
@@ -908,7 +915,7 @@ void Ermine::ViewPortGUI::Update()
 	int max_size;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_size);
 
-	if (!EditorGUI::isPlaying)
+	if (!EditorGUI::isPlaying && gShowGrid)
 	{
 		constexpr float lineSpacing = 1.0f;
 		constexpr int majorEvery = 10;
