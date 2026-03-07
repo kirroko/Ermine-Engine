@@ -182,13 +182,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "jumpHeight": {
-                  "t": 0,
-                  "v": 2.0
-                },
                 "mouseHorSens": {
                   "t": 0,
                   "v": 0.30000001192092898
+                },
+                "jumpHeight": {
+                  "t": 0,
+                  "v": 2.0
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -198,13 +198,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "camDefaultY": {
-                  "t": 0,
-                  "v": 4.5
-                },
                 "jumpspeed": {
                   "t": 0,
                   "v": 5.0
+                },
+                "camDefaultY": {
+                  "t": 0,
+                  "v": 4.5
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -216,11 +216,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 }
@@ -15823,7 +15823,7 @@
         "Transform": {
           "position": [
             121.77753448486328,
-            56.565643310546878,
+            55.437625885009769,
             130.99652099609376
           ],
           "rotation": [
@@ -18180,20 +18180,20 @@
         },
         "Transform": {
           "position": [
-            121.26533508300781,
-            61.67095184326172,
-            135.38511657714845
+            121.26519012451172,
+            59.79376983642578,
+            135.3842315673828
           ],
           "rotation": [
             -0.4998946487903595,
             0.4999031722545624,
-            0.5000632405281067,
-            0.5001389384269714
+            0.500069797039032,
+            0.5001323819160461
           ],
           "scale": [
-            0.010000800713896752,
+            0.010000903159379959,
             0.00999963004142046,
-            0.010000421665608883
+            0.01000052411109209
           ]
         },
         "ObjectMetaData": {
@@ -101465,7 +101465,7 @@
       }
     },
     {
-      "id": 2488,
+      "id": 2486,
       "components": {
         "IDComponent": {
           "guid": "9052b51d70ff864f9010ccd328c714d8"
@@ -101504,7 +101504,7 @@
       }
     },
     {
-      "id": 2489,
+      "id": 2487,
       "components": {
         "IDComponent": {
           "guid": "b19d088c6514ce4b83d3aacd76b89e29"
@@ -101543,7 +101543,7 @@
       }
     },
     {
-      "id": 2490,
+      "id": 2488,
       "components": {
         "IDComponent": {
           "guid": "8cf5c01d249cab41a870a2e5ad1e5821"
@@ -101582,7 +101582,7 @@
       }
     },
     {
-      "id": 2491,
+      "id": 2489,
       "components": {
         "IDComponent": {
           "guid": "dd13c5509e1f644388b8bfdc1900c53f"
@@ -101621,7 +101621,7 @@
       }
     },
     {
-      "id": 2492,
+      "id": 2490,
       "components": {
         "IDComponent": {
           "guid": "f6a9158834f7af458718242a65c363c4"
@@ -101660,7 +101660,7 @@
       }
     },
     {
-      "id": 2493,
+      "id": 2491,
       "components": {
         "IDComponent": {
           "guid": "72385aed6e80c74cab796327a171b07d"
@@ -101699,7 +101699,7 @@
       }
     },
     {
-      "id": 2494,
+      "id": 2492,
       "components": {
         "IDComponent": {
           "guid": "989f0c413abe964ca3525c66e634cb95"
@@ -101738,7 +101738,7 @@
       }
     },
     {
-      "id": 2495,
+      "id": 2493,
       "components": {
         "IDComponent": {
           "guid": "b8cac19934ab17429e97b6d49dca8567"
@@ -101777,7 +101777,7 @@
       }
     },
     {
-      "id": 2499,
+      "id": 2494,
       "components": {
         "IDComponent": {
           "guid": "d231768a3c195948975c386527e743b9"
@@ -101816,7 +101816,7 @@
       }
     },
     {
-      "id": 2500,
+      "id": 2495,
       "components": {
         "IDComponent": {
           "guid": "24e280e8713b9e4bb92f960874354cbf"
@@ -101849,6 +101849,84 @@
         },
         "HierarchyComponent": {
           "parentGuid": "d231768a3c195948975c386527e743b9",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 2496,
+      "components": {
+        "IDComponent": {
+          "guid": "c63c02d0cde3cf408fba5b83bc8bc0a2"
+        },
+        "Transform": {
+          "position": [
+            -17.209054946899415,
+            0.4345715641975403,
+            3.8544960021972658
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999835252761841,
+            0.03999999910593033,
+            0.03999835252761841
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Fence",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_fence_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 2497,
+      "components": {
+        "IDComponent": {
+          "guid": "e30174009769f941a3233cab7d37c168"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_fence_low.fbx_pCylinder1_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "105008ee3dda5e4f9174665b32c9ee2f"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "c63c02d0cde3cf408fba5b83bc8bc0a2",
           "depth": 1
         },
         "GlobalTransform": {}
