@@ -1922,6 +1922,55 @@ namespace
 			}
 		}
 	}
+
+	void icall_globalaudio_play_voice(MonoString* name)
+	{
+		using namespace Ermine;
+		std::string voiceName;
+		ToTempUTF8(name, voiceName);
+
+		auto& ecs = ECS::GetInstance();
+		for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+		{
+			if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+			{
+				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+				globalAudio.PlayVoice(voiceName);
+				return;
+			}
+		}
+		EE_CORE_WARN("GlobalAudio: No GlobalAudioComponent found in scene");
+	}
+
+	void icall_globalaudio_stop_voice()
+	{
+		using namespace Ermine;
+		auto& ecs = ECS::GetInstance();
+		for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+		{
+			if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+			{
+				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+				globalAudio.StopVoice();
+				return;
+			}
+		}
+	}
+
+	void icall_globalaudio_set_voice_volume(float volume)
+	{
+		using namespace Ermine;
+		auto& ecs = ECS::GetInstance();
+		for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+		{
+			if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+			{
+				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+				globalAudio.SetVoiceVolume(volume);
+				return;
+			}
+		}
+	}
 #pragma endregion
 
 #pragma region AudioListener ICalls
@@ -4103,6 +4152,9 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.GlobalAudio::PlayMusic", (const void*)icall_globalaudio_play_music);
 	mono_add_internal_call("ErmineEngine.GlobalAudio::SetMusicVolume", (const void*)icall_globalaudio_set_music_volume);
 	mono_add_internal_call("ErmineEngine.GlobalAudio::SetSFXVolume", (const void*)icall_globalaudio_set_sfx_volume);
+	mono_add_internal_call("ErmineEngine.GlobalAudio::PlayVoice", (const void*)icall_globalaudio_play_voice);
+	mono_add_internal_call("ErmineEngine.GlobalAudio::StopVoice", (const void*)icall_globalaudio_stop_voice);
+	mono_add_internal_call("ErmineEngine.GlobalAudio::SetVoiceVolume", (const void*)icall_globalaudio_set_voice_volume);
 #pragma endregion
 
 #pragma region AudioListener ICalls

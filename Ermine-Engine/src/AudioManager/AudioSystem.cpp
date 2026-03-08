@@ -221,8 +221,104 @@ int GlobalAudioComponent::FindAmbienceIndex(const std::string& name) const {
     return -1;
 }
 
+// ========== Voice Methods ==========
 
-// ========== AudioSystem Static Methods ==========
+void GlobalAudioComponent::PlayVoice(int index) {
+    AudioSystem::PlayGlobalVoice(*this, index);
+}
+
+void GlobalAudioComponent::PlayVoice(const std::string& name) {
+    AudioSystem::PlayGlobalVoice(*this, name);
+}
+
+void GlobalAudioComponent::StopVoice() {
+    AudioSystem::StopGlobalVoice(*this);
+}
+
+void GlobalAudioComponent::SetVoiceVolume(float volume) {
+    voiceVolume = std::clamp(volume, 0.0f, 1.0f);
+
+    if (currentVoiceChannelId != -1 &&
+        currentVoiceIndex >= 0 &&
+        currentVoiceIndex < static_cast<int>(voice.size())) {
+        const auto& voiceSource = voice[currentVoiceIndex];
+        float finalVolume = AudioSystem::ConvertVolumeToFMOD(
+            voiceSource.volume * masterVolume * voiceVolume
+        );
+        CAudioEngine::SetChannelVolume(currentVoiceChannelId, finalVolume);
+    }
+}
+
+int GlobalAudioComponent::GetVoiceIndex(const std::string& name) const {
+    for (size_t i = 0; i < voice.size(); ++i) {
+        if (voice[i].audioName == name) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
+void GlobalAudioComponent::AddVoiceSource(const std::string& name, const std::string& path) {
+    for (const auto& v : voice) {
+        if (v.audioName == name) {
+            std::cout << "Voice source '" << name << "' already exists!" << std::endl;
+            return;
+        }
+    }
+    AudioSource newVoice;
+    newVoice.audioName = name;
+    newVoice.audioPath = path;
+    newVoice.volume = 1.0f;
+    voice.push_back(newVoice);
+}
+
+void GlobalAudioComponent::UpdateVoiceSource(int index, const std::string& name, const std::string& path) {
+    if (index >= 0 && index < static_cast<int>(voice.size())) {
+        if (currentVoiceIndex == index && currentVoiceChannelId != -1) {
+            CAudioEngine::StopChannel(currentVoiceChannelId, true, 0.3f);
+            currentVoiceChannelId = -1;
+        }
+        voice[index].audioName = name;
+        voice[index].audioPath = path;
+        try {
+            CAudioEngine::LoadSound(path, false, false, true); // Not looped, streamed
+        }
+        catch (const std::exception& e) {
+            (void)e;
+            UNREFERENCED_PARAMETER(e);
+        }
+    }
+}
+
+void GlobalAudioComponent::RemoveVoiceSource(int index) {
+    if (index >= 0 && index < static_cast<int>(voice.size())) {
+        if (currentVoiceIndex == index && currentVoiceChannelId != -1) {
+            CAudioEngine::StopChannel(currentVoiceChannelId, true, 0.3f);
+            currentVoiceChannelId = -1;
+            currentVoiceIndex = -1;
+        }
+        else if (currentVoiceIndex > index) {
+            currentVoiceIndex--;
+        }
+        voice.erase(voice.begin() + index);
+    }
+}
+
+const AudioSource* GlobalAudioComponent::GetVoiceSource(int index) const {
+    if (index >= 0 && index < static_cast<int>(voice.size())) {
+        return &voice[index];
+    }
+    return nullptr;
+}
+
+int GlobalAudioComponent::FindVoiceIndex(const std::string& name) const {
+    for (size_t i = 0; i < voice.size(); ++i) {
+        if (voice[i].audioName == name) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
 
 void AudioSystem::PlayGlobalAmbience(GlobalAudioComponent& globalAudio, int index)
 {
@@ -277,6 +373,57 @@ void AudioSystem::StopGlobalAmbience(GlobalAudioComponent& globalAudio)
         globalAudio.currentAmbienceChannelId = -1;
         globalAudio.currentAmbienceIndex = -1;
         std::cout << "Stopped ambience" << std::endl;
+    }
+}
+
+void AudioSystem::PlayGlobalVoice(GlobalAudioComponent& globalAudio, int index)
+{
+    if (index < 0 || index >= static_cast<int>(globalAudio.voice.size()))
+        return;
+
+    // Stop any currently playing voice line before starting the new one
+    StopGlobalVoice(globalAudio);
+
+    const auto& voiceSource = globalAudio.voice[index];
+
+    // Load as non-looping, streamed (voice lines are long but play once)
+    CAudioEngine::LoadSound(voiceSource.audioPath, false, false, true);
+
+    float finalVolume = ConvertVolumeToFMOD(
+        voiceSource.volume * globalAudio.masterVolume * globalAudio.voiceVolume
+    );
+
+    Vector3D position(0.0f, 0.0f, 0.0f);
+    globalAudio.currentVoiceChannelId = CAudioEngine::PlaySounds(
+        voiceSource.audioPath, position, finalVolume
+    );
+    globalAudio.currentVoiceIndex = index;
+
+    std::cout << "Playing voice: " << voiceSource.audioName << std::endl;
+}
+
+void AudioSystem::PlayGlobalVoice(GlobalAudioComponent& globalAudio, const std::string& name)
+{
+    for (size_t i = 0; i < globalAudio.voice.size(); ++i)
+    {
+        if (globalAudio.voice[i].audioName == name)
+        {
+            PlayGlobalVoice(globalAudio, static_cast<int>(i));
+            return;
+        }
+    }
+
+    std::cout << "Voice '" << name << "' not found in GlobalAudioComponent" << std::endl;
+}
+
+void AudioSystem::StopGlobalVoice(GlobalAudioComponent& globalAudio)
+{
+    if (globalAudio.currentVoiceChannelId != -1)
+    {
+        CAudioEngine::StopChannel(globalAudio.currentVoiceChannelId, true, 0.1f);
+        globalAudio.currentVoiceChannelId = -1;
+        globalAudio.currentVoiceIndex = -1;
+        std::cout << "Stopped voice" << std::endl;
     }
 }
 
@@ -674,6 +821,16 @@ void AudioSystem::UpdateGlobalAudio(GlobalAudioComponent& globalAudio)
         {
             globalAudio.currentAmbienceChannelId = -1;
             globalAudio.currentAmbienceIndex = -1;
+        }
+    }
+
+    // Check if current voice line has finished playing
+    if (globalAudio.currentVoiceChannelId != -1)
+    {
+        if (!CAudioEngine::IsPlaying(globalAudio.currentVoiceChannelId))
+        {
+            globalAudio.currentVoiceChannelId = -1;
+            globalAudio.currentVoiceIndex = -1;
         }
     }
 }
