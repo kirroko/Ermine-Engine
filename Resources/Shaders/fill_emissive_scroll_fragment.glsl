@@ -2,6 +2,7 @@
 #extension GL_ARB_bindless_texture : require
 
 const uint MAT_FLAG_ALBEDO_MAP = 1u << 0u;
+const float FILL_FULL_EPSILON = 0.99;
 
 layout(std430, binding = 5) restrict readonly buffer TextureArrayBlock {
     uvec2 textureHandles[];
@@ -20,11 +21,12 @@ in vec2 vFillScrollDirUV;
 out vec4 FragColor;
 
 uniform float u_Time;
-uniform float u_FillScrollSpeed = 0.1;
+uniform float u_FillScrollSpeed = 0.2;
 
 void main()
 {
-    if (vFillCoord > clamp(vFillAmount, 0.0, 1.0)) {
+    float fillAmount = clamp(vFillAmount, 0.0, 1.0);
+    if (fillAmount <= FILL_FULL_EPSILON && vFillCoord > fillAmount) {
         FragColor = vec4(0.0, 0.0, 0.0, 1.0);
         return;
     }
