@@ -234,6 +234,28 @@ public class PlayerController2 : MonoBehaviour
                     obj.SetActive(false);
                     interactTimer = 0f;
                 }
+
+                if (obj.name == "KeyObject" && interactTimer > 1f)
+                {
+                    // Collect key
+                    //GlobalAudio.PlaySFX("BookPickUp");
+                    UnlockDoor.I.IncrementKeys();
+
+                    obj.SetActive(false);
+                    interactTimer = 0f;
+                }
+
+                if (obj.name == "ComputerDoorUnlock" && interactTimer > 1f)
+                {
+                    // Collect key
+                    //GlobalAudio.PlaySFX("BookPickUp");
+                    UnlockDoor.I.Evaluate();
+                    
+                    //Add feedback
+
+                    interactTimer = 0f;
+                }
+
             }
             /*else
             {
