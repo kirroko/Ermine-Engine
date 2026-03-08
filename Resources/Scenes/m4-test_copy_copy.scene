@@ -21623,11 +21623,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -22455,11 +22455,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -23287,11 +23287,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -24119,11 +24119,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -24951,11 +24951,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -25783,11 +25783,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -26615,11 +26615,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -27447,11 +27447,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -28279,11 +28279,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -29111,11 +29111,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -48302,13 +48302,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.10000000149011612
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.10000000149011612
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -48318,13 +48318,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -48336,11 +48336,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
@@ -67671,13 +67671,13 @@
                   "t": 0,
                   "v": 2.0
                 },
-                "sceneName": {
-                  "t": 3,
-                  "v": "m4-LEVEL2_AI.scene"
-                },
                 "eDuration": {
                   "t": 0,
                   "v": 3.0
+                },
+                "sceneName": {
+                  "t": 3,
+                  "v": "m4-LEVEL2_AI.scene"
                 },
                 "dSpeed": {
                   "t": 0,
@@ -68355,7 +68355,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "4368a363f1536c4a880e75efe57a65c1",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -68394,7 +68394,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "4368a363f1536c4a880e75efe57a65c1",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
