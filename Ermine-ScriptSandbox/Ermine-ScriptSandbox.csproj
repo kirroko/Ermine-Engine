@@ -72,8 +72,11 @@
   <ItemGroup>
     <Compile Include="AnimationExample.cs" />
     <Compile Include="AttackState.cs" />
+    <Compile Include="Credits.cs" />
     <Compile Include="CutsceneVideo.cs" />
     <Compile Include="GearRotateAnimationTest.cs" />
+    <Compile Include="IdleState.cs" />
+    <Compile Include="SpawnPointController.cs" />
     <Compile Include="SpotLightTrigger.cs" />
     <Compile Include="ChaseState.cs" />
     <Compile Include="CutscenePlayer.cs" />

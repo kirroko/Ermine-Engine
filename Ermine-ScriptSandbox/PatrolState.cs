@@ -3,7 +3,7 @@ using System;
 
 public class Patrol : MonoBehaviour
 {
-    public float radius = 5f;
+    public float radius = 30f;
     public int pointCount = 16;
     public float reachDist = 0.5f;
 
@@ -11,7 +11,7 @@ public class Patrol : MonoBehaviour
     public float stuckTime = 0.75f;
     public float minProgressEpsilon = 0.02f;
 
-    public float recenterDelay = 1.0f;
+    //public float recenterDelay = 1.0f;
 
     public string playerName = "Player";
 
@@ -25,11 +25,14 @@ public class Patrol : MonoBehaviour
 
     private ulong entityID;
 
-    private bool jumping = false;
+    //private bool jumping = false;
     private ulong jumpLinkEntityID = 0;
+    private bool insideJumpArea = false;
+    public float jumpCooldown = 3.0f;
+    private float jumpCooldownTimer = 0.0f;
 
-    private bool pendingRecenter = false;
-    private float recenterTimer = 0f;
+    //private bool pendingRecenter = false;
+    //private float recenterTimer = 0f;
 
     // stun guard
     public float stunDuration = 5.0f;
@@ -41,6 +44,8 @@ public class Patrol : MonoBehaviour
     public float viewDistance = 15.0f;
     public float rayHeight = 0.8f;
     public float rayForwardOffset = 2.0f;
+
+    private Vector3 patrolCenter;
 
     private void CachePlayerIfNeeded()
     {
@@ -128,7 +133,8 @@ public class Patrol : MonoBehaviour
         CachePlayerIfNeeded();
 
         // Build patrol points around the spawn position
-        BuildPatrolPoints(transform.position);
+        patrolCenter = transform.position;
+        BuildPatrolPoints(patrolCenter);
     }
 
     void Update()
@@ -140,6 +146,9 @@ public class Patrol : MonoBehaviour
             armTimer -= Time.deltaTime;
 
         RightClickStunArmed = armTimer > 0f;
+
+        if (jumpCooldownTimer > 0.0f)
+            jumpCooldownTimer -= Time.deltaTime;
 
         if (isStunned)
         {
@@ -162,36 +171,54 @@ public class Patrol : MonoBehaviour
             return;
         }
 
-        if (jumping)
+        if (insideJumpArea && jumpCooldownTimer <= 0.0f)
         {
-            //Debug.Log("CALL StartJump: me=" + entityID + " link=" + jumpLinkEntityID);
             NavAgent.StartJump(entityID, jumpLinkEntityID);
-
-            jumping = false;
-            jumpLinkEntityID = 0;
-
-            // Schedule a patrol recenter after the jump likely finishes
-            pendingRecenter = true;
-            recenterTimer = recenterDelay;
-
+            jumpCooldownTimer = jumpCooldown;
             return;
         }
 
+        //if (jumping)
+        //{
+        //    if (HasLineOfSightToPlayer())
+        //    {
+        //        jumping = false;
+        //        jumpLinkEntityID = 0;
+        //        StateMachine.RequestNextState(entityID);
+        //        return;
+        //    }
+
+        //    if (jumpCooldownTimer <= 0.0f)
+        //    {
+        //        //Debug.Log("CALL StartJump: me=" + entityID + " link=" + jumpLinkEntityID);
+        //        NavAgent.StartJump(entityID, jumpLinkEntityID);
+        //        jumpCooldownTimer = jumpCooldown;
+
+        //        // Schedule a patrol recenter after the jump likely finishes
+        //        pendingRecenter = true;
+        //        recenterTimer = recenterDelay;
+        //    }
+
+        //    jumping = false;
+        //    jumpLinkEntityID = 0;
+        //    return;
+        //}
+
         // after landing, rebuild patrol points around current position
-        if (pendingRecenter)
-        {
-            recenterTimer -= Time.deltaTime;
-            if (recenterTimer <= 0f)
-            {
-                pendingRecenter = false;
-                BuildPatrolPoints(transform.position);
-                return;
-            }
-        }
+        //if (pendingRecenter)
+        //{
+        //    recenterTimer -= Time.deltaTime;
+        //    if (recenterTimer <= 0f)
+        //    {
+        //        pendingRecenter = false;
+        //        BuildPatrolPoints(transform.position);
+        //        return;
+        //    }
+        //}
 
         if (patrolPoints == null || patrolPoints.Length == 0 || currentIndex < 0)
         {
-            BuildPatrolPoints(transform.position);
+            BuildPatrolPoints(patrolCenter);
             return;
         }
 
@@ -224,10 +251,9 @@ public class Patrol : MonoBehaviour
 
     void OnCollisionEnter(Collision col)
     {
-        if (jumping) return;
         if (col.gameObject.name == "JumpArea")
         {
-            jumping = true;
+            insideJumpArea = true;
             jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
         }
 
@@ -243,10 +269,9 @@ public class Patrol : MonoBehaviour
 
     void OnCollisionStay(Collision col)
     {
-        if (jumping) return;
         if (col.gameObject.name == "JumpArea")
         {
-            jumping = true;
+            insideJumpArea = true;
             jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
         }
 
@@ -262,11 +287,13 @@ public class Patrol : MonoBehaviour
 
     void OnCollisionExit(Collision col)
     {
-        if (jumping) return;
         if (col.gameObject.name == "JumpArea")
         {
-            jumping = true;
-            jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
+            if (jumpLinkEntityID == (ulong)col.gameObject.GetInstanceID())
+            {
+                insideJumpArea = false;
+                jumpLinkEntityID = 0;
+            }
         }
     }
 }
