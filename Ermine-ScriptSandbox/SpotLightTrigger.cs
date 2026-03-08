@@ -31,7 +31,7 @@ public class SpotLightTrigger : MonoBehaviour
             health = GameplayHUD.GetHealth(healthBar);
         }
 
-        timer = tickInterval;
+        timer = 0;
     }
     void Update()
     {
