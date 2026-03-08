@@ -21,8 +21,11 @@ public class Move : MonoBehaviour
     private float turnTimer = 0f;
     private float repathTimer = 0f;
 
-    private bool jumping = false;
+    //private bool jumping = false;
+    private bool insideJumpArea = false;
     private ulong jumpLinkEntityID = 0;
+    public float jumpCooldown = 3.0f;
+    private float jumpCooldownTimer = 0.0f;
 
     public string playerName = "Player";
 
@@ -122,6 +125,9 @@ public class Move : MonoBehaviour
 
         RightClickStunArmed = armTimer > 0f;
 
+        if (jumpCooldownTimer > 0.0f)
+            jumpCooldownTimer -= Time.deltaTime;
+
         if (isStunned)
         {
             //Debug.Log("stunned");
@@ -139,16 +145,34 @@ public class Move : MonoBehaviour
             return;
         }
 
-        if (jumping)
+        if (insideJumpArea && jumpCooldownTimer <= 0.0f)
         {
-            //Debug.Log("CALL StartJump: me=" + entityID + " link=" + jumpLinkEntityID);
             NavAgent.StartJump(entityID, jumpLinkEntityID);
-
-            jumping = false;
-            jumpLinkEntityID = 0;
-
+            jumpCooldownTimer = jumpCooldown;
             return;
         }
+
+        //if (jumping)
+        //{
+        //    if (HasLineOfSightToPlayer())
+        //    {
+        //        jumping = false;
+        //        jumpLinkEntityID = 0;
+        //        StateMachine.RequestNextState(entityID);
+        //        return;
+        //    }
+
+        //    if (jumpCooldownTimer <= 0.0f)
+        //    {
+        //        //Debug.Log("CALL StartJump: me=" + entityID + " link=" + jumpLinkEntityID);
+        //        NavAgent.StartJump(entityID, jumpLinkEntityID);
+        //        jumpCooldownTimer = jumpCooldown;
+        //    }
+
+        //    jumping = false;
+        //    jumpLinkEntityID = 0;
+        //    return;
+        //}
 
         if (turnTimer > 0f) turnTimer -= Time.deltaTime;
         if (repathTimer > 0f) repathTimer -= Time.deltaTime;
@@ -319,10 +343,9 @@ public class Move : MonoBehaviour
 
     void OnCollisionEnter(Collision col)
     {
-        if (jumping) return;
         if (col.gameObject.name == "JumpArea")
         {
-            jumping = true;
+            insideJumpArea = true;
             jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
         }
 
@@ -337,10 +360,9 @@ public class Move : MonoBehaviour
 
     void OnCollisionStay(Collision col)
     {
-        if (jumping) return;
         if (col.gameObject.name == "JumpArea")
         {
-            jumping = true;
+            insideJumpArea = true;
             jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
         }
 
@@ -355,11 +377,13 @@ public class Move : MonoBehaviour
 
     void OnCollisionExit(Collision col)
     {
-        if (jumping) return;
         if (col.gameObject.name == "JumpArea")
         {
-            jumping = true;
-            jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
+            if (jumpLinkEntityID == (ulong)col.gameObject.GetInstanceID())
+            {
+                insideJumpArea = false;
+                jumpLinkEntityID = 0;
+            }
         }
     }
 }

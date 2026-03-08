@@ -33,6 +33,38 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "NavMesh.h"
 
 namespace {
+    std::string ResolveCustomVertexShaderPath(const std::string& fragmentPath)
+    {
+        constexpr const char* kDefaultVertex = "../Resources/Shaders/vertex.glsl";
+        if (fragmentPath.empty()) {
+            return kDefaultVertex;
+        }
+
+        std::filesystem::path fragmentFile(fragmentPath);
+        std::string fragmentName = fragmentFile.filename().string();
+        std::string vertexName = fragmentName;
+
+        const size_t fragmentPos = vertexName.find("fragment");
+        if (fragmentPos != std::string::npos) {
+            vertexName.replace(fragmentPos, std::string("fragment").size(), "vertex");
+        }
+        else if (fragmentFile.extension() == ".frag") {
+            vertexName = fragmentFile.stem().string() + ".vert";
+        }
+        else {
+            return kDefaultVertex;
+        }
+
+        std::filesystem::path vertexPath = fragmentFile.has_parent_path()
+            ? (fragmentFile.parent_path() / vertexName)
+            : (std::filesystem::path("../Resources/Shaders") / vertexName);
+
+        if (std::filesystem::exists(vertexPath)) {
+            return vertexPath.generic_string();
+        }
+        return kDefaultVertex;
+    }
+
     std::string BuildMaterialSignature(const Ermine::graphics::Material& material,
         std::string_view customFragmentShader,
         std::string_view meshName = {})
@@ -959,6 +991,11 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
             renderer->m_GlobalGraphics.Deserialize(d["globalGraphics"]);
             renderer->ApplyFromGlobalGraphics();
         }
+
+        // After deserialization, force material compilation first, then full draw-data rebuild.
+        renderer->MarkMaterialsDirty();
+        renderer->CompileMaterials();
+        renderer->ForceDrawDataRebuild();
     }
 }
 
@@ -1501,6 +1538,8 @@ void SaveMaterialToFile(const Ermine::graphics::Material& material,
     saveParam("materialNormalStrength");
     saveParam("materialShadingModel");
     saveParam("materialCastsShadows");
+    saveParam("materialFillAmount");
+    saveParam("materialFillDirection");
     saveParam("materialHasAlbedoMap");
     saveParam("materialHasNormalMap");
     saveParam("materialHasRoughnessMap");
@@ -1620,6 +1659,14 @@ Ermine::graphics::Material LoadMaterialFromFile(const std::filesystem::path& pat
         }
     }
 
+    // Backward compatibility defaults for older material assets.
+    if (!material.HasParameter("materialFillAmount")) {
+        material.SetFloat("materialFillAmount", 1.0f);
+    }
+    if (!material.HasParameter("materialFillDirection")) {
+        material.SetVec3("materialFillDirection", Ermine::Vec3(0.0f, 1.0f, 0.0f));
+    }
+
     // Load UV transform
     if (d.HasMember("uvTransform") && d["uvTransform"].IsObject()) {
         const auto& uvObj = d["uvTransform"];
@@ -1645,15 +1692,16 @@ Ermine::graphics::Material LoadMaterialFromFile(const std::filesystem::path& pat
             *outCustomFragmentShader = fragPath;
 
         if (!fragPath.empty()) {
+            const std::string vertexPath = ResolveCustomVertexShaderPath(fragPath);
             auto shader = Ermine::AssetManager::GetInstance().LoadShader(
-                "../Resources/Shaders/vertex.glsl",
+                vertexPath,
                 fragPath
             );
             if (shader && shader->IsValid()) {
                 material.SetShader(shader);
             }
             else {
-                EE_CORE_WARN("Failed to load custom fragment shader '{}' from material file", fragPath);
+                EE_CORE_WARN("Failed to load custom shader pair ('{}', '{}') from material file", vertexPath, fragPath);
             }
         }
     }

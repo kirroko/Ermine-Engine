@@ -29,9 +29,6 @@ public class Attack : MonoBehaviour
     public float repathInterval = 0.10f;
     private float repathTimer = 0f;
 
-    private bool jumping = false;
-    private ulong jumpLinkEntityID = 0;
-
     // stun guard
     public float stunDuration = 5.0f;
     private bool isStunned = false;
@@ -120,17 +117,6 @@ public class Attack : MonoBehaviour
             return; // do NOTHING while stunned
         }
 
-        if (jumping)
-        {
-            //Debug.Log("CALL StartJump: me=" + entityID + " link=" + jumpLinkEntityID);
-            NavAgent.StartJump(entityID, jumpLinkEntityID);
-
-            jumping = false;
-            jumpLinkEntityID = 0;
-
-            return;
-        }
-
         CachePlayerIfNeeded();
         if (playerGO == null) return;
 
@@ -199,13 +185,6 @@ public class Attack : MonoBehaviour
         //if (col.gameObject.name == playerName)
         //    collidingWithPlayer = true;
 
-        if (jumping) return;
-        if (col.gameObject.name == "JumpArea")
-        {
-            jumping = true;
-            jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
-        }
-
         if (!RightClickStunArmed) return;
         if (col.gameObject.name == "Sphere")
         {
@@ -219,13 +198,6 @@ public class Attack : MonoBehaviour
     {
         //if (col.gameObject.name == playerName)
         //    collidingWithPlayer = true;
-
-        if (jumping) return;
-        if (col.gameObject.name == "JumpArea")
-        {
-            jumping = true;
-            jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
-        }
 
         if (!RightClickStunArmed) return;
         if (col.gameObject.name == "Sphere")
@@ -243,12 +215,5 @@ public class Attack : MonoBehaviour
         //    collidingWithPlayer = false;
         //    tickTimer = tickInterval;
         //}
-
-        if (jumping) return;
-        if (col.gameObject.name == "JumpArea")
-        {
-            jumping = true;
-            jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
-        }
     }
 }

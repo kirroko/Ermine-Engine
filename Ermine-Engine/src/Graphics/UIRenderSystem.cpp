@@ -282,6 +282,7 @@ namespace Ermine
                 if (imageComp.fullscreen)
                 {
                     RenderTexturedSquare(0.5f, 0.5f, imageComp.height, texture, imageComp.tintColor, imageComp.alpha);
+					//RenderTexturedRect(0.5f, 0.5f, imageComp.width, imageComp.height, texture, imageComp.tintColor, imageComp.alpha);
                 }
                 else
                 {
@@ -293,6 +294,15 @@ namespace Ermine
                         imageComp.tintColor,
                         imageComp.alpha
                     );
+     //               RenderTexturedRect(
+     //                   imageComp.position.x,
+     //                   imageComp.position.y,
+     //                   imageComp.width,
+     //                   imageComp.height,
+     //                   texture,
+     //                   imageComp.tintColor,
+     //                   imageComp.alpha
+					//);
                 }
             }
 

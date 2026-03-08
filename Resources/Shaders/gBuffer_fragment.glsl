@@ -32,6 +32,7 @@ const uint MAT_FLAG_METALLIC_MAP  = 1u << 3u;  // bit 3
 const uint MAT_FLAG_AO_MAP        = 1u << 4u;  // bit 4
 const uint MAT_FLAG_EMISSIVE_MAP  = 1u << 5u;  // bit 5
 const uint FLAG_CAMERA_ATTACHED   = 1u << 1u;  // DrawInfo flag bit 1
+const float FILL_FULL_EPSILON     = 0.99;
 
 // Bindless texture array SSBO - stores texture handles as uvec2 (64-bit split into two 32-bit values)
 layout(std430, binding = 5) restrict readonly buffer TextureArrayBlock
@@ -96,6 +97,8 @@ flat in vec3 vEmissive;
 flat in uint vTextureFlags;
 flat in ivec4 vTextureIndices;     // albedo, normal, roughness, metallic
 flat in ivec2 vTextureIndices2;    // ao, emissive
+flat in float vFillAmount;
+in float vFillCoord;
 
 in vec2 vTransformedUV;   // UV with scale/offset already applied
 in vec4 vCurrClipPos; // Current clip-space position
@@ -119,6 +122,12 @@ vec2 computeVelocity()
 
 void main()
 {
+    if (vFillAmount <= FILL_FULL_EPSILON && vFillCoord > vFillAmount) {
+        // Keep geometry/depth coverage intact, but black out the unfilled portion.
+        writeGBuffer(vec3(0.0), ViewNormal, vec3(0.0), 0.0, 1.0, 0.0, 0.0, computeVelocity());
+        return;
+    }
+
     // Unpack material data from varyings (NO SSBO ACCESS!)
     vec3 albedo = vAlbedo.rgb;
     float metallic = vAlbedo.a;
