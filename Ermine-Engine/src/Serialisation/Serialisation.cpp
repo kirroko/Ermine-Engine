@@ -1540,6 +1540,7 @@ void SaveMaterialToFile(const Ermine::graphics::Material& material,
     saveParam("materialCastsShadows");
     saveParam("materialFillAmount");
     saveParam("materialFillDirection");
+    saveParam("materialFillUVAxis");
     saveParam("materialHasAlbedoMap");
     saveParam("materialHasNormalMap");
     saveParam("materialHasRoughnessMap");
@@ -1665,6 +1666,9 @@ Ermine::graphics::Material LoadMaterialFromFile(const std::filesystem::path& pat
     }
     if (!material.HasParameter("materialFillDirection")) {
         material.SetVec3("materialFillDirection", Ermine::Vec3(0.0f, 1.0f, 0.0f));
+    }
+    if (!material.HasParameter("materialFillUVAxis")) {
+        material.SetVec2("materialFillUVAxis", Ermine::Vec2(0.0f, 1.0f));
     }
 
     // Load UV transform

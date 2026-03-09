@@ -241,7 +241,7 @@ namespace Ermine
                         exinfo.format = FMOD_SOUND_FORMAT_PCMFLOAT;
                         exinfo.length = static_cast<unsigned int>(video->audioPcm.size() * sizeof(float));
 
-                        const FMOD_MODE mode = static_cast<FMOD_MODE>(FMOD_OPENRAW | FMOD_OPENMEMORY | FMOD_OPENMEMORY_POINT | FMOD_CREATESAMPLE | (video->loop ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF));
+                        const FMOD_MODE mode = static_cast<FMOD_MODE>(FMOD_OPENRAW | FMOD_OPENMEMORY | FMOD_CREATESAMPLE | (video->loop ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF));
                         FMOD::Sound* sound = nullptr;
                         if (core->createSound(reinterpret_cast<const char*>(video->audioPcm.data()), mode, &exinfo, &sound) == FMOD_OK && sound)
                         {
@@ -1086,6 +1086,7 @@ namespace Ermine
             video.audioSound = nullptr;
         }
         video.audioPcm.clear();
+        video.audioPcm.shrink_to_fit();
 
         if (video.tex_y)
         {

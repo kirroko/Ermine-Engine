@@ -4430,6 +4430,7 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 		EntityID e = candidate.entity;
 		auto& light = ecs.GetComponent<Light>(e);
 		const glm::mat4 lightWorld = GetEntityWorldMatrix(e);
+		const bool effectiveCastsShadows = light.castsShadows && light.type != LightType::POINT;
 
 		// Derive light transform from world matrix so parenting is respected.
 		const glm::vec3 lightPos = ExtractWorldPosition(lightWorld);
@@ -4437,13 +4438,11 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 
 		// Allocate shadow layers for this light (if any)
 		int shadowLayersNeeded = 0;
-		if (light.castsShadows) {
+		if (effectiveCastsShadows) {
 			if (light.type == LightType::DIRECTIONAL) {
 				shadowLayersNeeded = NUM_CASCADES;
 			} else if (light.type == LightType::SPOT) {
 				shadowLayersNeeded = 1;
-			} else if (light.type == LightType::POINT) {
-				shadowLayersNeeded = 6;
 			}
 		}
 
@@ -4472,7 +4471,7 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 
 		// Pack flags into bitfield: bit 0 = castsShadows, bit 1 = castsRays
 		float flags = 0.0f;
-		bool hasShadowLayers = light.castsShadows && light.startOffset >= 0;
+		bool hasShadowLayers = effectiveCastsShadows && light.startOffset >= 0;
 		if (hasShadowLayers) flags += 1.0f;  // bit 0
 		if (light.castsRays) flags += 2.0f;     // bit 1
 
@@ -7427,7 +7426,7 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 	for (EntityID e : m_ShadowCastingLights) {
 		if (!ecs.HasComponent<Light>(e)) continue;
 		auto& light = ecs.GetComponent<Light>(e);
-		if (light.castsShadows == 0) continue;
+		if (!light.castsShadows || light.type == LightType::POINT) continue;
 		int baseLayer = light.startOffset;
 		if (baseLayer < 0) continue;
 
