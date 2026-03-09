@@ -25,14 +25,10 @@ public class Patrol : MonoBehaviour
 
     private ulong entityID;
 
-    //private bool jumping = false;
     private ulong jumpLinkEntityID = 0;
     private bool insideJumpArea = false;
     public float jumpCooldown = 3.0f;
     private float jumpCooldownTimer = 0.0f;
-
-    //private bool pendingRecenter = false;
-    //private float recenterTimer = 0f;
 
     // stun guard
     public float stunDuration = 5.0f;
@@ -177,44 +173,6 @@ public class Patrol : MonoBehaviour
             jumpCooldownTimer = jumpCooldown;
             return;
         }
-
-        //if (jumping)
-        //{
-        //    if (HasLineOfSightToPlayer())
-        //    {
-        //        jumping = false;
-        //        jumpLinkEntityID = 0;
-        //        StateMachine.RequestNextState(entityID);
-        //        return;
-        //    }
-
-        //    if (jumpCooldownTimer <= 0.0f)
-        //    {
-        //        //Debug.Log("CALL StartJump: me=" + entityID + " link=" + jumpLinkEntityID);
-        //        NavAgent.StartJump(entityID, jumpLinkEntityID);
-        //        jumpCooldownTimer = jumpCooldown;
-
-        //        // Schedule a patrol recenter after the jump likely finishes
-        //        pendingRecenter = true;
-        //        recenterTimer = recenterDelay;
-        //    }
-
-        //    jumping = false;
-        //    jumpLinkEntityID = 0;
-        //    return;
-        //}
-
-        // after landing, rebuild patrol points around current position
-        //if (pendingRecenter)
-        //{
-        //    recenterTimer -= Time.deltaTime;
-        //    if (recenterTimer <= 0f)
-        //    {
-        //        pendingRecenter = false;
-        //        BuildPatrolPoints(transform.position);
-        //        return;
-        //    }
-        //}
 
         if (patrolPoints == null || patrolPoints.Length == 0 || currentIndex < 0)
         {
