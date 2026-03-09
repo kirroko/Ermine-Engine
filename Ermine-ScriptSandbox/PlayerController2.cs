@@ -235,7 +235,7 @@ public class PlayerController2 : MonoBehaviour
                     interactTimer = 0f;
                 }
 
-                if (obj.name == "KeyObject" && interactTimer > 1f)
+                if (obj.name == "GearKeyPrefab" && interactTimer > 1f)
                 {
                     // Collect key
                     //GlobalAudio.PlaySFX("BookPickUp");
