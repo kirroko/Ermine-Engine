@@ -46,6 +46,7 @@ public class Move : MonoBehaviour
     public float stuckMoveEps = 0.02f;        // how little movement counts as "stuck"
     private Vector3 lastPos;
     private float stuckTimer = 0f;
+    private float lastTargetDist = float.MaxValue;
 
     private GameObject rayDebug;
     private void CachePlayerIfNeeded()
@@ -99,6 +100,7 @@ public class Move : MonoBehaviour
         entityID = (ulong)gameObject.GetInstanceID();
 
         lastPos = transform.position;
+        lastTargetDist = float.MaxValue;
 
         // this can be used for the enemy lightcone to damage player
         //rayDebug = Prefab.Instantiate("../Resources/Prefabs/Sphere.prefab");
@@ -152,42 +154,10 @@ public class Move : MonoBehaviour
             return;
         }
 
-        //if (jumping)
-        //{
-        //    if (HasLineOfSightToPlayer())
-        //    {
-        //        jumping = false;
-        //        jumpLinkEntityID = 0;
-        //        StateMachine.RequestNextState(entityID);
-        //        return;
-        //    }
-
-        //    if (jumpCooldownTimer <= 0.0f)
-        //    {
-        //        //Debug.Log("CALL StartJump: me=" + entityID + " link=" + jumpLinkEntityID);
-        //        NavAgent.StartJump(entityID, jumpLinkEntityID);
-        //        jumpCooldownTimer = jumpCooldown;
-        //    }
-
-        //    jumping = false;
-        //    jumpLinkEntityID = 0;
-        //    return;
-        //}
-
         if (turnTimer > 0f) turnTimer -= Time.deltaTime;
         if (repathTimer > 0f) repathTimer -= Time.deltaTime;
 
         // only check turning if cooldown is over
-        //if (turnTimer <= 0f && HitsSomethingInFront())
-        //{
-        //    TurnAround();
-        //    FaceDir();
-        //    PushTargetForward(true);
-
-        //    turnTimer = turnCooldown;  // lock turning for a moment
-        //    return;
-        //}
-
         if (turnTimer <= 0f)
         {
             bool obstacle = HitsObstacleInFront();
@@ -201,6 +171,7 @@ public class Move : MonoBehaviour
                 PushTargetForward(true);
 
                 stuckTimer = 0f;      // reset stuck state after turning
+                lastTargetDist = float.MaxValue;
                 turnTimer = turnCooldown;
                 return;
             }
@@ -217,40 +188,6 @@ public class Move : MonoBehaviour
             PushTargetForward(false);
         }
     }
-
-    //private bool HitsSomethingInFront()
-    //{
-    //    Vector3 origin = transform.position
-    //                   + new Vector3(0f, rayHeight, 0f)
-    //                   + dir * rayForwardOffset;
-
-    //    //if (rayDebug != null)
-    //    //{
-    //    //    rayDebug.transform.position = origin;
-    //    //}
-
-    //    RaycastHit hit;
-    //    bool didHit = Physics.Raycast(origin, dir, out hit, 0.8f);
-
-    //    if (!didHit)
-    //        return false;
-    //    //else
-    //    //    Debug.Log(hit.transform.gameObject.name);
-
-    //    var hitGO = hit.transform.gameObject;
-
-    //    // Ignore self-hit
-    //    ulong hitID = (ulong)hit.transform.gameObject.GetInstanceID();
-    //    if (hitID == entityID) return false;
-
-    //    string n = hitGO.name;
-    //    if (n == playerName) return false;
-    //    if (n == "Sphere") return false;
-    //    //if (n == "RayDebug") return false;
-
-    //    // Debug.Log("Hit: " + hit.transform.gameObject.name);
-    //    return true;
-    //}
 
     private bool HitsObstacleInFront()
     {
@@ -299,13 +236,18 @@ public class Move : MonoBehaviour
     private bool IsStuck()
     {
         float moved = (transform.position - lastPos).Magnitude;
+        float targetDist = (target - transform.position).Magnitude;
 
-        if (moved <= stuckMoveEps)
+        bool barelyMoved = moved <= stuckMoveEps;
+        bool notGettingCloser = targetDist >= lastTargetDist - 0.01f;
+
+        if (barelyMoved || notGettingCloser)
             stuckTimer += Time.deltaTime;
         else
             stuckTimer = 0f;
 
         lastPos = transform.position;
+        lastTargetDist = targetDist;
 
         return stuckTimer >= stuckTimeToTurn;
     }
