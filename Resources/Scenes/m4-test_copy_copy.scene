@@ -25,6 +25,7 @@
           "musicVolume": 0.23999999463558198,
           "sfxVolume": 1.0,
           "ambienceVolume": 0.08900000154972077,
+          "voiceVolume": 1.0,
           "autoPlay": true,
           "music": [
             {
@@ -94,6 +95,43 @@
             {
               "name": "Steampunk",
               "path": "../Resources/Audio/Ambience_Factory_v2.wav",
+              "volume": 1.0
+            }
+          ],
+          "voice": [
+            {
+              "name": "Clue1",
+              "path": "../Resources/Audio/1stClue.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Clue2",
+              "path": "../Resources/Audio/2ndClue.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Clue3",
+              "path": "../Resources/Audio/3rdClue.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Clue4",
+              "path": "../Resources/Audio/4thClue.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Locks",
+              "path": "../Resources/Audio/2Locks.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Key1",
+              "path": "../Resources/Audio/Key1.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Key2",
+              "path": "../Resources/Audio/Key2.wav",
               "volume": 1.0
             }
           ]
