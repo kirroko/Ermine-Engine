@@ -107,20 +107,6 @@ out vec2 vTransformedUV;  // UV with scale/offset already applied
 out vec4 vCurrClipPos; // Current clip-space position for per-fragment velocity
 out vec4 vPrevClipPos; // Previous clip-space position for per-fragment velocity
 
-vec2 signNotZero(vec2 v)
-{
-    return vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0);
-}
-
-vec3 octDecode(vec2 e)
-{
-    vec3 v = vec3(e.x, e.y, 1.0 - abs(e.x) - abs(e.y));
-    if (v.z < 0.0) {
-        v.xy = (1.0 - abs(v.yx)) * signNotZero(v.xy);
-    }
-    return normalize(v);
-}
-
 void main()
 {
     // Get draw info for this draw call (offset by baseDrawID for multi-batch rendering)
@@ -243,15 +229,21 @@ void main()
     vTextureIndices2 = ivec2(material.aoMapIndex, material.emissiveMapIndex);
     vFillAmount = clamp(material.fillAmount, 0.0, 1.0);
 
-    // Project local-space position onto oct-decoded local fill axis.
+    // Project mesh UVs onto the configured UV fill axis.
     const float EPS = 1e-6;
-    vec3 fillDir = octDecode(vec2(material.fillDirOctX, material.fillDirOctY));
-    float p = dot(skinnedPos.xyz, fillDir);
-    float minP = dot(drawInfo.aabbMin, fillDir);
-    float maxP = dot(drawInfo.aabbMax, fillDir);
+    vec2 fillAxisUV = vec2(material.fillDirOctX, material.fillDirOctY);
+    float fillAxisLenSq = dot(fillAxisUV, fillAxisUV);
+    if (fillAxisLenSq <= EPS) {
+        fillAxisUV = vec2(0.0, 1.0);
+    } else {
+        fillAxisUV *= inversesqrt(fillAxisLenSq);
+    }
+
+    float p = dot(TexCoord, fillAxisUV);
+    float minP = min(min(0.0, fillAxisUV.x), min(fillAxisUV.y, fillAxisUV.x + fillAxisUV.y));
+    float maxP = max(max(0.0, fillAxisUV.x), max(fillAxisUV.y, fillAxisUV.x + fillAxisUV.y));
     float range = maxP - minP;
     if (range <= EPS) {
-        // Degenerate extent along fill axis: treat as fully filled instead of collapsing to black.
         vFillCoord = 0.0;
     } else {
         vFillCoord = clamp((p - minP) / range, 0.0, 1.0);

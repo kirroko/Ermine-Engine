@@ -4,6 +4,8 @@ using ErmineEngine;
 public class HealthDrivenMaterialFill : MonoBehaviour
 {
     public string healthBarName = "Healthbar";
+    public float fillWhenEmpty = 0.0f;
+    public float fillWhenFull = 0.3f;
 
     private Material targetMaterial;
     private GameObject healthSource;
@@ -91,7 +93,9 @@ public class HealthDrivenMaterialFill : MonoBehaviour
 
         float ratio = (maxHealth > 0.0f) ? (health / maxHealth) : 0.0f;
         ratio = Mathf.Clamp(ratio, 0.0f, 1.0f);
-        targetFill = ratio;
+        float minFill = Mathf.Clamp(fillWhenEmpty, 0.0f, 1.0f);
+        float maxFill = Mathf.Clamp(fillWhenFull, 0.0f, 1.0f);
+        targetFill = Mathf.Lerp(minFill, maxFill, ratio);
         targetMaterial.fill = targetFill;
     }
 }

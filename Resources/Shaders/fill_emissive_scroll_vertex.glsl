@@ -77,20 +77,6 @@ flat out float vFillAmount;
 out float vFillCoord;
 out vec2 vFillScrollDirUV;
 
-vec2 signNotZero(vec2 v)
-{
-    return vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0);
-}
-
-vec3 octDecode(vec2 e)
-{
-    vec3 v = vec3(e.x, e.y, 1.0 - abs(e.x) - abs(e.y));
-    if (v.z < 0.0) {
-        v.xy = (1.0 - abs(v.yx)) * signNotZero(v.xy);
-    }
-    return normalize(v);
-}
-
 void main()
 {
     DrawInfo drawInfo = drawInfos[baseDrawID + gl_DrawID];
@@ -150,12 +136,18 @@ void main()
     vFillAmount = clamp(material.fillAmount, 0.0, 1.0);
     vBaseUV = fma(aTexCoord, material.uvScale, material.uvOffset);
 
-    vec3 fillDir = octDecode(vec2(material.fillDirOctX, material.fillDirOctY));
-
     const float EPS = 1e-6;
-    float p = dot(skinnedPos.xyz, fillDir);
-    float minP = dot(drawInfo.aabbMin, fillDir);
-    float maxP = dot(drawInfo.aabbMax, fillDir);
+    vec2 fillAxisUV = vec2(material.fillDirOctX, material.fillDirOctY);
+    float fillAxisLenSq = dot(fillAxisUV, fillAxisUV);
+    if (fillAxisLenSq <= EPS) {
+        fillAxisUV = vec2(0.0, 1.0);
+    } else {
+        fillAxisUV *= inversesqrt(fillAxisLenSq);
+    }
+
+    float p = dot(aTexCoord, fillAxisUV);
+    float minP = min(min(0.0, fillAxisUV.x), min(fillAxisUV.y, fillAxisUV.x + fillAxisUV.y));
+    float maxP = max(max(0.0, fillAxisUV.x), max(fillAxisUV.y, fillAxisUV.x + fillAxisUV.y));
     float range = maxP - minP;
     if (range <= EPS) {
         vFillCoord = 0.0;
@@ -163,14 +155,7 @@ void main()
         vFillCoord = clamp((p - minP) / range, 0.0, 1.0);
     }
 
-    // Match gbuffer TBN convention: orthonormalize tangent against normal, then derive bitangent.
-    vec3 n = normalize(skinnedNormal);
-    vec3 t = normalize(skinnedTangent);
-    t = normalize(t - dot(t, n) * n);
-    vec3 b = cross(n, t);
-
-    // Project local fill direction into tangent-space UV axes.
-    vec2 scrollDir = vec2(dot(fillDir, t), dot(fillDir, b));
+    vec2 scrollDir = fillAxisUV;
     float scrollLen = length(scrollDir);
     vFillScrollDirUV = (scrollLen > EPS) ? (scrollDir / scrollLen) : vec2(0.0, 1.0);
 }
