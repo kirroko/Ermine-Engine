@@ -49,6 +49,14 @@
             "type": "float",
             "value": 0.2849999964237213
         },
+        "materialFillDirection": {
+            "type": "vec3",
+            "value": [
+                0.0,
+                1.0,
+                0.0
+            ]
+        },
         "materialFillUVAxis": {
             "type": "vec2",
             "value": [
