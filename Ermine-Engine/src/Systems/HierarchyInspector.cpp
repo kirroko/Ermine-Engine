@@ -80,6 +80,7 @@ namespace Ermine::editor {
 
 	static bool FieldAppliesToType(const std::string& key, LightType t) {
 		if (key == "innerAngle" || key == "outerAngle") return t == LightType::SPOT;
+		if (key == "castsShadows") return t != LightType::POINT;
 		if (key == "castsRays") return t == LightType::SPOT; // Only show for spotlights
 		if (key == "radius") return t == LightType::SPOT || t == LightType::POINT;
 		// color, intensity, castsShadows, type are always shown
@@ -1483,24 +1484,24 @@ namespace Ermine::editor {
 
 		ImGui::SeparatorText("Rendering");
 
-		// --- Fill Amount / Direction ---
-		{
-			float fill = getFloat("materialFillAmount", nullptr, 1.0f);
-			if (ImGui::SliderFloat("Fill", &fill, 0.0f, 1.0f)) {
-				gm->SetFloat("materialFillAmount", std::clamp(fill, 0.0f, 1.0f));
-			}
+        // --- Fill Amount / UV Axis ---
+        {
+            float fill = getFloat("materialFillAmount", nullptr, 1.0f);
+            if (ImGui::SliderFloat("Fill", &fill, 0.0f, 1.0f)) {
+                gm->SetFloat("materialFillAmount", std::clamp(fill, 0.0f, 1.0f));
+            }
 
-			Vec3 fillDir = getVec3("materialFillDirection", nullptr, Vec3(0.0f, 1.0f, 0.0f));
-			float dir[3] = { fillDir.x, fillDir.y, fillDir.z };
-			if (ImGui::DragFloat3("Fill Direction", dir, 0.01f, -1.0f, 1.0f)) {
-				Vec3 d(dir[0], dir[1], dir[2]);
-				const float lenSq = d.x * d.x + d.y * d.y + d.z * d.z;
-				if (lenSq < 1e-8f) {
-					d = Vec3(0.0f, 1.0f, 0.0f);
-				}
-				gm->SetVec3("materialFillDirection", d);
-			}
-		}
+            Vec2 fillAxis = getVec2("materialFillUVAxis", nullptr, Vec2(0.0f, 1.0f));
+            float axis[2] = { fillAxis.x, fillAxis.y };
+            if (ImGui::DragFloat2("Fill UV Axis", axis, 0.01f, -1.0f, 1.0f)) {
+                Vec2 uvAxis(axis[0], axis[1]);
+                const float lenSq = uvAxis.x * uvAxis.x + uvAxis.y * uvAxis.y;
+                if (lenSq < 1e-8f) {
+                    uvAxis = Vec2(0.0f, 1.0f);
+                }
+                gm->SetVec2("materialFillUVAxis", uvAxis);
+            }
+        }
 
 		// --- Casts Shadows ---
 		{
@@ -1678,12 +1679,13 @@ namespace Ermine::editor {
 			gm->SetUVScale(Vec2(1.0f, 1.0f));
 			gm->SetUVOffset(Vec2(0.0f, 0.0f));
 
-			gm->SetBool("materialCastsShadows", true);
-			matComp.cacheCastsShadows = true;
-			gm->SetFloat("materialFillAmount", 1.0f);
-			gm->SetVec3("materialFillDirection", Vec3(0.0f, 1.0f, 0.0f));
+            gm->SetBool("materialCastsShadows", true);
+            matComp.cacheCastsShadows = true;
+            gm->SetFloat("materialFillAmount", 1.0f);
+            gm->SetVec3("materialFillDirection", Vec3(0.0f, 1.0f, 0.0f));
+            gm->SetVec2("materialFillUVAxis", Vec2(0.0f, 1.0f));
 
-			gm->SetBool("materialHasAlbedoMap", false);
+            gm->SetBool("materialHasAlbedoMap", false);
 			setBoolBoth("materialHasNormalMap", "material.hasNormalMap", false);
 			gm->SetBool("materialHasRoughnessMap", false);
 			gm->SetBool("materialHasMetallicMap", false);

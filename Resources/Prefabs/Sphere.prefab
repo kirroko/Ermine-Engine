@@ -81,37 +81,7 @@
           ]
         },
         "Material": {
-          "hasMaterial": true,
-          "params": {
-            "materialAlbedo": [
-              0.1,
-              0.4,
-              1.0,
-              1.0
-            ],
-            "materialAlpha": 1.0,
-            "materialTransparency": 0.0,
-            "materialMetallic": 0.2,
-            "materialRoughness": 0.3,
-            "materialEmissive": [
-              0.2,
-              0.6,
-              1.0
-            ],
-            "materialEmissiveIntensity": 30.0,
-            "materialHasAlbedoMap": false,
-            "materialHasEmissiveMap": false
-          },
-          "textures": [],
-          "uvScale": [
-            1.0,
-            1.0
-          ],
-          "uvOffset": [
-            0.0,
-            0.0
-          ],
-          "castsShadows": false
+          "guid": "6a4a6d1a5d3f4b26b9f8c0a1e2d7f314"
         },
         "GPUParticleEmitter": {
           "active": true,
