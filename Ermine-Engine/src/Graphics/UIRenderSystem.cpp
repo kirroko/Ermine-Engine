@@ -439,6 +439,22 @@ namespace Ermine
             RenderSlider(slider);
         }
 
+        // Render UITextComponent entities
+        for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
+        {
+            if (!ecs.IsEntityValid(entity))
+                continue;
+
+            if (!ecs.HasComponent<UITextComponent>(entity))
+                continue;
+
+            if (!IsEntityActiveInHierarchy(entity))
+                continue;
+
+            const auto& textComp = ecs.GetComponent<UITextComponent>(entity);
+            RenderTextComponent(textComp);
+        }
+
         // Re-enable depth test
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
@@ -1695,6 +1711,78 @@ namespace Ermine
                 m_VBO
             );
         }
+
+        // Render value display if enabled
+        if (m_textRenderer && slider.showValue)
+        {
+            std::string valueText;
+            if (slider.valueAsPercentage)
+            {
+                int percent = static_cast<int>(normalizedValue * 100.0f + 0.5f);
+                valueText = std::to_string(percent) + "%";
+            }
+            else
+            {
+                // Show raw value with 1 decimal place
+                char buf[32];
+                snprintf(buf, sizeof(buf), "%.1f", slider.value);
+                valueText = buf;
+            }
+
+            float valueX = slider.position.x + slider.valueOffset.x;
+            float valueY = slider.position.y + slider.valueOffset.y;
+
+            // Center the value text vertically relative to the offset position
+            float valTextWidth = m_textRenderer->GetTextWidth(valueText, slider.valueScale);
+            valueX -= valTextWidth * 0.5f;
+
+            m_textRenderer->RenderText(
+                m_uiShader,
+                valueText,
+                valueX,
+                valueY,
+                slider.valueScale,
+                slider.valueColor,
+                1.0f,
+                m_VAO,
+                m_VBO
+            );
+        }
+    }
+
+    void UIRenderSystem::RenderTextComponent(const UITextComponent& textComp)
+    {
+        if (!m_textRenderer || textComp.text.empty())
+            return;
+
+        float textScale = textComp.fontSize;
+
+        // Calculate starting X based on alignment
+        float textX = textComp.position.x;
+        if (textComp.alignment == 1) // Center
+        {
+            float textWidth = m_textRenderer->GetTextWidth(textComp.text, textScale);
+            textX -= textWidth * 0.5f;
+        }
+        else if (textComp.alignment == 2) // Right
+        {
+            float textWidth = m_textRenderer->GetTextWidth(textComp.text, textScale);
+            textX -= textWidth;
+        }
+
+        float textY = textComp.position.y;
+
+        m_textRenderer->RenderText(
+            m_uiShader,
+            textComp.text,
+            textX,
+            textY,
+            textScale,
+            textComp.color,
+            textComp.alpha,
+            m_VAO,
+            m_VBO
+        );
     }
 
 } // namespace Ermine
