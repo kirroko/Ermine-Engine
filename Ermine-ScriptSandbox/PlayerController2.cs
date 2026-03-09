@@ -218,6 +218,66 @@ public class PlayerController2 : MonoBehaviour
                     interactTimer = 0f;
                 }
 
+                if (obj.name == "Book1" && interactTimer > 1f)
+                {
+                    // Collect book
+                    GlobalAudio.PlaySFX("BookPickUp");
+                    GlobalAudio.PlayVoice("Clue1");
+                    GameObject msg = GameObject.Find("Clue1");
+
+                    if (msg != null)
+                    {
+                        msg.SetActive(true);
+                    }
+
+                    obj.SetActive(false);
+                    interactTimer = 0f;
+                }
+                if (obj.name == "Book2" && interactTimer > 1f)
+                {
+                    // Collect book
+                    GlobalAudio.PlaySFX("BookPickUp");
+                    GlobalAudio.PlayVoice("Clue2");
+                    GameObject msg = GameObject.Find("Clue2");
+
+                    if (msg != null)
+                    {
+                        msg.SetActive(true);
+                    }
+
+                    obj.SetActive(false);
+                    interactTimer = 0f;
+                }
+                if (obj.name == "Book3" && interactTimer > 1f)
+                {
+                    // Collect book
+                    GlobalAudio.PlaySFX("BookPickUp");
+                    GlobalAudio.PlayVoice("Clue3");
+                    GameObject msg = GameObject.Find("Clue3");
+
+                    if (msg != null)
+                    {
+                        msg.SetActive(true);
+                    }
+
+                    obj.SetActive(false);
+                    interactTimer = 0f;
+                }
+                if (obj.name == "Book4" && interactTimer > 1f)
+                {
+                    // Collect book
+                    GlobalAudio.PlaySFX("BookPickUp");
+                    GlobalAudio.PlayVoice("Clue4");
+                    GameObject msg = GameObject.Find("Clue4");
+
+                    if (msg != null)
+                    {
+                        msg.SetActive(true);
+                    }
+
+                    obj.SetActive(false);
+                    interactTimer = 0f;
+                }
                 if (obj.name == "Book" && interactTimer > 1f)
                 {
                     // Collect book
