@@ -4059,9 +4059,9 @@ namespace Ermine::editor {
 
 		// Position (only relevant when not fullscreen)
 		if (!imageComp.fullscreen) {
-			ImGui::DragFloat3("Position", &imageComp.position.x, 0.01f, 0.0f, 1.0f);
-			ImGui::DragFloat("Width", &imageComp.width, 0.01f, 0.0f, 1.0f);
-			ImGui::DragFloat("Height", &imageComp.height, 0.01f, 0.0f, 1.0f);
+			ImGui::DragFloat3("Position", &imageComp.position.x, 0.01f);
+			ImGui::DragFloat("Width", &imageComp.width, 0.01f);
+			ImGui::DragFloat("Height", &imageComp.height, 0.01f);
 			ImGui::Checkbox("Maintain Aspect Ratio", &imageComp.maintainAspectRatio);
 		}
 

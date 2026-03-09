@@ -873,6 +873,7 @@ namespace
 	MonoClass* s_SerializeFieldAttr = nullptr;
 	MonoClass* s_AnimatorClass = nullptr;
 	MonoClass* s_MaterialClass = nullptr;
+	MonoClass* s_UIImageComponentClass = nullptr;
 
 	MonoClass* s_ObjectClass = nullptr;
 	MonoClassField* s_EntityIDField = nullptr;
@@ -1148,6 +1149,32 @@ namespace
 			return nullptr;
 		}
 		return &ECS::GetInstance().GetComponent<Transform>(id);
+	}
+
+	Ermine::UIImageComponent* GetUIImageComponentFromManaged(MonoObject* thisObj)
+	{
+		using namespace Ermine;
+		EntityID id = GetEntityIDFromManaged(thisObj);
+		if (id == 0 || !ECS::GetInstance().IsEntityValid(id) || !ECS::GetInstance().HasComponent<UIImageComponent>(id))
+		{
+			EE_CORE_WARN("Cannot get UIImageComponent for {0}; either not valid or doesn't have UIImageComponent!", id);
+			return nullptr;
+		}
+		return &ECS::GetInstance().GetComponent<UIImageComponent>(id);
+	}
+
+	ManagedVector3 icall_uiimage_get_position(MonoObject* thisObj)
+	{
+		if (auto* ui = GetUIImageComponentFromManaged(thisObj))
+			return ToManagedVec(ui->position);
+
+		return { 0.5f, 0.5f, 0.0f };
+	}
+
+	void icall_uiimage_set_position(MonoObject* thisObj, ManagedVector3 value)
+	{
+		if (auto* ui = GetUIImageComponentFromManaged(thisObj))
+			ui->position = ToNativeVec(value);
 	}
 
 #pragma region Transform ICalls
@@ -1895,6 +1922,55 @@ namespace
 			}
 		}
 	}
+
+	void icall_globalaudio_play_voice(MonoString* name)
+	{
+		using namespace Ermine;
+		std::string voiceName;
+		ToTempUTF8(name, voiceName);
+
+		auto& ecs = ECS::GetInstance();
+		for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+		{
+			if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+			{
+				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+				globalAudio.PlayVoice(voiceName);
+				return;
+			}
+		}
+		EE_CORE_WARN("GlobalAudio: No GlobalAudioComponent found in scene");
+	}
+
+	void icall_globalaudio_stop_voice()
+	{
+		using namespace Ermine;
+		auto& ecs = ECS::GetInstance();
+		for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+		{
+			if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+			{
+				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+				globalAudio.StopVoice();
+				return;
+			}
+		}
+	}
+
+	void icall_globalaudio_set_voice_volume(float volume)
+	{
+		using namespace Ermine;
+		auto& ecs = ECS::GetInstance();
+		for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+		{
+			if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+			{
+				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+				globalAudio.SetVoiceVolume(volume);
+				return;
+			}
+		}
+	}
 #pragma endregion
 
 #pragma region AudioListener ICalls
@@ -2376,6 +2452,23 @@ namespace
 			return obj;
 		}
 
+		// Handle UIImage component
+		if (klass == s_UIImageComponentClass)
+		{
+			if (!ECS::GetInstance().HasComponent<UIImageComponent>(id))
+				return nullptr;
+
+			auto* dom = Ermine::ECS::GetInstance()
+				.GetSystem<Ermine::scripting::ScriptSystem>()->m_ScriptEngine->GetGameDomain();
+
+			MonoObject* obj = mono_object_new(dom, s_UIImageComponentClass);
+			mono_runtime_object_init(obj);
+			SetEntityIDOnManaged(obj, id);
+			SetComponentGameObject(obj, id);
+
+			return obj;
+		}
+
 		// return back the obj when requesting MonoBehaviour derived -> Script component
 		if (IsSubclassOf(klass, s_MonoBehaviourClass))
 		{
@@ -2418,6 +2511,9 @@ namespace
 
 		if (klass == s_MaterialClass)
 			return ECS::GetInstance().HasComponent<Ermine::Material>(id);
+
+		if (klass == s_UIImageComponentClass)
+			return ECS::GetInstance().HasComponent<UIImageComponent>(id);
 
 		if (IsSubclassOf(klass, s_MonoBehaviourClass))
 			return ECS::GetInstance().HasComponent<Script>(id);
@@ -3992,6 +4088,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 		s_SerializeFieldAttr = mono_class_from_name(s_APIImage, "ErmineEngine", "SerializeField");
 	s_AnimatorClass = GetAPIClass("ErmineEngine", "Animator");
 	s_MaterialClass = GetAPIClass("ErmineEngine", "Material");
+	s_UIImageComponentClass = GetAPIClass("ErmineEngine", "UIImage");
 
 	s_ObjectClass = GetAPIClass("ErmineEngine", "Object");
 	if (s_ObjectClass && !s_EntityIDField)
@@ -4055,6 +4152,9 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.GlobalAudio::PlayMusic", (const void*)icall_globalaudio_play_music);
 	mono_add_internal_call("ErmineEngine.GlobalAudio::SetMusicVolume", (const void*)icall_globalaudio_set_music_volume);
 	mono_add_internal_call("ErmineEngine.GlobalAudio::SetSFXVolume", (const void*)icall_globalaudio_set_sfx_volume);
+	mono_add_internal_call("ErmineEngine.GlobalAudio::PlayVoice", (const void*)icall_globalaudio_play_voice);
+	mono_add_internal_call("ErmineEngine.GlobalAudio::StopVoice", (const void*)icall_globalaudio_stop_voice);
+	mono_add_internal_call("ErmineEngine.GlobalAudio::SetVoiceVolume", (const void*)icall_globalaudio_set_voice_volume);
 #pragma endregion
 
 #pragma region AudioListener ICalls
@@ -4196,6 +4296,9 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.UIBookCounter::Internal_SetCollected", (const void*)Internal_BookCounter_SetCollected);
 	mono_add_internal_call("ErmineEngine.UIBookCounter::Internal_AddBook", (const void*)Internal_BookCounter_AddBook);
 	mono_add_internal_call("ErmineEngine.UIBookCounter::Internal_GetTotal", (const void*)Internal_BookCounter_GetTotal);
+
+	mono_add_internal_call("ErmineEngine.UIImage::get_position", (const void*)icall_uiimage_get_position);
+	mono_add_internal_call("ErmineEngine.UIImage::set_position", (const void*)icall_uiimage_set_position);
 
 #pragma endregion UI ICalls
 

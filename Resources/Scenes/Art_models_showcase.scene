@@ -118,7 +118,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "0841c3b8564a9442a1a358b6d8c6e4be"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "0e4f981bf09e734d99d2a1bce915c438",
@@ -128,7 +128,7 @@
       }
     },
     {
-      "id": 20,
+      "id": 4,
       "components": {
         "IDComponent": {
           "guid": "afeaf5a8467f4d46b5c8cf3cbc0b68e3"
@@ -167,7 +167,7 @@
       }
     },
     {
-      "id": 21,
+      "id": 5,
       "components": {
         "IDComponent": {
           "guid": "751efdebfa89e745a7956ca29a863369"
@@ -196,7 +196,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "62b737cae6bda64c9da5ca6138481078"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "afeaf5a8467f4d46b5c8cf3cbc0b68e3",
@@ -206,7 +206,7 @@
       }
     },
     {
-      "id": 22,
+      "id": 6,
       "components": {
         "IDComponent": {
           "guid": "48827d43ba11304ca7a8bd41b20b27e3"
@@ -245,7 +245,7 @@
       }
     },
     {
-      "id": 23,
+      "id": 7,
       "components": {
         "IDComponent": {
           "guid": "046201af51a8fb4a9e94c5c462ba08d0"
@@ -284,7 +284,7 @@
       }
     },
     {
-      "id": 26,
+      "id": 8,
       "components": {
         "IDComponent": {
           "guid": "933018a6c61bd646b1f87e575274e664"
@@ -323,7 +323,7 @@
       }
     },
     {
-      "id": 27,
+      "id": 9,
       "components": {
         "IDComponent": {
           "guid": "889aaa9fcb4da44191afda2e883ce152"
@@ -352,7 +352,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "b96282e7ce2c4e43a19eb9eb5ec0703d"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "933018a6c61bd646b1f87e575274e664",
@@ -362,7 +362,7 @@
       }
     },
     {
-      "id": 28,
+      "id": 10,
       "components": {
         "IDComponent": {
           "guid": "9266556a030f264ea5e3c45d3fa6c1a4"
@@ -401,7 +401,7 @@
       }
     },
     {
-      "id": 29,
+      "id": 11,
       "components": {
         "IDComponent": {
           "guid": "1b584f0bcce82842b2c76ca8af04e8e5"
@@ -430,7 +430,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "0180994e6f77fd4cbc4bcbeeb706c169"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "9266556a030f264ea5e3c45d3fa6c1a4",
@@ -440,7 +440,7 @@
       }
     },
     {
-      "id": 30,
+      "id": 12,
       "components": {
         "IDComponent": {
           "guid": "f507e93478239745b9ab30a74c892c17"
@@ -479,7 +479,7 @@
       }
     },
     {
-      "id": 31,
+      "id": 13,
       "components": {
         "IDComponent": {
           "guid": "d2b20a5617b155499fc8958de21a8349"
@@ -518,7 +518,7 @@
       }
     },
     {
-      "id": 32,
+      "id": 14,
       "components": {
         "IDComponent": {
           "guid": "fc9ef11fe0e5944191724c14d015836e"
@@ -557,7 +557,7 @@
       }
     },
     {
-      "id": 33,
+      "id": 15,
       "components": {
         "IDComponent": {
           "guid": "a4659ad3a7c71846ba2063fe409f7250"
@@ -596,7 +596,7 @@
       }
     },
     {
-      "id": 36,
+      "id": 16,
       "components": {
         "IDComponent": {
           "guid": "ad70f6faad86714ca61ba2c695e4c872"
@@ -635,7 +635,7 @@
       }
     },
     {
-      "id": 37,
+      "id": 17,
       "components": {
         "IDComponent": {
           "guid": "86d3161b2264f447b1321ca6556fc2a3"
@@ -674,7 +674,7 @@
       }
     },
     {
-      "id": 38,
+      "id": 18,
       "components": {
         "IDComponent": {
           "guid": "5d0106fb5fea9b43bbb48f3ad5cbe3eb"
@@ -713,7 +713,7 @@
       }
     },
     {
-      "id": 43,
+      "id": 19,
       "components": {
         "IDComponent": {
           "guid": "1adbd83bd2fe7649a5638a74a8d74aad"
@@ -762,7 +762,7 @@
       }
     },
     {
-      "id": 47,
+      "id": 20,
       "components": {
         "IDComponent": {
           "guid": "9be8626548d7754684d9441d957f9e66"
@@ -801,7 +801,7 @@
       }
     },
     {
-      "id": 48,
+      "id": 21,
       "components": {
         "IDComponent": {
           "guid": "f7541d89be88a046a7a5d7ed5d42b537"
@@ -830,7 +830,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e9885c39337c514cb5b0cffb60408c76"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "9be8626548d7754684d9441d957f9e66",
@@ -840,7 +840,7 @@
       }
     },
     {
-      "id": 49,
+      "id": 22,
       "components": {
         "IDComponent": {
           "guid": "b9d314e97047984b90a37cd1b08365f6"
@@ -879,7 +879,7 @@
       }
     },
     {
-      "id": 50,
+      "id": 23,
       "components": {
         "IDComponent": {
           "guid": "6246e863369fbc419454c601bb28f73c"
@@ -908,7 +908,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "1fc7225407050340891add720dd824e4"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "b9d314e97047984b90a37cd1b08365f6",
@@ -918,7 +918,7 @@
       }
     },
     {
-      "id": 55,
+      "id": 24,
       "components": {
         "IDComponent": {
           "guid": "ab2f2eb920b84741a566d67e38371209"
@@ -957,7 +957,7 @@
       }
     },
     {
-      "id": 56,
+      "id": 25,
       "components": {
         "IDComponent": {
           "guid": "9e60021cbd7af44dade6b675cc989a63"
@@ -996,7 +996,7 @@
       }
     },
     {
-      "id": 57,
+      "id": 26,
       "components": {
         "IDComponent": {
           "guid": "fbbe8b5d87e7ac48b47d0a126db3d508"
@@ -1035,7 +1035,7 @@
       }
     },
     {
-      "id": 58,
+      "id": 27,
       "components": {
         "IDComponent": {
           "guid": "094d0db64e9bc848a077b1b206e55999"
@@ -1074,7 +1074,7 @@
       }
     },
     {
-      "id": 59,
+      "id": 28,
       "components": {
         "IDComponent": {
           "guid": "8883e2486776ad4fb5daaac3c76414f7"
@@ -1113,7 +1113,7 @@
       }
     },
     {
-      "id": 60,
+      "id": 29,
       "components": {
         "IDComponent": {
           "guid": "fdbcd7b2d87cc5449185028c613f121a"
@@ -1152,7 +1152,7 @@
       }
     },
     {
-      "id": 61,
+      "id": 30,
       "components": {
         "IDComponent": {
           "guid": "a3895b34f227964b8f48a77e18121ba4"
@@ -1191,7 +1191,7 @@
       }
     },
     {
-      "id": 62,
+      "id": 31,
       "components": {
         "IDComponent": {
           "guid": "3f76666d5edd6f45bd6409a1a15fa87d"
@@ -1220,7 +1220,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "08d8bc340888814e809a34d3dee6dc7a"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "fdbcd7b2d87cc5449185028c613f121a",
@@ -1230,7 +1230,7 @@
       }
     },
     {
-      "id": 63,
+      "id": 32,
       "components": {
         "IDComponent": {
           "guid": "52638a7bfd575d44a72e6e24b07d18e8"
@@ -1269,7 +1269,7 @@
       }
     },
     {
-      "id": 64,
+      "id": 33,
       "components": {
         "IDComponent": {
           "guid": "7d5636542076744faeb24d99c1231d74"
@@ -1298,7 +1298,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "c4b81ac07eff2d46bfadee9b3f539c40"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "52638a7bfd575d44a72e6e24b07d18e8",
@@ -1308,7 +1308,7 @@
       }
     },
     {
-      "id": 65,
+      "id": 34,
       "components": {
         "IDComponent": {
           "guid": "a2ac3a048ced5546abb1ecbd9fa25561"
@@ -1347,7 +1347,7 @@
       }
     },
     {
-      "id": 66,
+      "id": 35,
       "components": {
         "IDComponent": {
           "guid": "c9117acd99a73e49be36b48bea1544af"
@@ -1386,7 +1386,7 @@
       }
     },
     {
-      "id": 74,
+      "id": 36,
       "components": {
         "IDComponent": {
           "guid": "d34466aec35a52409a9a9726d7fbafb1"
@@ -1425,7 +1425,7 @@
       }
     },
     {
-      "id": 75,
+      "id": 37,
       "components": {
         "IDComponent": {
           "guid": "837236349da36747a57beb00dbe7b699"
@@ -1464,7 +1464,7 @@
       }
     },
     {
-      "id": 79,
+      "id": 38,
       "components": {
         "IDComponent": {
           "guid": "c2fbc7ec197fcb47b81241468ce823b0"
@@ -1503,7 +1503,7 @@
       }
     },
     {
-      "id": 80,
+      "id": 39,
       "components": {
         "IDComponent": {
           "guid": "1cac7d03c7ea35478e429f0cd9c6c128"
@@ -1542,7 +1542,7 @@
       }
     },
     {
-      "id": 81,
+      "id": 40,
       "components": {
         "IDComponent": {
           "guid": "014cb41bd1fff342963525246b67a4e7"
@@ -1581,7 +1581,7 @@
       }
     },
     {
-      "id": 82,
+      "id": 41,
       "components": {
         "IDComponent": {
           "guid": "ef91e12119e5e442b9e76ce38ed7740c"
@@ -1620,7 +1620,7 @@
       }
     },
     {
-      "id": 83,
+      "id": 42,
       "components": {
         "IDComponent": {
           "guid": "42681f826956d448b6da42983ec42c0d"
@@ -1659,7 +1659,7 @@
       }
     },
     {
-      "id": 84,
+      "id": 43,
       "components": {
         "IDComponent": {
           "guid": "31f9c9ac7f2a0c4db2f993722eedaae9"
@@ -1698,7 +1698,7 @@
       }
     },
     {
-      "id": 85,
+      "id": 44,
       "components": {
         "IDComponent": {
           "guid": "b3fae382f081254b8e6a9d95dc3c5a30"
@@ -1737,7 +1737,7 @@
       }
     },
     {
-      "id": 86,
+      "id": 45,
       "components": {
         "IDComponent": {
           "guid": "5ef5f81abcc5a34fbd8b339f1081a9b2"
@@ -1776,7 +1776,7 @@
       }
     },
     {
-      "id": 87,
+      "id": 46,
       "components": {
         "IDComponent": {
           "guid": "107a8414191e9946b7fc6ccda15d9f71"
@@ -1815,7 +1815,7 @@
       }
     },
     {
-      "id": 88,
+      "id": 47,
       "components": {
         "IDComponent": {
           "guid": "e75991733866b14ca119c80bdd067257"
@@ -1854,7 +1854,7 @@
       }
     },
     {
-      "id": 89,
+      "id": 48,
       "components": {
         "IDComponent": {
           "guid": "a2defa086fbf3a43bd9fe6d11e1adae1"
@@ -1893,7 +1893,7 @@
       }
     },
     {
-      "id": 90,
+      "id": 49,
       "components": {
         "IDComponent": {
           "guid": "7ab1ee9a4828d14c88d83d3c5fb2c7ed"
@@ -1932,7 +1932,7 @@
       }
     },
     {
-      "id": 91,
+      "id": 50,
       "components": {
         "IDComponent": {
           "guid": "0dea8ae4ace76141b1b3aaa485f2e1cd"
@@ -1971,7 +1971,7 @@
       }
     },
     {
-      "id": 92,
+      "id": 51,
       "components": {
         "IDComponent": {
           "guid": "4151a95a6b4a9745b96d082b0faf9291"
@@ -2010,7 +2010,7 @@
       }
     },
     {
-      "id": 93,
+      "id": 52,
       "components": {
         "IDComponent": {
           "guid": "a7b15fcad2ca4b40b2f5e36c4a5afe2a"
@@ -2049,7 +2049,7 @@
       }
     },
     {
-      "id": 94,
+      "id": 53,
       "components": {
         "IDComponent": {
           "guid": "581805841037464ebc311c5f0c3455f7"
@@ -2088,7 +2088,7 @@
       }
     },
     {
-      "id": 95,
+      "id": 54,
       "components": {
         "IDComponent": {
           "guid": "35c97f718e608e4496545ea191a57a7c"
@@ -2127,7 +2127,7 @@
       }
     },
     {
-      "id": 96,
+      "id": 55,
       "components": {
         "IDComponent": {
           "guid": "3d7ff8dc29d03d4e9eb1f1474bc0888e"
@@ -2166,7 +2166,7 @@
       }
     },
     {
-      "id": 97,
+      "id": 56,
       "components": {
         "IDComponent": {
           "guid": "6849012680088b42a8a2b4cd8cc6ca92"
@@ -2205,7 +2205,7 @@
       }
     },
     {
-      "id": 98,
+      "id": 57,
       "components": {
         "IDComponent": {
           "guid": "66f257c1cd977b4baaef4ea0c1c31409"
@@ -2244,7 +2244,7 @@
       }
     },
     {
-      "id": 99,
+      "id": 58,
       "components": {
         "IDComponent": {
           "guid": "4a50c002353973409e7e4db2c99a92a4"
@@ -2283,7 +2283,7 @@
       }
     },
     {
-      "id": 100,
+      "id": 59,
       "components": {
         "IDComponent": {
           "guid": "d3e578ed58269644af6aedaa7ca3c49a"
@@ -2322,7 +2322,7 @@
       }
     },
     {
-      "id": 101,
+      "id": 60,
       "components": {
         "IDComponent": {
           "guid": "b54b2e84646ad143a86643e1c2338bc5"
@@ -2361,7 +2361,7 @@
       }
     },
     {
-      "id": 102,
+      "id": 61,
       "components": {
         "IDComponent": {
           "guid": "742ab270d7f0f443aeca56e2504f01bc"
@@ -2400,7 +2400,7 @@
       }
     },
     {
-      "id": 103,
+      "id": 62,
       "components": {
         "IDComponent": {
           "guid": "471b14013872e94d9639693bf3a0507a"
@@ -2439,7 +2439,7 @@
       }
     },
     {
-      "id": 104,
+      "id": 63,
       "components": {
         "IDComponent": {
           "guid": "70215870a191ca42ba7c14138b61eb0f"
@@ -2478,7 +2478,7 @@
       }
     },
     {
-      "id": 105,
+      "id": 64,
       "components": {
         "IDComponent": {
           "guid": "61b14790992337449752754069eccf29"
@@ -2517,7 +2517,7 @@
       }
     },
     {
-      "id": 106,
+      "id": 65,
       "components": {
         "IDComponent": {
           "guid": "9fa4f7953b3c1a4c921e2d896a67a824"
@@ -2556,7 +2556,7 @@
       }
     },
     {
-      "id": 107,
+      "id": 66,
       "components": {
         "IDComponent": {
           "guid": "eaee7241b938cb498f9b31feb4fbf9bd"
@@ -2595,7 +2595,7 @@
       }
     },
     {
-      "id": 108,
+      "id": 67,
       "components": {
         "IDComponent": {
           "guid": "c5ddd756e08f8443822ffa368e4929cb"
@@ -2634,7 +2634,7 @@
       }
     },
     {
-      "id": 109,
+      "id": 68,
       "components": {
         "IDComponent": {
           "guid": "8f120e10f1429c49aadbd1402a459a70"
@@ -2673,7 +2673,7 @@
       }
     },
     {
-      "id": 110,
+      "id": 69,
       "components": {
         "IDComponent": {
           "guid": "2e75f3c1c490c44689a21b7a9bfa5d81"
@@ -2712,7 +2712,7 @@
       }
     },
     {
-      "id": 111,
+      "id": 70,
       "components": {
         "IDComponent": {
           "guid": "d69fa91239621d47828cc25a7bad4161"
@@ -2751,7 +2751,7 @@
       }
     },
     {
-      "id": 112,
+      "id": 71,
       "components": {
         "IDComponent": {
           "guid": "8863ebe893dea64c95ecde1719ef4734"
@@ -2790,7 +2790,7 @@
       }
     },
     {
-      "id": 113,
+      "id": 72,
       "components": {
         "IDComponent": {
           "guid": "0d451fca78d7d14b9323da2cdd182efa"
@@ -2829,7 +2829,7 @@
       }
     },
     {
-      "id": 114,
+      "id": 73,
       "components": {
         "IDComponent": {
           "guid": "15e85c2377cd5e42abc4c2f97a15eba0"
@@ -2868,7 +2868,7 @@
       }
     },
     {
-      "id": 115,
+      "id": 74,
       "components": {
         "IDComponent": {
           "guid": "e0d44217bb2ffd499db1596c1521df77"
@@ -2907,7 +2907,7 @@
       }
     },
     {
-      "id": 116,
+      "id": 75,
       "components": {
         "IDComponent": {
           "guid": "e207e1459dc7d445b231bdf234f1357c"
@@ -2946,7 +2946,7 @@
       }
     },
     {
-      "id": 117,
+      "id": 76,
       "components": {
         "IDComponent": {
           "guid": "933303a6d475c3428ff9ba8d4188b124"
@@ -2985,7 +2985,7 @@
       }
     },
     {
-      "id": 118,
+      "id": 77,
       "components": {
         "IDComponent": {
           "guid": "635a008fffe01348baa3b308a509190e"
@@ -3024,7 +3024,7 @@
       }
     },
     {
-      "id": 119,
+      "id": 78,
       "components": {
         "IDComponent": {
           "guid": "479e76a84e360c48910d60753d008467"
@@ -3053,7 +3053,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "0a37158c3d164941ab9c0712d3ad5127"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "635a008fffe01348baa3b308a509190e",
@@ -3063,7 +3063,7 @@
       }
     },
     {
-      "id": 120,
+      "id": 79,
       "components": {
         "IDComponent": {
           "guid": "e906efb9cfcf5949ac00772a28fb94f7"
@@ -3092,7 +3092,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e9c4825fb9899d44a3b4aa65d421c4aa"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "635a008fffe01348baa3b308a509190e",
@@ -3102,7 +3102,7 @@
       }
     },
     {
-      "id": 121,
+      "id": 80,
       "components": {
         "IDComponent": {
           "guid": "47671154faf77f4584ebcf2ef87e8260"
@@ -3131,7 +3131,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "96b7d5c110e4dd41b979422bd2588e74"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "635a008fffe01348baa3b308a509190e",
@@ -3141,7 +3141,7 @@
       }
     },
     {
-      "id": 122,
+      "id": 81,
       "components": {
         "IDComponent": {
           "guid": "9be99355eb2c7f4b8bcb61b96e2b645c"
@@ -3170,7 +3170,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "84a37bb20393d64992baf1bf6327b229"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "635a008fffe01348baa3b308a509190e",
@@ -3180,7 +3180,7 @@
       }
     },
     {
-      "id": 123,
+      "id": 82,
       "components": {
         "IDComponent": {
           "guid": "4c7b18722037ea4bafb1af841ddc68fd"
@@ -3219,7 +3219,7 @@
       }
     },
     {
-      "id": 124,
+      "id": 83,
       "components": {
         "IDComponent": {
           "guid": "0c7f3bafc6d26446bd8673966e13a2a2"
@@ -3248,7 +3248,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "c3f7b1baa5736843900c068aad4de518"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "4c7b18722037ea4bafb1af841ddc68fd",
@@ -3258,7 +3258,7 @@
       }
     },
     {
-      "id": 125,
+      "id": 84,
       "components": {
         "IDComponent": {
           "guid": "de1e7d65971a9c4babf13c28cc53912b"
@@ -3297,7 +3297,7 @@
       }
     },
     {
-      "id": 126,
+      "id": 85,
       "components": {
         "IDComponent": {
           "guid": "9aa95b60db8ddd4cb44f9d68da4cc153"
@@ -3326,7 +3326,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "25ba82828abee349bde519a82fcc84b5"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "de1e7d65971a9c4babf13c28cc53912b",
@@ -3336,7 +3336,7 @@
       }
     },
     {
-      "id": 127,
+      "id": 86,
       "components": {
         "IDComponent": {
           "guid": "1977f19724c0f94299609bbc822ed05f"
@@ -3375,7 +3375,7 @@
       }
     },
     {
-      "id": 128,
+      "id": 87,
       "components": {
         "IDComponent": {
           "guid": "ee4147497451054c921e178df5cb2a84"
@@ -3404,7 +3404,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "6e314e29fb55cd4f8ef88b866c91328c"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "1977f19724c0f94299609bbc822ed05f",
@@ -3414,7 +3414,7 @@
       }
     },
     {
-      "id": 129,
+      "id": 88,
       "components": {
         "IDComponent": {
           "guid": "59b69c36e741f84b97ae13cb589401aa"
@@ -3453,7 +3453,7 @@
       }
     },
     {
-      "id": 130,
+      "id": 89,
       "components": {
         "IDComponent": {
           "guid": "e1d49ce6e6dd334cac932a29dea8395a"
@@ -3482,7 +3482,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "426b02d82252624b9aa1e4c0b1d633ae"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "59b69c36e741f84b97ae13cb589401aa",
@@ -3492,7 +3492,7 @@
       }
     },
     {
-      "id": 131,
+      "id": 90,
       "components": {
         "IDComponent": {
           "guid": "5b537b1282d74d48a58539d9bbf5470d"
@@ -3531,7 +3531,7 @@
       }
     },
     {
-      "id": 132,
+      "id": 91,
       "components": {
         "IDComponent": {
           "guid": "e00d1ed59572514c9039f7a7b3c2458f"
@@ -3570,7 +3570,7 @@
       }
     },
     {
-      "id": 133,
+      "id": 92,
       "components": {
         "IDComponent": {
           "guid": "856fd7cca4224d4686b74ca25f9f3f8c"
@@ -3599,7 +3599,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "fd879bc613224243b7cb9d649b1e162e"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "e00d1ed59572514c9039f7a7b3c2458f",
@@ -3609,7 +3609,7 @@
       }
     },
     {
-      "id": 134,
+      "id": 93,
       "components": {
         "IDComponent": {
           "guid": "83e2cd91e2c34c4fa1f5720d92eb1aeb"
@@ -3648,7 +3648,7 @@
       }
     },
     {
-      "id": 135,
+      "id": 94,
       "components": {
         "IDComponent": {
           "guid": "b7e491ed2dd1624ca2bc4e5bd202199f"
@@ -3687,7 +3687,7 @@
       }
     },
     {
-      "id": 136,
+      "id": 95,
       "components": {
         "IDComponent": {
           "guid": "d3d44b6b0f55b4458275cace52f1aaa5"
@@ -3726,7 +3726,7 @@
       }
     },
     {
-      "id": 137,
+      "id": 96,
       "components": {
         "IDComponent": {
           "guid": "4efaac442bb2cf4da6a4268120deac41"
@@ -3755,7 +3755,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "b0071bfd24a1db4886eed9c8d25ce40f"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "d3d44b6b0f55b4458275cace52f1aaa5",
@@ -3765,7 +3765,7 @@
       }
     },
     {
-      "id": 138,
+      "id": 97,
       "components": {
         "IDComponent": {
           "guid": "fd15f0c87807c947b980c205acd36a8e"
@@ -3804,7 +3804,7 @@
       }
     },
     {
-      "id": 139,
+      "id": 98,
       "components": {
         "IDComponent": {
           "guid": "4d1e14410d03a14587f3749283b34111"
@@ -3833,7 +3833,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "54c92ce747561b4a94c90108de7809e0"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "fd15f0c87807c947b980c205acd36a8e",
@@ -3843,7 +3843,7 @@
       }
     },
     {
-      "id": 140,
+      "id": 99,
       "components": {
         "IDComponent": {
           "guid": "bff449c507cc574189835e4ea188870b"
@@ -3882,7 +3882,7 @@
       }
     },
     {
-      "id": 141,
+      "id": 100,
       "components": {
         "IDComponent": {
           "guid": "3b543d116601234b8aad03fe9c63cc42"
@@ -3911,7 +3911,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "92dc833ed742ab4ba7b973ee1acd9b2e"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "bff449c507cc574189835e4ea188870b",
@@ -3921,7 +3921,7 @@
       }
     },
     {
-      "id": 142,
+      "id": 101,
       "components": {
         "IDComponent": {
           "guid": "11a10472e1bd0c4d8337534cf3212831"
@@ -3960,7 +3960,7 @@
       }
     },
     {
-      "id": 143,
+      "id": 102,
       "components": {
         "IDComponent": {
           "guid": "63061a4ae881df4ba7cf2ed9a9630f97"
@@ -3989,7 +3989,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "6d5a17dd1a22e04097febe551a724059"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "11a10472e1bd0c4d8337534cf3212831",
@@ -3999,7 +3999,7 @@
       }
     },
     {
-      "id": 144,
+      "id": 103,
       "components": {
         "IDComponent": {
           "guid": "9fe06b1abc748f4fa1f1ec4032ba7740"
@@ -4038,7 +4038,7 @@
       }
     },
     {
-      "id": 145,
+      "id": 104,
       "components": {
         "IDComponent": {
           "guid": "548543bf64aefa458d927c957ef2029b"
@@ -4067,7 +4067,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "3582f94127f501419e43b39f0145413a"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "9fe06b1abc748f4fa1f1ec4032ba7740",
@@ -4077,7 +4077,7 @@
       }
     },
     {
-      "id": 146,
+      "id": 105,
       "components": {
         "IDComponent": {
           "guid": "60e1b5895fab7c47b687576d65c80cf6"
@@ -4116,7 +4116,7 @@
       }
     },
     {
-      "id": 147,
+      "id": 106,
       "components": {
         "IDComponent": {
           "guid": "455b66a070c8dc488cda59295e78f9cd"
@@ -4145,7 +4145,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "c925a58252b27d4b838dc2ae299c25cc"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "60e1b5895fab7c47b687576d65c80cf6",
@@ -4155,7 +4155,7 @@
       }
     },
     {
-      "id": 148,
+      "id": 107,
       "components": {
         "IDComponent": {
           "guid": "4aaaf960c497914b9865f5328a2d83b3"
@@ -4194,7 +4194,7 @@
       }
     },
     {
-      "id": 149,
+      "id": 108,
       "components": {
         "IDComponent": {
           "guid": "4acf03c8f45ea442ac7e40bd171e0be2"
@@ -4223,7 +4223,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "5acbb8bc9db5d9408f6982a20290cf20"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "4aaaf960c497914b9865f5328a2d83b3",
@@ -4233,7 +4233,7 @@
       }
     },
     {
-      "id": 150,
+      "id": 109,
       "components": {
         "IDComponent": {
           "guid": "030ed89a99f7be48943f7c6ff18a80d5"
@@ -4272,7 +4272,7 @@
       }
     },
     {
-      "id": 151,
+      "id": 110,
       "components": {
         "IDComponent": {
           "guid": "b35b8154d49f8d47949a15a257b01a31"
@@ -4301,7 +4301,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "846e71c6132e6b46aeae24ff43494fac"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "030ed89a99f7be48943f7c6ff18a80d5",
@@ -4311,7 +4311,7 @@
       }
     },
     {
-      "id": 152,
+      "id": 111,
       "components": {
         "IDComponent": {
           "guid": "07e5573ef64a944baec6026e34b5d1f4"
@@ -4350,7 +4350,7 @@
       }
     },
     {
-      "id": 153,
+      "id": 112,
       "components": {
         "IDComponent": {
           "guid": "933d34891f36f744b134e44250bf278c"
@@ -4389,7 +4389,7 @@
       }
     },
     {
-      "id": 154,
+      "id": 113,
       "components": {
         "IDComponent": {
           "guid": "ee88b96e34151147b97894fd0b217328"
@@ -4428,7 +4428,7 @@
       }
     },
     {
-      "id": 155,
+      "id": 114,
       "components": {
         "IDComponent": {
           "guid": "8f1e2dc55dd40c488736baf7b3d87848"
@@ -4467,7 +4467,7 @@
       }
     },
     {
-      "id": 156,
+      "id": 115,
       "components": {
         "IDComponent": {
           "guid": "d9403c9200c7784690500461ead7a94f"
@@ -4506,7 +4506,7 @@
       }
     },
     {
-      "id": 157,
+      "id": 116,
       "components": {
         "IDComponent": {
           "guid": "fbda76eb02475848b80e561a82d27d1c"
@@ -4535,7 +4535,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "d2ed71e8bcd94d41b47e30c31792b031"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "d9403c9200c7784690500461ead7a94f",
@@ -4545,7 +4545,7 @@
       }
     },
     {
-      "id": 158,
+      "id": 117,
       "components": {
         "IDComponent": {
           "guid": "8820a5d654fb6d4795f361b8e684be90"
@@ -4584,7 +4584,7 @@
       }
     },
     {
-      "id": 159,
+      "id": 118,
       "components": {
         "IDComponent": {
           "guid": "d41dc92d1d81bd41b5d5d44006fe031a"
@@ -4613,7 +4613,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "51ec0071f97df741aa4bf64152255c01"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "8820a5d654fb6d4795f361b8e684be90",
@@ -4623,7 +4623,7 @@
       }
     },
     {
-      "id": 160,
+      "id": 119,
       "components": {
         "IDComponent": {
           "guid": "76d435b7f17b374392c508ca482fec60"
@@ -4662,7 +4662,7 @@
       }
     },
     {
-      "id": 161,
+      "id": 120,
       "components": {
         "IDComponent": {
           "guid": "e8e8192fbe6d8b4b8d722c41a36f302f"
@@ -4691,7 +4691,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "bb7ced01d54b404da4fe773d885b3280"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "76d435b7f17b374392c508ca482fec60",
@@ -4701,7 +4701,7 @@
       }
     },
     {
-      "id": 162,
+      "id": 121,
       "components": {
         "IDComponent": {
           "guid": "32ac2f174cb07b46bca944b5c24308cf"
@@ -4740,7 +4740,7 @@
       }
     },
     {
-      "id": 163,
+      "id": 122,
       "components": {
         "IDComponent": {
           "guid": "76ebb73985d2184db58d9071f4478ff4"
@@ -4769,7 +4769,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9a89439ce8eb6e43a000846b21a1c897"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "32ac2f174cb07b46bca944b5c24308cf",
@@ -4779,7 +4779,7 @@
       }
     },
     {
-      "id": 164,
+      "id": 123,
       "components": {
         "IDComponent": {
           "guid": "d5ca3df17df0ab4aae8ec0fede48ec8f"
@@ -4818,7 +4818,7 @@
       }
     },
     {
-      "id": 165,
+      "id": 124,
       "components": {
         "IDComponent": {
           "guid": "5b5bdb44d198244b953a0d935e992e81"
@@ -4847,7 +4847,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "ba56345ca9acd14b9c46cde5d84a3bea"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "d5ca3df17df0ab4aae8ec0fede48ec8f",
@@ -4857,7 +4857,7 @@
       }
     },
     {
-      "id": 166,
+      "id": 125,
       "components": {
         "IDComponent": {
           "guid": "9ecc04139b5e9948a5f0733585a7ec21"
@@ -4896,7 +4896,7 @@
       }
     },
     {
-      "id": 167,
+      "id": 126,
       "components": {
         "IDComponent": {
           "guid": "cac5f61d398b6f48aa011fdc9e423536"
@@ -4925,7 +4925,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "fade3d7596c5664193d8b1fede54b78f"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "9ecc04139b5e9948a5f0733585a7ec21",
@@ -4935,7 +4935,7 @@
       }
     },
     {
-      "id": 168,
+      "id": 127,
       "components": {
         "IDComponent": {
           "guid": "5f08de6ab5819a42b06dfa1f781287c0"
@@ -4974,7 +4974,7 @@
       }
     },
     {
-      "id": 169,
+      "id": 128,
       "components": {
         "IDComponent": {
           "guid": "484cb84717cca94b8d105b027f4a33bb"
@@ -5003,7 +5003,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "c804adcc2f206c4f80036631b2226068"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "5f08de6ab5819a42b06dfa1f781287c0",
@@ -5013,7 +5013,7 @@
       }
     },
     {
-      "id": 170,
+      "id": 129,
       "components": {
         "IDComponent": {
           "guid": "8b7a047848043e4c89510bb22a42ad48"
@@ -5052,7 +5052,7 @@
       }
     },
     {
-      "id": 171,
+      "id": 130,
       "components": {
         "IDComponent": {
           "guid": "c8eed8638ddadf42a2fa935c31b2db1b"
@@ -5091,7 +5091,7 @@
       }
     },
     {
-      "id": 172,
+      "id": 131,
       "components": {
         "IDComponent": {
           "guid": "c4b37543e56f0f4dae1d1364aa32b62f"
@@ -5130,7 +5130,7 @@
       }
     },
     {
-      "id": 173,
+      "id": 132,
       "components": {
         "IDComponent": {
           "guid": "ba57d0b4d7e3cb4fad82bbdd2fe1d043"
@@ -5159,7 +5159,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "ce1fc99c18cb1346a540e9d589f5061b"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "c4b37543e56f0f4dae1d1364aa32b62f",
@@ -5169,7 +5169,7 @@
       }
     },
     {
-      "id": 174,
+      "id": 133,
       "components": {
         "IDComponent": {
           "guid": "36da79b570333f4e9cbda5a0d7b47ae1"
@@ -5208,7 +5208,7 @@
       }
     },
     {
-      "id": 175,
+      "id": 134,
       "components": {
         "IDComponent": {
           "guid": "147520bf58d1b740a56a3f1985c1ffc5"
@@ -5237,7 +5237,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "02b77e6328f839429604fa15cf768505"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "36da79b570333f4e9cbda5a0d7b47ae1",
@@ -5247,7 +5247,7 @@
       }
     },
     {
-      "id": 176,
+      "id": 135,
       "components": {
         "IDComponent": {
           "guid": "6b0ad94486c2764bace7c9bf73a0c119"
@@ -5296,7 +5296,7 @@
       }
     },
     {
-      "id": 177,
+      "id": 136,
       "components": {
         "IDComponent": {
           "guid": "8b78adaf53a0db4bb343be70c8d0f6bc"
@@ -5345,7 +5345,7 @@
       }
     },
     {
-      "id": 178,
+      "id": 137,
       "components": {
         "IDComponent": {
           "guid": "53399b72a435864ebfb2bb6af1d96445"
@@ -5394,7 +5394,7 @@
       }
     },
     {
-      "id": 179,
+      "id": 138,
       "components": {
         "IDComponent": {
           "guid": "1c3ea3ac0461c649b57e4f43b686d659"
@@ -5443,7 +5443,7 @@
       }
     },
     {
-      "id": 180,
+      "id": 139,
       "components": {
         "IDComponent": {
           "guid": "89d7ac39c744cf459e5d35deee03bd68"
@@ -5492,7 +5492,7 @@
       }
     },
     {
-      "id": 181,
+      "id": 140,
       "components": {
         "IDComponent": {
           "guid": "7e674090e5e111409822ed4a7ce97d22"
@@ -5541,7 +5541,7 @@
       }
     },
     {
-      "id": 182,
+      "id": 141,
       "components": {
         "IDComponent": {
           "guid": "b853468239b7ab4f9cb327ec344da42a"
@@ -5590,7 +5590,7 @@
       }
     },
     {
-      "id": 183,
+      "id": 142,
       "components": {
         "IDComponent": {
           "guid": "cfbe88cde428384eb7ab28355738bccb"
@@ -5639,7 +5639,7 @@
       }
     },
     {
-      "id": 184,
+      "id": 143,
       "components": {
         "IDComponent": {
           "guid": "86bb654ca201514fb448ac6ba6227556"
@@ -5688,7 +5688,7 @@
       }
     },
     {
-      "id": 192,
+      "id": 144,
       "components": {
         "IDComponent": {
           "guid": "809f464056c8d3419abb865a290586a4"
@@ -5730,7 +5730,7 @@
       }
     },
     {
-      "id": 193,
+      "id": 145,
       "components": {
         "IDComponent": {
           "guid": "c9a6093386c6b747b9f207886a4909d7"
@@ -5769,7 +5769,7 @@
       }
     },
     {
-      "id": 194,
+      "id": 146,
       "components": {
         "IDComponent": {
           "guid": "6872658760fa714b8890d499eac26a67"
@@ -5808,7 +5808,7 @@
       }
     },
     {
-      "id": 195,
+      "id": 147,
       "components": {
         "IDComponent": {
           "guid": "4fb90f82b7d8ea45b2bd094136f8ebb1"
@@ -5874,7 +5874,7 @@
       }
     },
     {
-      "id": 196,
+      "id": 148,
       "components": {
         "IDComponent": {
           "guid": "cdad805d8fbe3e42ad52ecbcb6bda113"
@@ -5913,7 +5913,7 @@
       }
     },
     {
-      "id": 197,
+      "id": 149,
       "components": {
         "IDComponent": {
           "guid": "3515a503edf1044d8ece524acfb43145"
@@ -5952,7 +5952,7 @@
       }
     },
     {
-      "id": 198,
+      "id": 150,
       "components": {
         "IDComponent": {
           "guid": "805dbf205448b6489157d3ae68bdc216"
@@ -5991,7 +5991,7 @@
       }
     },
     {
-      "id": 199,
+      "id": 151,
       "components": {
         "IDComponent": {
           "guid": "75e5a80ed6048c4a9be94a9ab049c01b"
@@ -6030,7 +6030,7 @@
       }
     },
     {
-      "id": 200,
+      "id": 152,
       "components": {
         "IDComponent": {
           "guid": "888d1e839843c64f9935b2c0ab9531e6"
@@ -6069,7 +6069,7 @@
       }
     },
     {
-      "id": 201,
+      "id": 153,
       "components": {
         "IDComponent": {
           "guid": "af9ae770ef87a74388619cd4e2194484"
@@ -6108,7 +6108,7 @@
       }
     },
     {
-      "id": 202,
+      "id": 154,
       "components": {
         "IDComponent": {
           "guid": "bbf15876cdb45d4fbe1a288bc34294d6"
@@ -6147,7 +6147,7 @@
       }
     },
     {
-      "id": 203,
+      "id": 155,
       "components": {
         "IDComponent": {
           "guid": "43d55060f7c1a24c89f3acb180828439"
@@ -6186,7 +6186,7 @@
       }
     },
     {
-      "id": 204,
+      "id": 156,
       "components": {
         "IDComponent": {
           "guid": "63b2fc731f2a8045893c4cbdb74ec8f4"
@@ -6225,7 +6225,7 @@
       }
     },
     {
-      "id": 205,
+      "id": 157,
       "components": {
         "IDComponent": {
           "guid": "59f2891a246183469681dbd44b4d294a"
@@ -6291,7 +6291,7 @@
       }
     },
     {
-      "id": 206,
+      "id": 158,
       "components": {
         "IDComponent": {
           "guid": "8ba3bf8dfca10448af49f3299dee5072"
@@ -6330,7 +6330,7 @@
       }
     },
     {
-      "id": 207,
+      "id": 159,
       "components": {
         "IDComponent": {
           "guid": "ed12e2950ce2544baeda380ccb90ee3a"
@@ -6369,7 +6369,7 @@
       }
     },
     {
-      "id": 208,
+      "id": 160,
       "components": {
         "IDComponent": {
           "guid": "549a0eba02ef704a8095094a6f07e22f"
@@ -6408,7 +6408,7 @@
       }
     },
     {
-      "id": 209,
+      "id": 161,
       "components": {
         "IDComponent": {
           "guid": "e5ad881197de6745b15efe5d787d1187"
@@ -6447,7 +6447,7 @@
       }
     },
     {
-      "id": 210,
+      "id": 162,
       "components": {
         "IDComponent": {
           "guid": "19177f051dc09b419373786d7e1701a2"
@@ -6487,7 +6487,7 @@
       }
     },
     {
-      "id": 211,
+      "id": 163,
       "components": {
         "IDComponent": {
           "guid": "388f91c28174a147b5369ea74c7a7237"
@@ -6526,7 +6526,7 @@
       }
     },
     {
-      "id": 212,
+      "id": 164,
       "components": {
         "IDComponent": {
           "guid": "482030246dbad74084bbeb34c5e335ba"
@@ -6566,7 +6566,7 @@
       }
     },
     {
-      "id": 213,
+      "id": 165,
       "components": {
         "IDComponent": {
           "guid": "67d4c481c3d69345910d5e6afd589508"
@@ -6605,7 +6605,7 @@
       }
     },
     {
-      "id": 214,
+      "id": 166,
       "components": {
         "IDComponent": {
           "guid": "5d4d3d68a10e0943bc2056805ac9b023"
@@ -6647,7 +6647,7 @@
       }
     },
     {
-      "id": 215,
+      "id": 167,
       "components": {
         "IDComponent": {
           "guid": "2c07435375012a4a869170b7605fa012"
@@ -6686,7 +6686,7 @@
       }
     },
     {
-      "id": 216,
+      "id": 168,
       "components": {
         "IDComponent": {
           "guid": "e02ef1d195487e4488ddd7d1a00be6eb"
@@ -6725,7 +6725,7 @@
       }
     },
     {
-      "id": 217,
+      "id": 169,
       "components": {
         "IDComponent": {
           "guid": "190dfc67ef16a448acf8d20f82c6e093"
@@ -6791,7 +6791,7 @@
       }
     },
     {
-      "id": 218,
+      "id": 170,
       "components": {
         "IDComponent": {
           "guid": "fba9442a8e382548ac1a32f1bf528553"
@@ -6830,7 +6830,7 @@
       }
     },
     {
-      "id": 220,
+      "id": 171,
       "components": {
         "IDComponent": {
           "guid": "a62e7b230ffab146a3d68f22cb04d20a"
@@ -6869,7 +6869,7 @@
       }
     },
     {
-      "id": 221,
+      "id": 172,
       "components": {
         "IDComponent": {
           "guid": "cdc114120c4c1941bf553fd001c29012"
@@ -6908,7 +6908,7 @@
       }
     },
     {
-      "id": 224,
+      "id": 173,
       "components": {
         "IDComponent": {
           "guid": "020b1f52f252614eaae1d72f877d5251"
@@ -6947,7 +6947,7 @@
       }
     },
     {
-      "id": 225,
+      "id": 174,
       "components": {
         "IDComponent": {
           "guid": "a09c9ae9d470e24c84d40af1833a2c77"
@@ -6980,6 +6980,1095 @@
         },
         "HierarchyComponent": {
           "parentGuid": "020b1f52f252614eaae1d72f877d5251",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 175,
+      "components": {
+        "IDComponent": {
+          "guid": "1d5d3fd736e2a84bbad28fd76dd2695c"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.05000000074505806,
+            0.05000000074505806,
+            0.05000000074505806
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "ElevatorDoorRight",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_Elevator_door_r_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "00ac77529f1fdb4cb98c0892bb6faa94",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 176,
+      "components": {
+        "IDComponent": {
+          "guid": "a01d912d1201804db188b568aa15866a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Elevator_door_r_low.fbx_pCylinder19_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "1d5d3fd736e2a84bbad28fd76dd2695c",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 177,
+      "components": {
+        "IDComponent": {
+          "guid": "0295322e9ec327418c6d03707b6b8fdb"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Elevator_door_r_low.fbx_pCylinder19_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "1d5d3fd736e2a84bbad28fd76dd2695c",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 178,
+      "components": {
+        "IDComponent": {
+          "guid": "88c812cb0f880f4eb46183da0ad3abb5"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.05000000074505806,
+            0.05000000074505806,
+            0.05000000074505806
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "ElevatorDoorLeft",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_Elevator_door_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "00ac77529f1fdb4cb98c0892bb6faa94",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 179,
+      "components": {
+        "IDComponent": {
+          "guid": "f68cc00d54315d499747de3b909a52e3"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Elevator_door_low.fbx_pCylinder18_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "88c812cb0f880f4eb46183da0ad3abb5",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 180,
+      "components": {
+        "IDComponent": {
+          "guid": "0a2c101a46a5114b94755d3967db5880"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Elevator_door_low.fbx_pCylinder18_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "88c812cb0f880f4eb46183da0ad3abb5",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 181,
+      "components": {
+        "IDComponent": {
+          "guid": "a0a54a5de9e2054e824ff7047438276b"
+        },
+        "Transform": {
+          "position": [
+            0.00036907196044921875,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.05000000074505806,
+            0.05000000074505806,
+            0.05000000074505806
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "ElevatorEntrance",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Elevator_entrance_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "00ac77529f1fdb4cb98c0892bb6faa94",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 182,
+      "components": {
+        "IDComponent": {
+          "guid": "3540974fc8ea424eaf9c0f007c6ba9e4"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Elevator_entrance_low.fbx_pCylinder3_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "a0a54a5de9e2054e824ff7047438276b",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 183,
+      "components": {
+        "IDComponent": {
+          "guid": "6e1559851da8814db71e36c02bf4f84d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Elevator_entrance_low.fbx_pCylinder3_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "a0a54a5de9e2054e824ff7047438276b",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 184,
+      "components": {
+        "IDComponent": {
+          "guid": "8ab1719e8f3ffa4f854db1afca636dd5"
+        },
+        "Transform": {
+          "position": [
+            0.00036907196044921875,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            9.872115569464768e-9,
+            -1.1102229584507075e-16,
+            1.0960248034828012e-24,
+            1.0
+          ],
+          "scale": [
+            0.05000004172325134,
+            0.05000004172325134,
+            0.05000000074505806
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "ElevatorArrow",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Elevator_entrance_arrow_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "00ac77529f1fdb4cb98c0892bb6faa94",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 185,
+      "components": {
+        "IDComponent": {
+          "guid": "690e538e6935624cb9892df87a1315a7"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Elevator_entrance_arrow_low.fbx_arrow_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "8ab1719e8f3ffa4f854db1afca636dd5",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 186,
+      "components": {
+        "IDComponent": {
+          "guid": "97102adfb11d44499c5d3ff9e319bbdb"
+        },
+        "Transform": {
+          "position": [
+            0.00036907196044921875,
+            -0.42951077222824099,
+            -3.7571144104003908
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.05000000074505806,
+            0.05000000074505806,
+            0.05000000074505806
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "ElevatorBase",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            1.100000023841858,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            130.0,
+            1.0,
+            130.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_Elevator_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "00ac77529f1fdb4cb98c0892bb6faa94",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 187,
+      "components": {
+        "IDComponent": {
+          "guid": "a243290afe4a9548aad2886b6dbb3ea6"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Elevator_low.fbx_group1_pCube18_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "97102adfb11d44499c5d3ff9e319bbdb",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 188,
+      "components": {
+        "IDComponent": {
+          "guid": "b8e463d71bf1314ea378d57f834c01c3"
+        },
+        "Transform": {
+          "position": [
+            -212.12738037109376,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            20.0,
+            20.0,
+            20.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Elevator_low.fbx_group1_pCube18_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "97102adfb11d44499c5d3ff9e319bbdb",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 189,
+      "components": {
+        "IDComponent": {
+          "guid": "00ac77529f1fdb4cb98c0892bb6faa94"
+        },
+        "Transform": {
+          "position": [
+            16.045391082763673,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "ElevatorParentNew",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            7.0,
+            -3.549999952316284
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            4.900000095367432,
+            12.350000381469727,
+            5.0
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "EndElevator",
+              "enabled": true,
+              "fields": {
+                "eSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "sceneName": {
+                  "t": 3,
+                  "v": "m4-LEVEL2_AI.scene"
+                },
+                "eDuration": {
+                  "t": 0,
+                  "v": 3.0
+                },
+                "dSpeed": {
+                  "t": 0,
+                  "v": 1.0
+                },
+                "dDuration": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 190,
+      "components": {
+        "IDComponent": {
+          "guid": "57f0d1b45395f642979ece8206f9d1b0"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "EntranceCollider",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            5.050000190734863,
+            8.649999618530274,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.950000047683716,
+            16.25,
+            0.8500000238418579
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "00ac77529f1fdb4cb98c0892bb6faa94",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 191,
+      "components": {
+        "IDComponent": {
+          "guid": "bb6dc81091e1b24a82073159454b10c1"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "EntranceCollider",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            -5.0,
+            8.649999618530274,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.950000047683716,
+            16.25,
+            0.8500000238418579
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "00ac77529f1fdb4cb98c0892bb6faa94",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 192,
+      "components": {
+        "IDComponent": {
+          "guid": "de88b6fd143b1b458b2392bcf402a5a7"
+        },
+        "Transform": {
+          "position": [
+            -0.10558509826660156,
+            5.843738079071045,
+            -6.479930877685547
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "ElevatorCollider",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            6.099999904632568,
+            10.899999618530274,
+            0.3499999940395355
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "00ac77529f1fdb4cb98c0892bb6faa94",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 193,
+      "components": {
+        "IDComponent": {
+          "guid": "d164a0461647f94585e66b35421d5d55"
+        },
+        "Transform": {
+          "position": [
+            3.1856613159179689,
+            5.843710899353027,
+            -3.8784737586975099
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "ElevatorCollider (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            90.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            6.099999904632568,
+            10.899999618530274,
+            0.3499999940395355
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "00ac77529f1fdb4cb98c0892bb6faa94",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 194,
+      "components": {
+        "IDComponent": {
+          "guid": "b477bb54d7fe1e4eb5712bf9b4df12d3"
+        },
+        "Transform": {
+          "position": [
+            -3.1331825256347658,
+            5.843710899353027,
+            -3.8784737586975099
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "ElevatorCollider (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            90.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            6.099999904632568,
+            10.899999618530274,
+            0.3499999940395355
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "00ac77529f1fdb4cb98c0892bb6faa94",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 210,
+      "components": {
+        "IDComponent": {
+          "guid": "7c9e3588dc66dd48ac58a16a5dcf77ae"
+        },
+        "Transform": {
+          "position": [
+            0.02474212646484375,
+            10.949121475219727,
+            -3.1816554069519045
+          ],
+          "rotation": [
+            0.7085322737693787,
+            0.0,
+            0.0,
+            0.705678403377533
+          ],
+          "scale": [
+            1.0000052452087403,
+            1.0000070333480836,
+            1.0000016689300538
+          ]
+        },
+        "Light": {
+          "color": [
+            0.598724365234375,
+            0.6044131517410278,
+            0.013805675320327282
+          ],
+          "intensity": 4.821000099182129,
+          "type": "Spot",
+          "castsShadows": true,
+          "castsRays": true,
+          "innerAngle": 28.100000381469728,
+          "outerAngle": 39.400001525878909,
+          "radius": 13.520000457763672
+        },
+        "ObjectMetaData": {
+          "name": "ElevatorLight",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "00ac77529f1fdb4cb98c0892bb6faa94",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -7025,12 +8114,26 @@
     "gamma": 2.200000047683716,
     "vignetteIntensity": 0.30000001192092898,
     "vignetteRadius": 0.800000011920929,
+    "vignetteCoverage": 0.0,
+    "vignetteFalloff": 0.20000000298023225,
+    "vignetteMapStrength": 1.0,
+    "vignetteMapRGBModifier": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "vignetteMapPath": "",
     "bloomStrength": 0.03999999910593033,
     "filmGrainEnabled": false,
     "grainIntensity": 0.014999999664723874,
     "grainScale": 1.5,
     "chromaticAberrationEnabled": false,
     "chromaticAmount": 0.003000000026077032,
+    "radialBlurEnabled": false,
+    "radialBlurStrength": 0.0,
+    "radialBlurSamples": 12,
+    "radialBlurCenterX": 0.5,
+    "radialBlurCenterY": 0.5,
     "fxaaSpanMax": 8.0,
     "fxaaReduceMin": 0.0078125,
     "fxaaReduceMul": 0.125,
