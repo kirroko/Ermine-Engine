@@ -18,10 +18,28 @@ public class Idle : MonoBehaviour
     public float jumpCooldown = 3.0f;
     private float jumpCooldownTimer = 0.0f;
 
+    public float stunDuration = 5.0f;
+    private bool isStunned = false;
+    private float stunTimer = 0.0f;
+    public static bool RightClickStunArmed = false;
+    private float armTimer = 0.0f;
+
     private void CachePlayerIfNeeded()
     {
         if (playerGO == null)
             playerGO = GameObject.Find(playerName);
+    }
+
+    private void TryStun()
+    {
+        if (isStunned)
+            return;
+
+        isStunned = true;
+        stunTimer = stunDuration;
+
+        // stop immediately while stunned
+        NavAgent.SetDestination(entityID, transform.position);
     }
 
     private bool HasLineOfSightToPlayer()
@@ -62,6 +80,19 @@ public class Idle : MonoBehaviour
         if (jumpCooldownTimer > 0.0f)
             jumpCooldownTimer -= Time.deltaTime;
 
+        RightClickStunArmed = armTimer > 0f;
+
+        if (isStunned)
+        {
+            //Debug.Log("stunned");
+            stunTimer -= Time.deltaTime;
+            if (stunTimer <= 0.0f)
+            {
+                isStunned = false;
+            }
+            return; // do NOTHING while stunned
+        }
+
         // If player is visible, switch state
         if (HasLineOfSightToPlayer())
         {
@@ -84,6 +115,13 @@ public class Idle : MonoBehaviour
             insideJumpArea = true;
             jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
         }
+        if (!RightClickStunArmed) return;
+        if (col.gameObject.name == "Sphere")
+        {
+            TryStun();
+            armTimer = 0.0f;
+            RightClickStunArmed = false;
+        }
     }
 
     void OnCollisionStay(Collision col)
@@ -92,6 +130,13 @@ public class Idle : MonoBehaviour
         {
             insideJumpArea = true;
             jumpLinkEntityID = (ulong)col.gameObject.GetInstanceID();
+        }
+        if (!RightClickStunArmed) return;
+        if (col.gameObject.name == "Sphere")
+        {
+            TryStun();
+            armTimer = 0.0f;
+            RightClickStunArmed = false;
         }
     }
 
@@ -104,6 +149,13 @@ public class Idle : MonoBehaviour
                 insideJumpArea = false;
                 jumpLinkEntityID = 0;
             }
+        }
+        if (!RightClickStunArmed) return;
+        if (col.gameObject.name == "Sphere")
+        {
+            TryStun();
+            armTimer = 0.0f;
+            RightClickStunArmed = false;
         }
     }
 }

@@ -30,5 +30,14 @@ namespace ErmineEngine
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void SetSFXVolume(float volume);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void PlayVoice(string name);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void StopVoice();
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void SetVoiceVolume(float volume);
     }
 }
