@@ -5219,10 +5219,10 @@
             -8.211677551269532
           ],
           "rotation": [
-            0.7071068286895752,
-            0.0,
-            0.0,
-            0.7071067094802856
+            0.6408493518829346,
+            0.29885104298591616,
+            0.2988511025905609,
+            0.640849232673645
           ],
           "scale": [
             0.15000000596046449,
@@ -5391,10 +5391,10 @@
             -8.118584632873536
           ],
           "rotation": [
-            0.7071068286895752,
-            0.0,
-            0.0,
-            0.7071067094802856
+            0.6408493518829346,
+            -0.29885104298591616,
+            -0.2988511025905609,
+            0.640849232673645
           ],
           "scale": [
             0.10000000149011612,
@@ -5563,10 +5563,10 @@
             -7.903934478759766
           ],
           "rotation": [
-            0.7071068286895752,
-            0.0,
-            0.0,
-            0.7071067094802856
+            0.6408493518829346,
+            0.29885104298591616,
+            0.2988511025905609,
+            0.640849232673645
           ],
           "scale": [
             0.15000000596046449,
@@ -5888,7 +5888,7 @@
         },
         "Transform": {
           "position": [
-            0.44357776641845705,
+            0.3440000116825104,
             11.669855117797852,
             -17.612728118896486
           ],
@@ -5899,7 +5899,7 @@
             1.0
           ],
           "scale": [
-            0.02390213869512081,
+            0.02500000037252903,
             0.01290358230471611,
             0.2812490165233612
           ]
@@ -9098,9 +9098,9 @@
           ],
           "rotation": [
             0.0,
+            0.8870378732681274,
             0.0,
-            0.0,
-            1.0
+            0.46169644594192507
           ],
           "scale": [
             1.0,
@@ -9354,9 +9354,9 @@
           ],
           "rotation": [
             0.0,
+            0.5187985897064209,
             0.0,
-            0.0,
-            1.0
+            0.8548972606658936
           ],
           "scale": [
             1.0,
@@ -11898,10 +11898,10 @@
             -9.674206733703614
           ],
           "rotation": [
-            0.4999998211860657,
-            0.5000001788139343,
-            -0.4999998211860657,
-            0.5000001788139343
+            0.6644685864448547,
+            0.6644690632820129,
+            -0.24182909727096559,
+            0.2418292760848999
           ],
           "scale": [
             0.15000000596046449,
@@ -11986,10 +11986,10 @@
             -7.693473815917969
           ],
           "rotation": [
-            0.4999998211860657,
-            0.5000001788139343,
-            -0.4999998211860657,
-            0.5000001788139343
+            0.6644685864448547,
+            0.6644690632820129,
+            -0.24182909727096559,
+            0.2418292760848999
           ],
           "scale": [
             0.10000000149011612,
@@ -12074,10 +12074,10 @@
             -11.557196617126465
           ],
           "rotation": [
-            0.4999998211860657,
-            0.5000001788139343,
-            -0.4999998211860657,
-            0.5000001788139343
+            0.6644685864448547,
+            0.6644690632820129,
+            -0.24182909727096559,
+            0.2418292760848999
           ],
           "scale": [
             0.10000000149011612,
@@ -14016,9 +14016,9 @@
           ],
           "rotation": [
             0.0,
+            0.8870378732681274,
             0.0,
-            0.0,
-            1.0
+            0.46169644594192507
           ],
           "scale": [
             1.5,
@@ -14724,9 +14724,9 @@
           ],
           "rotation": [
             0.0,
+            0.8870378732681274,
             0.0,
-            0.0,
-            1.0
+            0.46169644594192507
           ],
           "scale": [
             1.5,
@@ -17876,9 +17876,9 @@
           ],
           "rotation": [
             0.0,
+            0.8870378732681274,
             0.0,
-            0.0,
-            1.0
+            0.46169644594192507
           ],
           "scale": [
             2.0,
@@ -21603,7 +21603,7 @@
         "Transform": {
           "position": [
             35.43168640136719,
-            7.739538192749023,
+            7.698905944824219,
             -223.41209411621095
           ],
           "rotation": [
@@ -21661,11 +21661,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -22435,7 +22435,7 @@
         "Transform": {
           "position": [
             49.6786994934082,
-            2.8630120754241945,
+            2.8223798274993898,
             -218.70953369140626
           ],
           "rotation": [
@@ -22493,11 +22493,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -23267,7 +23267,7 @@
         "Transform": {
           "position": [
             40.63077163696289,
-            3.4748620986938478,
+            3.434229850769043,
             -213.59352111816407
           ],
           "rotation": [
@@ -23325,11 +23325,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -24099,7 +24099,7 @@
         "Transform": {
           "position": [
             40.64946746826172,
-            5.985860824584961,
+            5.945228576660156,
             -193.76815795898438
           ],
           "rotation": [
@@ -24157,11 +24157,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -24931,7 +24931,7 @@
         "Transform": {
           "position": [
             25.467544555664064,
-            6.078822135925293,
+            6.038189888000488,
             -210.71484375
           ],
           "rotation": [
@@ -24989,11 +24989,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -25763,7 +25763,7 @@
         "Transform": {
           "position": [
             18.880647659301759,
-            5.706831932067871,
+            5.666199684143066,
             -228.0310516357422
           ],
           "rotation": [
@@ -25821,11 +25821,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -26595,7 +26595,7 @@
         "Transform": {
           "position": [
             18.847026824951173,
-            6.307188510894775,
+            6.266556262969971,
             -196.3971710205078
           ],
           "rotation": [
@@ -26653,11 +26653,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -27427,7 +27427,7 @@
         "Transform": {
           "position": [
             47.30696487426758,
-            4.22599983215332,
+            4.185367584228516,
             -176.23220825195313
           ],
           "rotation": [
@@ -27485,11 +27485,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -28259,7 +28259,7 @@
         "Transform": {
           "position": [
             32.28816223144531,
-            4.941508769989014,
+            4.900876522064209,
             -181.49838256835938
           ],
           "rotation": [
@@ -28317,11 +28317,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -29091,7 +29091,7 @@
         "Transform": {
           "position": [
             16.248126983642579,
-            4.22599983215332,
+            4.185367584228516,
             -181.49838256835938
           ],
           "rotation": [
@@ -29149,11 +29149,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -30230,7 +30230,7 @@
         },
         "Transform": {
           "position": [
-            67.9209976196289,
+            75.9209976196289,
             2.951773166656494,
             -180.3852081298828
           ],
@@ -35638,7 +35638,21 @@
           "parentGuid": "5af8fb34fae402428b6afda5b42819e2",
           "depth": 1
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "GearRotateAnimation",
+              "enabled": true,
+              "fields": {
+                "rotationSpeed": {
+                  "t": 0,
+                  "v": 0.800000011920929
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -35717,7 +35731,21 @@
           "parentGuid": "5af8fb34fae402428b6afda5b42819e2",
           "depth": 1
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "GearRotateAnimation",
+              "enabled": true,
+              "fields": {
+                "rotationSpeed": {
+                  "t": 0,
+                  "v": 0.800000011920929
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -41754,7 +41782,7 @@
               "iconTexturePath": "",
               "selectedIconPath": "./Resources/Textures/UI/Skill_Shooting_Active.png",
               "unselectedIconPath": "./Resources/Textures/UI/Skill_Shooting_Inactive.png",
-              "isSelected": false,
+              "isSelected": true,
               "skillName": "Shoot",
               "keyBinding": "",
               "description": ""
@@ -47519,7 +47547,7 @@
         "Transform": {
           "position": [
             21.145288467407228,
-            14.645000457763672,
+            15.145000457763672,
             -0.00030517578125
           ],
           "rotation": [
@@ -48261,15 +48289,15 @@
         },
         "Transform": {
           "position": [
-            8.391876220703125,
+            8.42555046081543,
             1.0498716831207276,
-            37.97709655761719
+            37.985260009765628
           ],
           "rotation": [
             0.0,
-            -0.7832251191139221,
+            -0.7860047221183777,
             0.0,
-            0.6217381954193115
+            0.6182205080986023
           ],
           "scale": [
             0.01000000350177288,
@@ -48340,13 +48368,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "jumpHeight": {
-                  "t": 0,
-                  "v": 2.0
-                },
                 "mouseHorSens": {
                   "t": 0,
                   "v": 0.10000000149011612
+                },
+                "jumpHeight": {
+                  "t": 0,
+                  "v": 2.0
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -48356,13 +48384,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "camDefaultY": {
-                  "t": 0,
-                  "v": 4.5
-                },
                 "jumpspeed": {
                   "t": 0,
                   "v": 5.0
+                },
+                "camDefaultY": {
+                  "t": 0,
+                  "v": 4.5
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -48374,11 +48402,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
@@ -48409,14 +48437,14 @@
         "Transform": {
           "position": [
             0.0,
-            0.0,
+            451.0836486816406,
             0.0
           ],
           "rotation": [
+            0.003799906000494957,
             0.0,
             0.0,
-            0.0,
-            1.0
+            0.9999927878379822
           ],
           "scale": [
             100.0,
@@ -48913,7 +48941,7 @@
               {
                 "name": "IsMoving",
                 "type": 0,
-                "boolValue": false,
+                "boolValue": true,
                 "floatValue": 0.0,
                 "intValue": 0,
                 "triggerValue": false
@@ -49013,7 +49041,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "3c724a694cbac9438c9313a76eb05889"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "391312a00c129346be4c2717bedc87a6",
@@ -49226,7 +49254,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "1265b849b079344baccd92472d812722"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "391312a00c129346be4c2717bedc87a6",
@@ -49283,10 +49311,10 @@
             63.79701232910156
           ],
           "rotation": [
-            0.4998311996459961,
-            -0.49982357025146487,
-            0.5001763701438904,
-            0.5001688003540039
+            0.24160157144069673,
+            -0.24159805476665498,
+            0.6645572185516357,
+            0.6645470261573792
           ],
           "scale": [
             0.15000002086162568,
@@ -49349,7 +49377,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "1607fe176731384088b40a62e4c022f9"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "aaade5f51691bb43a64ba377906fc493",
@@ -50201,7 +50229,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "160f953322d6ff4da23ef2f368943715"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "10fe389c8efab24684591b96d8494cbc",
@@ -50926,7 +50954,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+          "guid": "bc922888d2ad4a4ca93954ff1e8c8774"
         },
         "HierarchyComponent": {
           "parentGuid": "40d7fdf26e8e544b87d7470e40b18890",
@@ -52805,7 +52833,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+          "guid": "bc922888d2ad4a4ca93954ff1e8c8774"
         },
         "HierarchyComponent": {
           "parentGuid": "dd0f64e261792949b8bddd0449b70519",
@@ -52998,7 +53026,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "b118707045133343b138423825e9209c",
@@ -53077,7 +53105,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "3e40a88013c2e44f87cdf6506acf66b7",
@@ -53156,7 +53184,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "a3fdaec9b0851240bf4ecb5b8268e2c2",
@@ -53235,7 +53263,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "a940e49f4b8c124f967c650b001eb2ab",
@@ -53314,7 +53342,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "7027e195afa26f4eabc4b0ab12f8526c",
@@ -53393,7 +53421,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "14819af11c185f44850a78df9a787ef0",
@@ -53472,7 +53500,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "33018403720cac44b97bf2f1e64a6421",
@@ -53551,7 +53579,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "5857146eec76914086d5638a68d64196",
@@ -53630,7 +53658,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "666557cbebc1ba458cb162ddd1fcc87f",
@@ -53709,7 +53737,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "0559d15fd538fa4eaa3e96701529bd68",
@@ -53788,7 +53816,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "6483f45be447494083b8935a39f7aee9",
@@ -53903,7 +53931,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "c6c56994ca378f48a8f8d5372970403d",
@@ -53982,7 +54010,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "3109a10b9e4d8140b8f124351606df95",
@@ -54061,7 +54089,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "4c2b1ef1efa2314d972fdc5eea920ff8",
@@ -54140,7 +54168,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "f8bb46157e0cbd42af0c89fc91ee331a",
@@ -54219,7 +54247,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "cb2004905b39fa4d85a5ed770a7b1ad0",
@@ -54298,7 +54326,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "11e1a449e50f9a4ab338ac876b1e5cbd",
@@ -54377,7 +54405,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "17d8a3b47171ab4f85e014e20cd6a566",
@@ -54456,7 +54484,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "8957bdb288ded243972a344ae39b26a1",
@@ -54535,7 +54563,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "ee0b8d0b9eda4c4b8186cd24deffb1db",
@@ -54614,7 +54642,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "1967e4d8bee2fb4e915f3cce3354039b",
@@ -54693,7 +54721,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "7d6370b4cb1baf49a61c6a5ab69fd58c",
@@ -56215,7 +56243,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "c85254900ed8c8409426a8ec1fa3f24d",
@@ -56294,7 +56322,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "9c1a9adcee97e8468ac1b3706e21e3b4",
@@ -56373,7 +56401,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "4f65bbcb42336841aea1f44ea2776b69",
@@ -56452,7 +56480,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "8f265a94da8885478cf45f2ea999b987",
@@ -56531,7 +56559,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "3066d879d67a0a42834f7160efd47f54",
@@ -56610,7 +56638,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "3259b20af40f364e978806aad14dbd31",
@@ -67293,7 +67321,7 @@
         "Transform": {
           "position": [
             -2.2360684871673586,
-            1.0499999523162842,
+            1.049999713897705,
             0.0
           ],
           "rotation": [
@@ -67364,7 +67392,7 @@
         "Transform": {
           "position": [
             16.088668823242189,
-            1.5805375576019288,
+            1.5805373191833497,
             -98.0146255493164
           ],
           "rotation": [
@@ -67435,7 +67463,7 @@
         "Transform": {
           "position": [
             -13.239480018615723,
-            0.9746693968772888,
+            0.9746694564819336,
             -51.43029022216797
           ],
           "rotation": [
@@ -67506,7 +67534,7 @@
         "Transform": {
           "position": [
             28.02081871032715,
-            1.4761559963226319,
+            1.4761557579040528,
             -120.59310150146485
           ],
           "rotation": [
@@ -67577,7 +67605,7 @@
         "Transform": {
           "position": [
             12.82515811920166,
-            3.285762310028076,
+            3.2857627868652345,
             -163.68154907226563
           ],
           "rotation": [
@@ -67648,7 +67676,7 @@
         "Transform": {
           "position": [
             13.927865982055664,
-            1.786875605583191,
+            1.737595558166504,
             -281.2214050292969
           ],
           "rotation": [
@@ -67691,7 +67719,7 @@
           "rotz": false,
           "collidersize": [
             4.900000095367432,
-            12.350000381469727,
+            13.050000190734864,
             5.0
           ]
         },
@@ -67709,13 +67737,13 @@
                   "t": 0,
                   "v": 2.0
                 },
+                "sceneName": {
+                  "t": 3,
+                  "v": "LevelTransitionCutscene.scene"
+                },
                 "eDuration": {
                   "t": 0,
                   "v": 3.0
-                },
-                "sceneName": {
-                  "t": 3,
-                  "v": "m4-LEVEL2_AI.scene"
                 },
                 "dSpeed": {
                   "t": 0,
@@ -67978,9 +68006,9 @@
         },
         "Transform": {
           "position": [
-            0.0,
-            0.0,
-            0.0
+            13.927865982055664,
+            1.7375956773757935,
+            -281.2214050292969
           ],
           "rotation": [
             0.0,
@@ -68027,8 +68055,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "9bee57bf237a4942b85249b1fa664277",
-          "depth": 1
+          "depth": 0
         },
         "GlobalTransform": {}
       }
@@ -68041,9 +68068,9 @@
         },
         "Transform": {
           "position": [
-            0.0,
-            0.0,
-            0.0
+            13.927865982055664,
+            1.237595558166504,
+            -281.2214050292969
           ],
           "rotation": [
             0.0,
@@ -68090,8 +68117,7 @@
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "9bee57bf237a4942b85249b1fa664277",
-          "depth": 1
+          "depth": 0
         },
         "GlobalTransform": {}
       }
@@ -68105,8 +68131,8 @@
         "Transform": {
           "position": [
             0.00036907196044921875,
-            -0.42951077222824099,
-            -3.7571144104003908
+            -0.9980693459510803,
+            -3.757110595703125
           ],
           "rotation": [
             0.0,
@@ -68124,33 +68150,6 @@
           "name": "ElevatorBase",
           "tag": "Untagged",
           "selfActive": true
-        },
-        "PhysicComponent": {
-          "bodyType": "Rigid",
-          "motionType": "Static",
-          "mass": 0.0,
-          "shapeType": "Box",
-          "colliderpivot": [
-            0.0,
-            1.100000023841858,
-            0.0
-          ],
-          "posx": false,
-          "posy": false,
-          "posz": false,
-          "colliderrot": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotx": false,
-          "roty": false,
-          "rotz": false,
-          "collidersize": [
-            130.0,
-            1.0,
-            130.0
-          ]
         },
         "ModelComponent": {
           "model": "ART1_Elevator_low.fbx",
@@ -68193,7 +68192,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+          "guid": "bc922888d2ad4a4ca93954ff1e8c8774"
         },
         "HierarchyComponent": {
           "parentGuid": "3e6a9b145f29d648aaf3eaf4e63964d1",
@@ -68232,7 +68231,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+          "guid": "bc922888d2ad4a4ca93954ff1e8c8774"
         },
         "HierarchyComponent": {
           "parentGuid": "3e6a9b145f29d648aaf3eaf4e63964d1",
@@ -68311,7 +68310,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+          "guid": "bc922888d2ad4a4ca93954ff1e8c8774"
         },
         "HierarchyComponent": {
           "parentGuid": "09fb195388d43e478e090ab12597a98d",
@@ -68389,7 +68388,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+          "guid": "bc922888d2ad4a4ca93954ff1e8c8774"
         },
         "HierarchyComponent": {
           "parentGuid": "4368a363f1536c4a880e75efe57a65c1",
@@ -68428,7 +68427,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+          "guid": "bc922888d2ad4a4ca93954ff1e8c8774"
         },
         "HierarchyComponent": {
           "parentGuid": "4368a363f1536c4a880e75efe57a65c1",
@@ -68446,8 +68445,8 @@
         "Transform": {
           "position": [
             0.0,
-            0.0,
-            0.0
+            0.06639766693115235,
+            -0.480499267578125
           ],
           "rotation": [
             0.0,
@@ -68534,7 +68533,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+          "guid": "bc922888d2ad4a4ca93954ff1e8c8774"
         },
         "HierarchyComponent": {
           "parentGuid": "c2c34d6f0445654fb2a254d8594c7cd0",
@@ -68573,7 +68572,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+          "guid": "bc922888d2ad4a4ca93954ff1e8c8774"
         },
         "HierarchyComponent": {
           "parentGuid": "c2c34d6f0445654fb2a254d8594c7cd0",
@@ -68591,8 +68590,8 @@
         "Transform": {
           "position": [
             0.0,
-            0.0,
-            0.0
+            0.06639766693115235,
+            -0.480499267578125
           ],
           "rotation": [
             0.0,
@@ -68679,7 +68678,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+          "guid": "bc922888d2ad4a4ca93954ff1e8c8774"
         },
         "HierarchyComponent": {
           "parentGuid": "e0b3a46eecb91341a1362b5e76926eab",
@@ -68718,7 +68717,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "e2bf2eb7cbddb842a6bf57db6f450876"
+          "guid": "bc922888d2ad4a4ca93954ff1e8c8774"
         },
         "HierarchyComponent": {
           "parentGuid": "e0b3a46eecb91341a1362b5e76926eab",
@@ -69164,6 +69163,1237 @@
         },
         "GlobalTransform": {}
       }
+    },
+    {
+      "id": 1406,
+      "components": {
+        "IDComponent": {
+          "guid": "c0b2e199dc6e1546b67253e1156c5ca1"
+        },
+        "Transform": {
+          "position": [
+            20.245206832885743,
+            6.726757049560547,
+            -244.2958526611328
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "SpawnPoint_5",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            5.75,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            27.049999237060548,
+            12.649999618530274,
+            10.100000381469727
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "SpawnPointController",
+              "enabled": true,
+              "fields": {}
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 1407,
+      "components": {
+        "IDComponent": {
+          "guid": "b073c06d7bb3a9418bc5b10da44b2fde"
+        },
+        "Transform": {
+          "position": [
+            0.00013446807861328125,
+            -0.6669999957084656,
+            -3.820220947265625
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "ElevatorCollider (3)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            5.900000095367432,
+            2.0999999046325685,
+            6.849999904632568
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9bee57bf237a4942b85249b1fa664277",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1408,
+      "components": {
+        "IDComponent": {
+          "guid": "64d1c8bb6eb79d4c9786b3b82cd42e4e"
+        },
+        "Transform": {
+          "position": [
+            25.650999069213868,
+            17.399999618530275,
+            -212.28900146484376
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "jailConnectors",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1409,
+      "components": {
+        "IDComponent": {
+          "guid": "e89a1d1ed01da04bbda92fd29a29cf09"
+        },
+        "Transform": {
+          "position": [
+            20.707853317260743,
+            0.0002956390380859375,
+            34.792633056640628
+          ],
+          "rotation": [
+            0.0,
+            -0.4573684334754944,
+            0.0,
+            0.8892773389816284
+          ],
+          "scale": [
+            0.08883501589298248,
+            0.08883491158485413,
+            0.08883501589298248
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JailConnector",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_jail_connector_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "64d1c8bb6eb79d4c9786b3b82cd42e4e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1410,
+      "components": {
+        "IDComponent": {
+          "guid": "a63a8fa6fcd1e64c934b9081fb765401"
+        },
+        "Transform": {
+          "position": [
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e89a1d1ed01da04bbda92fd29a29cf09",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1411,
+      "components": {
+        "IDComponent": {
+          "guid": "45ec0c75132aa540b647d4bbeb5abbaf"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e89a1d1ed01da04bbda92fd29a29cf09",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1412,
+      "components": {
+        "IDComponent": {
+          "guid": "fd4db1b4eb8dcc47a375932cc9f45c3f"
+        },
+        "Transform": {
+          "position": [
+            8.149206161499024,
+            0.0002956390380859375,
+            30.896942138671876
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.08883491158485413,
+            0.08883491158485413,
+            0.08883491158485413
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JailConnector (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_jail_connector_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "64d1c8bb6eb79d4c9786b3b82cd42e4e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1413,
+      "components": {
+        "IDComponent": {
+          "guid": "b366062a2c315c45b4606f7a4db26dab"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "fd4db1b4eb8dcc47a375932cc9f45c3f",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1414,
+      "components": {
+        "IDComponent": {
+          "guid": "ab8e8dca9ef9544aaf894f1c6ce61850"
+        },
+        "Transform": {
+          "position": [
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "fd4db1b4eb8dcc47a375932cc9f45c3f",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1415,
+      "components": {
+        "IDComponent": {
+          "guid": "f2153e788b17a747aa10a5548069c44a"
+        },
+        "Transform": {
+          "position": [
+            15.437990188598633,
+            0.0002956390380859375,
+            17.17474365234375
+          ],
+          "rotation": [
+            0.0,
+            -0.7511382699012756,
+            0.0,
+            0.6601449251174927
+          ],
+          "scale": [
+            0.088835209608078,
+            0.08883491158485413,
+            0.088835209608078
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JailConnector (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_jail_connector_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "64d1c8bb6eb79d4c9786b3b82cd42e4e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1416,
+      "components": {
+        "IDComponent": {
+          "guid": "a32d22051f89c24d98974df31665c025"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f2153e788b17a747aa10a5548069c44a",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1417,
+      "components": {
+        "IDComponent": {
+          "guid": "8d27f4f4dd51e84ca411a1f0c3689865"
+        },
+        "Transform": {
+          "position": [
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f2153e788b17a747aa10a5548069c44a",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1418,
+      "components": {
+        "IDComponent": {
+          "guid": "bd0f69c26a83d045a2b146abb66f1408"
+        },
+        "Transform": {
+          "position": [
+            -5.4558258056640629,
+            0.0002689361572265625,
+            16.635879516601564
+          ],
+          "rotation": [
+            0.0,
+            -0.21884113550186158,
+            0.0,
+            0.9757605791091919
+          ],
+          "scale": [
+            0.0888352170586586,
+            0.08883491158485413,
+            0.08883515745401383
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JailConnector (3)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_jail_connector_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "64d1c8bb6eb79d4c9786b3b82cd42e4e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1419,
+      "components": {
+        "IDComponent": {
+          "guid": "6101670c6263c147b6324a4a3982a386"
+        },
+        "Transform": {
+          "position": [
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "bd0f69c26a83d045a2b146abb66f1408",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1420,
+      "components": {
+        "IDComponent": {
+          "guid": "2a17ff5c4d924540936ede1194262952"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "bd0f69c26a83d045a2b146abb66f1408",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1421,
+      "components": {
+        "IDComponent": {
+          "guid": "06063e9bd9dbf84aa696d19afdcba419"
+        },
+        "Transform": {
+          "position": [
+            25.287614822387697,
+            0.000293731689453125,
+            -5.3587646484375
+          ],
+          "rotation": [
+            0.0,
+            -0.42719608545303347,
+            0.0,
+            0.9041590094566345
+          ],
+          "scale": [
+            0.08883515000343323,
+            0.08883491158485413,
+            0.08883516490459442
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JailConnector (4)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_jail_connector_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "64d1c8bb6eb79d4c9786b3b82cd42e4e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1422,
+      "components": {
+        "IDComponent": {
+          "guid": "9ccdd76fdccf7f4bb162618f151ff12d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "06063e9bd9dbf84aa696d19afdcba419",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1423,
+      "components": {
+        "IDComponent": {
+          "guid": "5dd4bf0dda68784b97832da134eadf5a"
+        },
+        "Transform": {
+          "position": [
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "06063e9bd9dbf84aa696d19afdcba419",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1424,
+      "components": {
+        "IDComponent": {
+          "guid": "c8e71e2a31cb8147834e3a09bf9c5401"
+        },
+        "Transform": {
+          "position": [
+            13.671937942504883,
+            0.0002956390380859375,
+            -0.5125274658203125
+          ],
+          "rotation": [
+            0.0,
+            0.979860246181488,
+            0.0,
+            -0.19968482851982118
+          ],
+          "scale": [
+            0.08883531391620636,
+            0.08883491158485413,
+            0.08883531391620636
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JailConnector (5)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_jail_connector_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "64d1c8bb6eb79d4c9786b3b82cd42e4e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1425,
+      "components": {
+        "IDComponent": {
+          "guid": "a33b9f3c7943114ca0d09b23408a7adc"
+        },
+        "Transform": {
+          "position": [
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "c8e71e2a31cb8147834e3a09bf9c5401",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1426,
+      "components": {
+        "IDComponent": {
+          "guid": "6bf65db2c7739b4889d56479fc2ae90a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "c8e71e2a31cb8147834e3a09bf9c5401",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1427,
+      "components": {
+        "IDComponent": {
+          "guid": "6d1b9e1fba132648a497e9b41aabb9a2"
+        },
+        "Transform": {
+          "position": [
+            -7.99041748046875,
+            0.0002880096435546875,
+            -16.42633056640625
+          ],
+          "rotation": [
+            0.0,
+            -0.37518101930618288,
+            0.0,
+            0.9269515872001648
+          ],
+          "scale": [
+            0.08883524686098099,
+            0.08883491158485413,
+            0.08883524686098099
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JailConnector (6)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_jail_connector_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "64d1c8bb6eb79d4c9786b3b82cd42e4e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1428,
+      "components": {
+        "IDComponent": {
+          "guid": "1af3890c62344a49b198e113bdde366d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "6d1b9e1fba132648a497e9b41aabb9a2",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1429,
+      "components": {
+        "IDComponent": {
+          "guid": "5e9dff7d46136d438eeb994ce58a794c"
+        },
+        "Transform": {
+          "position": [
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "6d1b9e1fba132648a497e9b41aabb9a2",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1430,
+      "components": {
+        "IDComponent": {
+          "guid": "da07badad34d5249a446d7d161642eed"
+        },
+        "Transform": {
+          "position": [
+            9.998491287231446,
+            0.000274658203125,
+            -12.397735595703125
+          ],
+          "rotation": [
+            0.0,
+            -0.7511382699012756,
+            0.0,
+            0.6601449251174927
+          ],
+          "scale": [
+            0.088835209608078,
+            0.08883491158485413,
+            0.088835209608078
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JailConnector (7)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_jail_connector_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "64d1c8bb6eb79d4c9786b3b82cd42e4e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1431,
+      "components": {
+        "IDComponent": {
+          "guid": "bc121c11a1b6ef4ba784239ce8827cee"
+        },
+        "Transform": {
+          "position": [
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "da07badad34d5249a446d7d161642eed",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1432,
+      "components": {
+        "IDComponent": {
+          "guid": "288ce6739766da4c88c8440bb7aad8f0"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "da07badad34d5249a446d7d161642eed",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1433,
+      "components": {
+        "IDComponent": {
+          "guid": "77c3668d54d1064b901ebe0a7ea12100"
+        },
+        "Transform": {
+          "position": [
+            -0.0002002716064453125,
+            0.0002689361572265625,
+            0.000030517578125
+          ],
+          "rotation": [
+            0.0,
+            -0.7511382699012756,
+            0.0,
+            0.6601449251174927
+          ],
+          "scale": [
+            0.088835209608078,
+            0.08883491158485413,
+            0.088835209608078
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JailConnector (8)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_jail_connector_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "64d1c8bb6eb79d4c9786b3b82cd42e4e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1434,
+      "components": {
+        "IDComponent": {
+          "guid": "727c4b666c646f43bfbef44723cc1717"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "77c3668d54d1064b901ebe0a7ea12100",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1435,
+      "components": {
+        "IDComponent": {
+          "guid": "35d5782cca8ddc47a954661551d12a38"
+        },
+        "Transform": {
+          "position": [
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "77c3668d54d1064b901ebe0a7ea12100",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
     }
   ],
   "globalGraphics": {
@@ -69209,11 +70439,11 @@
     "vignetteFalloff": 0.20000000298023225,
     "vignetteMapStrength": 1.0,
     "vignetteMapRGBModifier": [
-      0.0,
-      0.0,
-      0.0
+      1.0,
+      1.0,
+      1.0
     ],
-    "vignetteMapPath": "",
+    "vignetteMapPath": "../Resources/Textures/White_Vignette_Alpha.png",
     "bloomStrength": 0.03999999910593033,
     "filmGrainEnabled": false,
     "grainIntensity": 0.014999999664723874,
