@@ -45,29 +45,68 @@
             "type": "bool",
             "value": true
         },
+        "materialFillAmount": {
+            "type": "float",
+            "value": 1.0
+        },
+        "materialFillDirection": {
+            "type": "vec3",
+            "value": [
+                0.0,
+                1.0,
+                0.0
+            ]
+        },
+        "materialFillUVAxis": {
+            "type": "vec2",
+            "value": [
+                0.0,
+                1.0
+            ]
+        },
         "materialHasAlbedoMap": {
             "type": "bool",
-            "value": false
+            "value": true
         },
         "materialHasNormalMap": {
             "type": "bool",
-            "value": false
+            "value": true
         },
         "materialHasRoughnessMap": {
             "type": "bool",
-            "value": false
+            "value": true
         },
         "materialHasMetallicMap": {
             "type": "bool",
-            "value": false
+            "value": true
         },
         "materialHasAoMap": {
             "type": "bool",
-            "value": false
+            "value": true
         },
         "materialHasEmissiveMap": {
             "type": "bool",
             "value": false
+        },
+        "materialAlbedoMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_GearBig_BaseColor.png"
+        },
+        "materialNormalMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_GearBig_Normal.png"
+        },
+        "materialRoughnessMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_GearBig_Roughness.png"
+        },
+        "materialMetallicMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_GearBig_Metallic.png"
+        },
+        "materialAoMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\C_GearBig_Height.png"
         }
     },
     "uvTransform": {
@@ -79,6 +118,5 @@
             0.0,
             0.0
         ]
-    },
-    "customFragmentShader": "../Resources/Shaders/volumetric_orb_fragment.glsl"
+    }
 }

@@ -112,8 +112,8 @@ namespace Ermine::graphics
 
         int aoMapIndex{ -1 };                   // 4 bytes (96-99)
         int emissiveMapIndex{ -1 };             // 4 bytes (100-103)
-        float fillDirOctX{ 0.0f };              // 4 bytes (104-107) - Oct-encoded fill direction X
-        float fillDirOctY{ 1.0f };              // 4 bytes (108-111) - Oct-encoded fill direction Y
+        float fillDirOctX{ 0.0f };              // 4 bytes (104-107) - Normalized UV fill axis X
+        float fillDirOctY{ 1.0f };              // 4 bytes (108-111) - Normalized UV fill axis Y
         // Total: 112 bytes (down from 128 bytes) - 12.5% reduction
     };
 
@@ -144,7 +144,8 @@ namespace Ermine::graphics
                 {"materialHasEmissiveMap", false},
                 {"materialCastsShadows", true},
                 {"materialFillAmount", 1.0f},
-                {"materialFillDirection", Vec3(0.0f, 1.0f, 0.0f)}
+                {"materialFillDirection", Vec3(0.0f, 1.0f, 0.0f)},
+                {"materialFillUVAxis", Vec2(0.0f, 1.0f)}
             };
         }
         // Returns a parameter map for a metallic PBR material.
@@ -167,7 +168,8 @@ namespace Ermine::graphics
                 {"materialHasEmissiveMap", false},
                 {"materialCastsShadows", true},
                 {"materialFillAmount", 1.0f},
-                {"materialFillDirection", Vec3(0.0f, 1.0f, 0.0f)}
+                {"materialFillDirection", Vec3(0.0f, 1.0f, 0.0f)},
+                {"materialFillUVAxis", Vec2(0.0f, 1.0f)}
             };
         }
 
@@ -191,7 +193,8 @@ namespace Ermine::graphics
                 {"materialHasEmissiveMap", false},
                 {"materialCastsShadows", true},
                 {"materialFillAmount", 1.0f},
-                {"materialFillDirection", Vec3(0.0f, 1.0f, 0.0f)}
+                {"materialFillDirection", Vec3(0.0f, 1.0f, 0.0f)},
+                {"materialFillUVAxis", Vec2(0.0f, 1.0f)}
             };
         }
 		// Emissive material
@@ -214,7 +217,8 @@ namespace Ermine::graphics
                 {"materialHasEmissiveMap", false},
                 {"materialCastsShadows", true},
                 {"materialFillAmount", 1.0f},
-                {"materialFillDirection", Vec3(0.0f, 1.0f, 0.0f)}
+                {"materialFillDirection", Vec3(0.0f, 1.0f, 0.0f)},
+                {"materialFillUVAxis", Vec2(0.0f, 1.0f)}
             };
         }
 
@@ -238,7 +242,8 @@ namespace Ermine::graphics
                 {"materialHasEmissiveMap", false},
                 {"materialCastsShadows", true},
                 {"materialFillAmount", 1.0f},
-                {"materialFillDirection", Vec3(0.0f, 1.0f, 0.0f)}
+                {"materialFillDirection", Vec3(0.0f, 1.0f, 0.0f)},
+                {"materialFillUVAxis", Vec2(0.0f, 1.0f)}
             };
         }
 
@@ -262,7 +267,8 @@ namespace Ermine::graphics
                 {"materialHasEmissiveMap", false},
                 {"materialCastsShadows", true},
                 {"materialFillAmount", 1.0f},
-                {"materialFillDirection", Vec3(0.0f, 1.0f, 0.0f)}
+                {"materialFillDirection", Vec3(0.0f, 1.0f, 0.0f)},
+                {"materialFillUVAxis", Vec2(0.0f, 1.0f)}
             };
         }
 
@@ -278,33 +284,6 @@ namespace Ermine::graphics
         static float Clamp01(const float value)
         {
             return std::max(0.0f, std::min(1.0f, value));
-        }
-
-        static Vec2 OctEncodeDirection(Vec3 direction)
-        {
-            const float lenSq = direction.x * direction.x + direction.y * direction.y + direction.z * direction.z;
-            if (lenSq < 1e-12f) {
-                direction = Vec3(0.0f, 1.0f, 0.0f);
-            }
-            else {
-                const float invLen = 1.0f / std::sqrt(lenSq);
-                direction = direction * invLen;
-            }
-
-            const float invL1 = 1.0f / (std::fabs(direction.x) + std::fabs(direction.y) + std::fabs(direction.z));
-            Vec2 encoded(direction.x * invL1, direction.y * invL1);
-
-            if (direction.z < 0.0f)
-            {
-                const float signX = (encoded.x >= 0.0f) ? 1.0f : -1.0f;
-                const float signY = (encoded.y >= 0.0f) ? 1.0f : -1.0f;
-                const float oldX = encoded.x;
-                const float oldY = encoded.y;
-                encoded.x = (1.0f - std::fabs(oldY)) * signX;
-                encoded.y = (1.0f - std::fabs(oldX)) * signY;
-            }
-
-            return encoded;
         }
 
         std::map<std::string, MaterialParam> m_parameters;
@@ -393,21 +372,34 @@ namespace Ermine::graphics
             }
             m_materialData.fillAmount = Clamp01(fillAmount);
 
-            Vec3 fillDirection(0.0f, 1.0f, 0.0f);
-            if (auto param = GetParameter("materialFillDirection"))
+            Vec2 fillAxisUV(0.0f, 1.0f);
+            if (auto param = GetParameter("materialFillUVAxis"))
             {
-                if (param->floatValues.size() >= 3)
+                if (param->floatValues.size() >= 2)
                 {
-                    fillDirection = Vec3(
-                        param->floatValues[0],
-                        param->floatValues[1],
-                        param->floatValues[2]
-                    );
+                    fillAxisUV = Vec2(param->floatValues[0], param->floatValues[1]);
                 }
             }
-            const Vec2 fillDirOct = OctEncodeDirection(fillDirection);
-            m_materialData.fillDirOctX = fillDirOct.x;
-            m_materialData.fillDirOctY = fillDirOct.y;
+            else if (auto param = GetParameter("materialFillDirection"))
+            {
+                if (param->floatValues.size() >= 2)
+                {
+                    fillAxisUV = Vec2(param->floatValues[0], param->floatValues[1]);
+                }
+            }
+
+            const float fillAxisLenSq = fillAxisUV.x * fillAxisUV.x + fillAxisUV.y * fillAxisUV.y;
+            if (fillAxisLenSq < 1e-12f) {
+                fillAxisUV = Vec2(0.0f, 1.0f);
+            }
+            else {
+                const float invLen = 1.0f / std::sqrt(fillAxisLenSq);
+                fillAxisUV.x *= invLen;
+                fillAxisUV.y *= invLen;
+            }
+
+            m_materialData.fillDirOctX = fillAxisUV.x;
+            m_materialData.fillDirOctY = fillAxisUV.y;
 
             // Update texture flags (packed into bitfield for efficiency)
             m_materialData.textureFlags = 0;
