@@ -21661,11 +21661,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -22493,11 +22493,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -23325,11 +23325,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -24157,11 +24157,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -24989,11 +24989,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -25821,11 +25821,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -26653,11 +26653,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -27485,11 +27485,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -28317,11 +28317,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -29149,11 +29149,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -30230,7 +30230,7 @@
         },
         "Transform": {
           "position": [
-            67.9209976196289,
+            75.9209976196289,
             2.951773166656494,
             -180.3852081298828
           ],
@@ -35638,7 +35638,21 @@
           "parentGuid": "5af8fb34fae402428b6afda5b42819e2",
           "depth": 1
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "GearRotateAnimation",
+              "enabled": true,
+              "fields": {
+                "rotationSpeed": {
+                  "t": 0,
+                  "v": 0.800000011920929
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -35717,7 +35731,21 @@
           "parentGuid": "5af8fb34fae402428b6afda5b42819e2",
           "depth": 1
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "GearRotateAnimation",
+              "enabled": true,
+              "fields": {
+                "rotationSpeed": {
+                  "t": 0,
+                  "v": 0.800000011920929
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
@@ -47519,7 +47547,7 @@
         "Transform": {
           "position": [
             21.145288467407228,
-            14.645000457763672,
+            15.145000457763672,
             -0.00030517578125
           ],
           "rotation": [
@@ -48340,13 +48368,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "jumpHeight": {
-                  "t": 0,
-                  "v": 2.0
-                },
                 "mouseHorSens": {
                   "t": 0,
                   "v": 0.10000000149011612
+                },
+                "jumpHeight": {
+                  "t": 0,
+                  "v": 2.0
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -48356,13 +48384,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "camDefaultY": {
-                  "t": 0,
-                  "v": 4.5
-                },
                 "jumpspeed": {
                   "t": 0,
                   "v": 5.0
+                },
+                "camDefaultY": {
+                  "t": 0,
+                  "v": 4.5
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -48374,11 +48402,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
@@ -49013,7 +49041,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "4a0ab126bdf28149aef9ccb0eacb51de"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "391312a00c129346be4c2717bedc87a6",
@@ -67709,13 +67737,13 @@
                   "t": 0,
                   "v": 2.0
                 },
-                "eDuration": {
-                  "t": 0,
-                  "v": 3.0
-                },
                 "sceneName": {
                   "t": 3,
                   "v": "LevelTransitionCutscene.scene"
+                },
+                "eDuration": {
+                  "t": 0,
+                  "v": 3.0
                 },
                 "dSpeed": {
                   "t": 0,
@@ -69211,123 +69239,6 @@
       "id": 1407,
       "components": {
         "IDComponent": {
-          "guid": "5044afad6091f44a9a50e9bc688df979"
-        },
-        "Transform": {
-          "position": [
-            33.80020523071289,
-            17.40029525756836,
-            -181.39205932617188
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            0.08883491158485413,
-            0.08883491158485413,
-            0.08883491158485413
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "JailConnector",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "ModelComponent": {
-          "model": "ART1_jail_connector_low.fbx",
-          "isSkinFile": false
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1408,
-      "components": {
-        "IDComponent": {
-          "guid": "c0de674b3098db43b7579657bbe2cc9e"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "e077899af7fe1e418fb350371cf488b5"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "5044afad6091f44a9a50e9bc688df979",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1409,
-      "components": {
-        "IDComponent": {
-          "guid": "97506baff02b5544b3cd3e6fe7a0e9f5"
-        },
-        "Transform": {
-          "position": [
-            36.131874084472659,
-            19.09675407409668,
-            -199.07705688476563
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "e077899af7fe1e418fb350371cf488b5"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "5044afad6091f44a9a50e9bc688df979",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1410,
-      "components": {
-        "IDComponent": {
           "guid": "b073c06d7bb3a9418bc5b10da44b2fde"
         },
         "Transform": {
@@ -69375,14 +69286,1111 @@
           "roty": false,
           "rotz": false,
           "collidersize": [
-            5.849999904632568,
+            5.900000095367432,
             2.0999999046325685,
-            5.5
+            6.849999904632568
           ]
         },
         "HierarchyComponent": {
           "parentGuid": "9bee57bf237a4942b85249b1fa664277",
           "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1408,
+      "components": {
+        "IDComponent": {
+          "guid": "64d1c8bb6eb79d4c9786b3b82cd42e4e"
+        },
+        "Transform": {
+          "position": [
+            25.650999069213868,
+            17.399999618530275,
+            -212.28900146484376
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "jailConnectors",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1409,
+      "components": {
+        "IDComponent": {
+          "guid": "e89a1d1ed01da04bbda92fd29a29cf09"
+        },
+        "Transform": {
+          "position": [
+            20.707853317260743,
+            0.0002956390380859375,
+            34.792633056640628
+          ],
+          "rotation": [
+            0.0,
+            -0.4573684334754944,
+            0.0,
+            0.8892773389816284
+          ],
+          "scale": [
+            0.08883501589298248,
+            0.08883491158485413,
+            0.08883501589298248
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JailConnector",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_jail_connector_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "64d1c8bb6eb79d4c9786b3b82cd42e4e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1410,
+      "components": {
+        "IDComponent": {
+          "guid": "a63a8fa6fcd1e64c934b9081fb765401"
+        },
+        "Transform": {
+          "position": [
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e89a1d1ed01da04bbda92fd29a29cf09",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1411,
+      "components": {
+        "IDComponent": {
+          "guid": "45ec0c75132aa540b647d4bbeb5abbaf"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e89a1d1ed01da04bbda92fd29a29cf09",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1412,
+      "components": {
+        "IDComponent": {
+          "guid": "fd4db1b4eb8dcc47a375932cc9f45c3f"
+        },
+        "Transform": {
+          "position": [
+            8.149206161499024,
+            0.0002956390380859375,
+            30.896942138671876
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.08883491158485413,
+            0.08883491158485413,
+            0.08883491158485413
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JailConnector (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_jail_connector_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "64d1c8bb6eb79d4c9786b3b82cd42e4e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1413,
+      "components": {
+        "IDComponent": {
+          "guid": "b366062a2c315c45b4606f7a4db26dab"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "fd4db1b4eb8dcc47a375932cc9f45c3f",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1414,
+      "components": {
+        "IDComponent": {
+          "guid": "ab8e8dca9ef9544aaf894f1c6ce61850"
+        },
+        "Transform": {
+          "position": [
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "fd4db1b4eb8dcc47a375932cc9f45c3f",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1415,
+      "components": {
+        "IDComponent": {
+          "guid": "f2153e788b17a747aa10a5548069c44a"
+        },
+        "Transform": {
+          "position": [
+            15.437990188598633,
+            0.0002956390380859375,
+            17.17474365234375
+          ],
+          "rotation": [
+            0.0,
+            -0.7511382699012756,
+            0.0,
+            0.6601449251174927
+          ],
+          "scale": [
+            0.088835209608078,
+            0.08883491158485413,
+            0.088835209608078
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JailConnector (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_jail_connector_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "64d1c8bb6eb79d4c9786b3b82cd42e4e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1416,
+      "components": {
+        "IDComponent": {
+          "guid": "a32d22051f89c24d98974df31665c025"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f2153e788b17a747aa10a5548069c44a",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1417,
+      "components": {
+        "IDComponent": {
+          "guid": "8d27f4f4dd51e84ca411a1f0c3689865"
+        },
+        "Transform": {
+          "position": [
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f2153e788b17a747aa10a5548069c44a",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1418,
+      "components": {
+        "IDComponent": {
+          "guid": "bd0f69c26a83d045a2b146abb66f1408"
+        },
+        "Transform": {
+          "position": [
+            -5.4558258056640629,
+            0.0002689361572265625,
+            16.635879516601564
+          ],
+          "rotation": [
+            0.0,
+            -0.21884113550186158,
+            0.0,
+            0.9757605791091919
+          ],
+          "scale": [
+            0.0888352170586586,
+            0.08883491158485413,
+            0.08883515745401383
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JailConnector (3)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_jail_connector_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "64d1c8bb6eb79d4c9786b3b82cd42e4e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1419,
+      "components": {
+        "IDComponent": {
+          "guid": "6101670c6263c147b6324a4a3982a386"
+        },
+        "Transform": {
+          "position": [
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "bd0f69c26a83d045a2b146abb66f1408",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1420,
+      "components": {
+        "IDComponent": {
+          "guid": "2a17ff5c4d924540936ede1194262952"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "bd0f69c26a83d045a2b146abb66f1408",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1421,
+      "components": {
+        "IDComponent": {
+          "guid": "06063e9bd9dbf84aa696d19afdcba419"
+        },
+        "Transform": {
+          "position": [
+            25.287614822387697,
+            0.000293731689453125,
+            -5.3587646484375
+          ],
+          "rotation": [
+            0.0,
+            -0.42719608545303347,
+            0.0,
+            0.9041590094566345
+          ],
+          "scale": [
+            0.08883515000343323,
+            0.08883491158485413,
+            0.08883516490459442
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JailConnector (4)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_jail_connector_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "64d1c8bb6eb79d4c9786b3b82cd42e4e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1422,
+      "components": {
+        "IDComponent": {
+          "guid": "9ccdd76fdccf7f4bb162618f151ff12d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "06063e9bd9dbf84aa696d19afdcba419",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1423,
+      "components": {
+        "IDComponent": {
+          "guid": "5dd4bf0dda68784b97832da134eadf5a"
+        },
+        "Transform": {
+          "position": [
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "06063e9bd9dbf84aa696d19afdcba419",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1424,
+      "components": {
+        "IDComponent": {
+          "guid": "c8e71e2a31cb8147834e3a09bf9c5401"
+        },
+        "Transform": {
+          "position": [
+            13.671937942504883,
+            0.0002956390380859375,
+            -0.5125274658203125
+          ],
+          "rotation": [
+            0.0,
+            0.979860246181488,
+            0.0,
+            -0.19968482851982118
+          ],
+          "scale": [
+            0.08883531391620636,
+            0.08883491158485413,
+            0.08883531391620636
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JailConnector (5)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_jail_connector_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "64d1c8bb6eb79d4c9786b3b82cd42e4e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1425,
+      "components": {
+        "IDComponent": {
+          "guid": "a33b9f3c7943114ca0d09b23408a7adc"
+        },
+        "Transform": {
+          "position": [
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "c8e71e2a31cb8147834e3a09bf9c5401",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1426,
+      "components": {
+        "IDComponent": {
+          "guid": "6bf65db2c7739b4889d56479fc2ae90a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "c8e71e2a31cb8147834e3a09bf9c5401",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1427,
+      "components": {
+        "IDComponent": {
+          "guid": "6d1b9e1fba132648a497e9b41aabb9a2"
+        },
+        "Transform": {
+          "position": [
+            -7.99041748046875,
+            0.0002880096435546875,
+            -16.42633056640625
+          ],
+          "rotation": [
+            0.0,
+            -0.37518101930618288,
+            0.0,
+            0.9269515872001648
+          ],
+          "scale": [
+            0.08883524686098099,
+            0.08883491158485413,
+            0.08883524686098099
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JailConnector (6)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_jail_connector_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "64d1c8bb6eb79d4c9786b3b82cd42e4e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1428,
+      "components": {
+        "IDComponent": {
+          "guid": "1af3890c62344a49b198e113bdde366d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "6d1b9e1fba132648a497e9b41aabb9a2",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1429,
+      "components": {
+        "IDComponent": {
+          "guid": "5e9dff7d46136d438eeb994ce58a794c"
+        },
+        "Transform": {
+          "position": [
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "6d1b9e1fba132648a497e9b41aabb9a2",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1430,
+      "components": {
+        "IDComponent": {
+          "guid": "da07badad34d5249a446d7d161642eed"
+        },
+        "Transform": {
+          "position": [
+            9.998491287231446,
+            0.000274658203125,
+            -12.397735595703125
+          ],
+          "rotation": [
+            0.0,
+            -0.7511382699012756,
+            0.0,
+            0.6601449251174927
+          ],
+          "scale": [
+            0.088835209608078,
+            0.08883491158485413,
+            0.088835209608078
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JailConnector (7)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_jail_connector_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "64d1c8bb6eb79d4c9786b3b82cd42e4e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1431,
+      "components": {
+        "IDComponent": {
+          "guid": "bc121c11a1b6ef4ba784239ce8827cee"
+        },
+        "Transform": {
+          "position": [
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "da07badad34d5249a446d7d161642eed",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1432,
+      "components": {
+        "IDComponent": {
+          "guid": "288ce6739766da4c88c8440bb7aad8f0"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "da07badad34d5249a446d7d161642eed",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1433,
+      "components": {
+        "IDComponent": {
+          "guid": "77c3668d54d1064b901ebe0a7ea12100"
+        },
+        "Transform": {
+          "position": [
+            -0.0002002716064453125,
+            0.0002689361572265625,
+            0.000030517578125
+          ],
+          "rotation": [
+            0.0,
+            -0.7511382699012756,
+            0.0,
+            0.6601449251174927
+          ],
+          "scale": [
+            0.088835209608078,
+            0.08883491158485413,
+            0.088835209608078
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "JailConnector (8)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_jail_connector_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "64d1c8bb6eb79d4c9786b3b82cd42e4e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1434,
+      "components": {
+        "IDComponent": {
+          "guid": "727c4b666c646f43bfbef44723cc1717"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "77c3668d54d1064b901ebe0a7ea12100",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1435,
+      "components": {
+        "IDComponent": {
+          "guid": "35d5782cca8ddc47a954661551d12a38"
+        },
+        "Transform": {
+          "position": [
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "74337c9cbe802a48a417db39b453511c"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "77c3668d54d1064b901ebe0a7ea12100",
+          "depth": 2
         },
         "GlobalTransform": {}
       }

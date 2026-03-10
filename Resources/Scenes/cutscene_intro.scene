@@ -86,13 +86,13 @@
                   "t": 3,
                   "v": "../Resources/Scenes/m4-test_copy_copy.scene"
                 },
-                "VideoFileName": {
-                  "t": 3,
-                  "v": "IntroCinematic.mpeg"
-                },
                 "videoDurationSeconds": {
                   "t": 0,
                   "v": 16.416667938232423
+                },
+                "VideoFileName": {
+                  "t": 3,
+                  "v": "IntroCinematic.mpeg"
                 },
                 "assumedFPS": {
                   "t": 1,
@@ -102,6 +102,73 @@
             }
           ]
         }
+      }
+    },
+    {
+      "id": 3,
+      "components": {
+        "IDComponent": {
+          "guid": "9d5315cf11c38242bc1fee8f94d2b2c2"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "BlackScreenPrefab",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3db3a3b89e7dc348b32afa32408882db",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "Resources/Textures/black-screen_39.png",
+          "fullscreen": false,
+          "position": [
+            0.5,
+            0.5,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 4.519999980926514,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ]
+        },
+        "GlobalTransform": {}
       }
     }
   ],
