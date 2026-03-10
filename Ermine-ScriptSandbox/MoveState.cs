@@ -49,6 +49,11 @@ public class Move : MonoBehaviour
     private float lastTargetDist = float.MaxValue;
 
     private GameObject rayDebug;
+
+    private Animator anim;
+    public float stunRecoverDelay = 5.0f;
+    private float recoverTimer = 0.0f;
+
     private void CachePlayerIfNeeded()
     {
         if (playerGO == null)
@@ -91,6 +96,12 @@ public class Move : MonoBehaviour
         isStunned = true;
         stunTimer = stunDuration;
 
+        if (anim != null)
+        {
+            anim.SetBool("IsMoving", false);
+            anim.SetBool("IsHit", true);
+        }
+
         // stop immediately while stunned
         NavAgent.SetDestination(entityID, transform.position);
     }
@@ -98,7 +109,7 @@ public class Move : MonoBehaviour
     void Start()
     {
         entityID = (ulong)gameObject.GetInstanceID();
-
+        anim = GetComponent<Animator>();
         lastPos = transform.position;
         lastTargetDist = float.MaxValue;
 
@@ -132,14 +143,37 @@ public class Move : MonoBehaviour
 
         if (isStunned)
         {
+            if (anim != null)
+            {
+                anim.SetBool("IsMoving", false);
+                anim.SetBool("IsHit", true);
+            }
+
             //Debug.Log("stunned");
             stunTimer -= Time.deltaTime;
             if (stunTimer <= 0.0f)
             {
                 isStunned = false;
+                recoverTimer = stunRecoverDelay;
+
+                if (anim != null)
+                    anim.SetBool("IsHit", false);
             }
             return; // do NOTHING while stunned
         }
+        if (recoverTimer > 0.0f)
+        {
+            recoverTimer -= Time.deltaTime;
+
+            if (anim != null)
+                anim.SetBool("IsMoving", false);
+
+            NavAgent.SetDestination(entityID, transform.position);
+            return;
+        }
+
+        if (anim != null)
+            anim.SetBool("IsMoving", true);
 
         if (HasLineOfSightToPlayer())
         {

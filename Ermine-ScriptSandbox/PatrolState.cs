@@ -43,6 +43,10 @@ public class Patrol : MonoBehaviour
 
     private Vector3 patrolCenter;
 
+    private Animator anim;
+    public float stunRecoverDelay = 5.0f;
+    private float recoverTimer = 0.0f;
+
     private void CachePlayerIfNeeded()
     {
         if (playerGO == null)
@@ -119,6 +123,12 @@ public class Patrol : MonoBehaviour
         isStunned = true;
         stunTimer = stunDuration;
 
+        if (anim != null)
+        {
+            anim.SetBool("IsMoving", false);
+            anim.SetBool("IsHit", true);
+        }
+
         // stop immediately while stunned
         NavAgent.SetDestination(entityID, transform.position);
     }
@@ -126,6 +136,7 @@ public class Patrol : MonoBehaviour
     void Start()
     {
         entityID = (ulong)gameObject.GetInstanceID();
+        anim = GetComponent<Animator>();
         CachePlayerIfNeeded();
 
         // Build patrol points around the spawn position
@@ -148,11 +159,21 @@ public class Patrol : MonoBehaviour
 
         if (isStunned)
         {
+            if (anim != null)
+            {
+                anim.SetBool("IsMoving", false);
+                anim.SetBool("IsHit", true);
+            }
+
             //Debug.Log("stunned");
             stunTimer -= Time.deltaTime;
             if (stunTimer <= 0.0f)
             {
                 isStunned = false;
+                recoverTimer = stunRecoverDelay;
+
+                if (anim != null)
+                    anim.SetBool("IsHit", false);
 
                 // Resume the current target after stun ends
                 if (patrolPoints != null && patrolPoints.Length > 0 && currentIndex >= 0)
@@ -160,6 +181,19 @@ public class Patrol : MonoBehaviour
             }
             return; // do NOTHING while stunned
         }
+        if (recoverTimer > 0.0f)
+        {
+            recoverTimer -= Time.deltaTime;
+
+            if (anim != null)
+                anim.SetBool("IsMoving", false);
+
+            NavAgent.SetDestination(entityID, transform.position);
+            return;
+        }
+
+        if (anim != null)
+            anim.SetBool("IsMoving", true);
 
         if (HasLineOfSightToPlayer())
         {

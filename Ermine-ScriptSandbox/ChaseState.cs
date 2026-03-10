@@ -33,6 +33,10 @@ public class Chase : MonoBehaviour
     public static bool RightClickStunArmed = false;
     private float armTimer = 0.0f;
 
+    private Animator anim;
+    public float stunRecoverDelay = 5.0f;
+    private float recoverTimer = 0.0f;
+
     private void CachePlayerIfNeeded()
     {
         if (playerGO == null)
@@ -47,6 +51,12 @@ public class Chase : MonoBehaviour
         isStunned = true;
         stunTimer = stunDuration;
 
+        if (anim != null)
+        {
+            anim.SetBool("IsMoving", false);
+            anim.SetBool("IsHit", true);
+        }
+
         // stop immediately while stunned
         NavAgent.SetDestination(entityID, transform.position);
     }
@@ -54,6 +64,7 @@ public class Chase : MonoBehaviour
     void Start()
     {
         entityID = (ulong)gameObject.GetInstanceID();
+        anim = GetComponent<Animator>();
         CachePlayerIfNeeded();
         loseSightTimer = loseSightGraceTime;
     }
@@ -95,14 +106,37 @@ public class Chase : MonoBehaviour
 
         if (isStunned)
         {
+            if (anim != null)
+            {
+                anim.SetBool("IsMoving", false);
+                anim.SetBool("IsHit", true);
+            }
+
             //Debug.Log("stunned");
             stunTimer -= Time.deltaTime;
             if (stunTimer <= 0.0f)
             {
                 isStunned = false;
+                recoverTimer = stunRecoverDelay;
+
+                if (anim != null)
+                    anim.SetBool("IsHit", false);
             }
             return; // do NOTHING while stunned
         }
+        if (recoverTimer > 0.0f)
+        {
+            recoverTimer -= Time.deltaTime;
+
+            if (anim != null)
+                anim.SetBool("IsMoving", false);
+
+            NavAgent.SetDestination(entityID, transform.position);
+            return;
+        }
+
+        if (anim != null)
+            anim.SetBool("IsMoving", true);
 
         CachePlayerIfNeeded();
         if (playerGO == null) return;
@@ -119,6 +153,9 @@ public class Chase : MonoBehaviour
         // Too far OR lost sight long enough back to previous
         if (dist > losePlayerDistance || loseSightTimer <= 0f)
         {
+            if (anim != null)
+                anim.SetBool("IsMoving", false);
+
             StateMachine.RequestPreviousState(entityID);
             return;
         }
@@ -126,6 +163,9 @@ public class Chase : MonoBehaviour
         // If near player go to Attack
         if (dist <= attackEnterDistance && hasLOS)
         {
+            if (anim != null)
+                anim.SetBool("IsMoving", false);
+
             StateMachine.RequestNextState(entityID);
             return;
         }

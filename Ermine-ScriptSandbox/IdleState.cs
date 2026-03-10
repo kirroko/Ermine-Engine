@@ -24,6 +24,10 @@ public class Idle : MonoBehaviour
     public static bool RightClickStunArmed = false;
     private float armTimer = 0.0f;
 
+    private Animator anim;
+    public float stunRecoverDelay = 5.0f;
+    private float recoverTimer = 0.0f;
+
     private void CachePlayerIfNeeded()
     {
         if (playerGO == null)
@@ -37,6 +41,11 @@ public class Idle : MonoBehaviour
 
         isStunned = true;
         stunTimer = stunDuration;
+
+        if (anim != null)
+        {
+            anim.SetBool("IsHit", true);
+        }
 
         // stop immediately while stunned
         NavAgent.SetDestination(entityID, transform.position);
@@ -72,25 +81,46 @@ public class Idle : MonoBehaviour
     void Start()
     {
         entityID = (ulong)gameObject.GetInstanceID();
+        anim = GetComponent<Animator>();
         CachePlayerIfNeeded();
     }
 
     void Update()
     {
-        if (jumpCooldownTimer > 0.0f)
-            jumpCooldownTimer -= Time.deltaTime;
+        if (Input.GetMouseButtonDown(1))
+            armTimer = 0.3f;
+
+        if (armTimer > 0.0f)
+            armTimer -= Time.deltaTime;
 
         RightClickStunArmed = armTimer > 0f;
 
+        if (jumpCooldownTimer > 0.0f)
+            jumpCooldownTimer -= Time.deltaTime;
+
         if (isStunned)
         {
+            if (anim != null)
+            {
+                anim.SetBool("IsHit", true);
+            }
+
             //Debug.Log("stunned");
             stunTimer -= Time.deltaTime;
             if (stunTimer <= 0.0f)
             {
                 isStunned = false;
+                recoverTimer = stunRecoverDelay;
+
+                if (anim != null)
+                    anim.SetBool("IsHit", false);
             }
             return; // do NOTHING while stunned
+        }
+        if (recoverTimer > 0.0f)
+        {
+            recoverTimer -= Time.deltaTime;
+            return;
         }
 
         // If player is visible, switch state

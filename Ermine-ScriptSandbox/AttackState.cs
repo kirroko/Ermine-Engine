@@ -36,6 +36,10 @@ public class Attack : MonoBehaviour
     public static bool RightClickStunArmed = false;
     private float armTimer = 0.0f;
 
+    private Animator anim;
+    public float stunRecoverDelay = 5.0f;
+    private float recoverTimer = 0.0f;
+
     // replace to this
     // Name of the entity with UIHealthbarComponent (must match your scene)
     //public string playerHealthBarName = "Healthbar";
@@ -48,6 +52,12 @@ public class Attack : MonoBehaviour
 
         isStunned = true;
         stunTimer = stunDuration;
+
+        if (anim != null)
+        {
+            anim.SetBool("IsMoving", false);
+            anim.SetBool("IsHit", true);
+        }
 
         // stop immediately while stunned
         NavAgent.SetDestination(entityID, transform.position);
@@ -62,6 +72,7 @@ public class Attack : MonoBehaviour
     void Start()
     {
         entityID = (ulong)gameObject.GetInstanceID();
+        anim = GetComponent<Animator>();
         CachePlayerIfNeeded();
         tickTimer = tickInterval;
         loseSightTimer = loseSightGraceTime;
@@ -108,13 +119,33 @@ public class Attack : MonoBehaviour
 
         if (isStunned)
         {
+            if (anim != null)
+            {
+                anim.SetBool("IsMoving", false);
+                anim.SetBool("IsHit", true);
+            }
+
             //Debug.Log("stunned");
             stunTimer -= Time.deltaTime;
             if (stunTimer <= 0.0f)
             {
                 isStunned = false;
+                recoverTimer = stunRecoverDelay;
+
+                if (anim != null)
+                    anim.SetBool("IsHit", false);
             }
             return; // do NOTHING while stunned
+        }
+        if (recoverTimer > 0.0f)
+        {
+            recoverTimer -= Time.deltaTime;
+
+            if (anim != null)
+                anim.SetBool("IsMoving", false);
+
+            NavAgent.SetDestination(entityID, transform.position);
+            return;
         }
 
         CachePlayerIfNeeded();
@@ -140,6 +171,9 @@ public class Attack : MonoBehaviour
         // If NOT in attack range, move towards player but stay in Attack state
         if (distToPlayer > attackRange)
         {
+            if (anim != null)
+                anim.SetBool("IsMoving", true);
+
             tickTimer = tickInterval; // don’t damage while out of range
 
             repathTimer -= Time.deltaTime;
@@ -152,6 +186,9 @@ public class Attack : MonoBehaviour
         }
 
         // IN attack range, stop moving and deal damage
+        if (anim != null)
+            anim.SetBool("IsMoving", false);
+
         NavAgent.SetDestination(entityID, transform.position);
 
         tickTimer -= Time.deltaTime;
