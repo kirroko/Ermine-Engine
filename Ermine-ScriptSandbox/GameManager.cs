@@ -18,10 +18,11 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         player = GameObject.Find("Player");
-        startPos = player.transform.position;
+        if (player != null)startPos = player.transform.position;
         respawnPos = startPos;
     }
 
+    
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Alpha1)) TeleportToPoint(0);
@@ -37,6 +38,7 @@ public class GameManager : MonoBehaviour
 
     public void PlayerRespawn()
     {
+        if (player == null) return;
         player.transform.position = respawnPos;
         Physics.SetPosition((ulong)player.GetInstanceID(), respawnPos);
     }
