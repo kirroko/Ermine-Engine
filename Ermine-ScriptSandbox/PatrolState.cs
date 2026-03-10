@@ -40,6 +40,7 @@ public class Patrol : MonoBehaviour
     public float viewDistance = 15.0f;
     public float rayHeight = 0.8f;
     public float rayForwardOffset = 2.0f;
+    public float closeDetectDistance = 2.0f;
 
     private Vector3 patrolCenter;
 
@@ -58,11 +59,19 @@ public class Patrol : MonoBehaviour
         CachePlayerIfNeeded();
         if (playerGO == null) return false;
 
-        Vector3 origin = transform.position
+        Vector3 enemyPos = transform.position;
+        Vector3 playerPoint = playerGO.transform.position;
+
+        // fallback for very close targets on tiny platforms
+        Vector3 flatToPlayer = playerPoint - enemyPos;
+        flatToPlayer.y = 0f;
+        if (flatToPlayer.Magnitude <= closeDetectDistance)
+            return true;
+
+        Vector3 origin = enemyPos
                        + new Vector3(0f, rayHeight, 0f)
                        + transform.forward * rayForwardOffset;
 
-        Vector3 playerPoint = playerGO.transform.position;
         Vector3 toPlayer = playerPoint - origin;
 
         float dist = toPlayer.Magnitude;

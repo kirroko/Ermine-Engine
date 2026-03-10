@@ -181,7 +181,7 @@ public class Move : MonoBehaviour
             return;
         }
 
-        if (insideJumpArea && jumpCooldownTimer <= 0.0f)
+        if (insideJumpArea && jumpCooldownTimer <= 0.0f && turnTimer <= 0f)
         {
             NavAgent.StartJump(entityID, jumpLinkEntityID);
             jumpCooldownTimer = jumpCooldown;
