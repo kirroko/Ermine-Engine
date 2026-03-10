@@ -1,50 +1,59 @@
 using ErmineEngine;
+using System.Resources;
 
 public class CutsceneVideo: MonoBehaviour
 {
-    public string nextScenePath = "../Resources/Scenes/m4-test_copy_copy.scene";
-    public string test = "yes";
+    public string nextSceneName = "../Resources/Scenes/m4-test_copy_copy.scene";
 
-    private const string VideoName = "intro_cinematic";
-    private const string VideoPath = "../Resources/Videos/IntroCinematic_SFX.mpeg";
+    // TEMP FIX PARAMETER (set video duration here in seconds)
+    public float videoDurationSeconds = 16f;
+
+
+    public string VideoFileName = "intro_cinematic.mpeg";
 
     private bool finished = false;
-    private int frameCounter = 0;
+    private float elapsedTime = 0f;
+
+
 
     void Start()
     {
-        if (VideoManager.Load(VideoName, VideoPath, false))
+        
+        if (VideoManager.Load(VideoFileName, "../Resources/Videos/" + VideoFileName, false))
         {
-            VideoManager.SetCurrent(VideoName);
+            VideoManager.SetCurrent(VideoFileName);
             VideoManager.SetFitMode(VideoFitMode.StretchToFill);
             VideoManager.SetRenderEnabled(true);
             VideoManager.Play();
         }
         else
         {
-            Debug.LogError("CutsceneVideo: Failed to load video '" + VideoPath + "'.");
+            Debug.LogError("CutsceneVideo: Failed to load video '" + VideoFileName + "'.");
         }
     }
 
     void Update()
     {
-        frameCounter++;
-
-        // print every ~60 frames
-        if (frameCounter % 60 == 0)
-        {
-            Debug.Log("[CutsceneVideo] Update running. finished=" + finished);
-        }
-
-
         if (finished) return;
 
-        bool done = VideoManager.IsDonePlaying(VideoName);
+        elapsedTime += Time.deltaTime;
 
-        if (frameCounter % 30 == 0)
+
+
+        if (elapsedTime >= videoDurationSeconds)
         {
-            Debug.Log("[CutsceneVideo] IsDonePlaying = " + done);
+            Debug.Log("[CutsceneVideo] Timeout reached (" + videoDurationSeconds + "s)");
+
+            finished = true;
+            VideoManager.Stop();
+            VideoManager.Free(VideoFileName);
+            SceneManager.LoadScene(nextSceneName);
+            return;
         }
+
+        bool done = !VideoManager.IsPlaying();
+        
+        
 
         if (done)
         {
@@ -56,16 +65,16 @@ public class CutsceneVideo: MonoBehaviour
             VideoManager.Stop();
 
             Debug.Log("[CutsceneVideo] Freeing video");
-            VideoManager.Free(VideoName);
+            VideoManager.Free(VideoFileName);
 
-            Debug.Log("[CutsceneVideo] Loading next scene: " + nextScenePath);
-            SceneManager.LoadScene(nextScenePath);
+            Debug.Log("[CutsceneVideo] Loading next scene: " + nextSceneName);
+            SceneManager.LoadScene(nextSceneName);
         }
     }
 
     void OnDestroy()
     {
         VideoManager.Stop();
-        VideoManager.Free(VideoName);
+        VideoManager.Free(VideoFileName);
     }
 }

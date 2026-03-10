@@ -84,15 +84,15 @@
               "fields": {
                 "nextSceneName": {
                   "t": 3,
-                  "v": "../Resources/Scenes/m4-test_copy_copy.scene"
+                  "v": "../Resources/Scenes/Level2Wcol.scene"
                 },
                 "VideoFileName": {
                   "t": 3,
-                  "v": "IntroCinematic.mpeg"
+                  "v": "ElevatorAnimation_Final.mpeg"
                 },
                 "videoDurationSeconds": {
                   "t": 0,
-                  "v": 16.416667938232423
+                  "v": 11.0
                 },
                 "assumedFPS": {
                   "t": 1,
