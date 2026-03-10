@@ -16,20 +16,15 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         player = GameObject.Find("Player");
-        startPos = player.transform.position;
+        if (player != null)startPos = player.transform.position;
         respawnPos = startPos;
     }
 
-    void Update()
-    {
-        //if (player.transform.position.y < -ff)
-        //{
-        //    player.transform.position = startPos;   
-        //}
-    }
+    
 
     public void PlayerRespawn()
     {
+        if (player == null) return;
         player.transform.position = respawnPos;
         Physics.SetPosition((ulong)player.GetInstanceID(), respawnPos);
     }

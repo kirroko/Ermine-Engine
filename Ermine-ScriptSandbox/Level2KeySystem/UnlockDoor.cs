@@ -22,16 +22,32 @@ public class UnlockDoor : MonoBehaviour
     private bool doorUnlocked = false;
 
     void Awake()
+{
+    I = this;
+
+    GameObject leftObj = GameObject.Find("FinalGateL");
+    GameObject rightObj = GameObject.Find("FinalGateR");
+
+    if (leftObj != null)
     {
-        I = this;
-
-        doorLeft = GameObject.Find("FinalGateL").transform;
-        doorRight = GameObject.Find("FinalGateR").transform;
-
-        // Store closed positions
+        doorLeft = leftObj.transform;
         leftClosedX = doorLeft.position.x;
+    }
+    else
+    {
+        Debug.Log("FinalGateL not found in the scene.");
+    }
+
+    if (rightObj != null)
+    {
+        doorRight = rightObj.transform;
         rightClosedX = doorRight.position.x;
     }
+    else
+    {
+        Debug.Log("FinalGateR not found in the scene.");
+    }
+}
 
     void Update()
     {
