@@ -205,7 +205,7 @@
         "ObjectMetaData": {
           "name": "GameManager",
           "tag": "Untagged",
-          "selfActive": false
+          "selfActive": true
         },
         "HierarchyComponent": {
           "depth": 0
@@ -238870,7 +238870,7 @@
       }
     },
     {
-      "id": 5642,
+      "id": 5641,
       "components": {
         "IDComponent": {
           "guid": "f30161a14af87f439cd0439a84d6ea9c"

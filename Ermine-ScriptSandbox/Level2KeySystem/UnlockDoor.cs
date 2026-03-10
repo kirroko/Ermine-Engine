@@ -22,36 +22,43 @@ public class UnlockDoor : MonoBehaviour
     private bool doorUnlocked = false;
 
     void Awake()
-{
-    I = this;
+    {
+        I = this;
 
-    GameObject leftObj = GameObject.Find("FinalGateL");
-    GameObject rightObj = GameObject.Find("FinalGateR");
+        GameObject leftObj = GameObject.Find("FinalGateL");
+        GameObject rightObj = GameObject.Find("FinalGateR");
 
-    if (leftObj != null)
-    {
-        doorLeft = leftObj.transform;
-        leftClosedX = doorLeft.position.x;
-    }
-    else
-    {
-        Debug.Log("FinalGateL not found in the scene.");
-    }
+        if (leftObj != null && leftObj.transform != null)
+        {
+            doorLeft = leftObj.transform;
+            leftClosedX = doorLeft.position.x;
+        }
+        else
+        {
+            Debug.Log("FinalGateL not found in the scene.");
+        }
 
-    if (rightObj != null)
-    {
-        doorRight = rightObj.transform;
-        rightClosedX = doorRight.position.x;
+        if (rightObj != null && rightObj.transform != null)
+        {
+            doorRight = rightObj.transform;
+            rightClosedX = doorRight.position.x;
+        }
+        else
+        {
+            Debug.Log("FinalGateR not found in the scene.");
+        }
     }
-    else
-    {
-        Debug.Log("FinalGateR not found in the scene.");
-    }
-}
 
     void Update()
     {
         if (!doorUnlocked) return;
+
+        // Extra safety checks
+        if (doorLeft == null || doorRight == null)
+        {
+            Debug.Log("Door transforms missing. Cannot open door.");
+            return;
+        }
 
         timer += Time.deltaTime * doorOpenSpeed;
 
@@ -76,27 +83,41 @@ public class UnlockDoor : MonoBehaviour
         }
         else
         {
-            // snap fully open
-            doorLeft.position = new Vector3(
-                leftClosedX - doorOpenDistance,
-                doorLeft.position.y,
-                doorLeft.position.z
-            );
+            if (doorLeft != null)
+            {
+                doorLeft.position = new Vector3(
+                    leftClosedX - doorOpenDistance,
+                    doorLeft.position.y,
+                    doorLeft.position.z
+                );
+            }
 
-            doorRight.position = new Vector3(
-                rightClosedX + doorOpenDistance,
-                doorRight.position.y,
-                doorRight.position.z
-            );
+            if (doorRight != null)
+            {
+                doorRight.position = new Vector3(
+                    rightClosedX + doorOpenDistance,
+                    doorRight.position.y,
+                    doorRight.position.z
+                );
+            }
 
-            doorUnlocked = false; // stop Update loop
+            doorUnlocked = false;
         }
     }
 
     public void IncrementKeys() { numOfKeys++; }
     public void DecrementKeys() { numOfKeys--; }
 
-    public void UnlockDoorBool() { doorUnlocked = true; }
+    public void UnlockDoorBool()
+    {
+        if (doorLeft == null || doorRight == null)
+        {
+            Debug.Log("Cannot unlock door because door objects are missing.");
+            return;
+        }
+
+        doorUnlocked = true;
+    }
 
     public void Evaluate()
     {
