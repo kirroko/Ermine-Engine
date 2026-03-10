@@ -5219,10 +5219,10 @@
             -8.211677551269532
           ],
           "rotation": [
-            0.7071068286895752,
-            0.0,
-            0.0,
-            0.7071067094802856
+            0.6408493518829346,
+            0.29885104298591616,
+            0.2988511025905609,
+            0.640849232673645
           ],
           "scale": [
             0.15000000596046449,
@@ -5391,10 +5391,10 @@
             -8.118584632873536
           ],
           "rotation": [
-            0.7071068286895752,
-            0.0,
-            0.0,
-            0.7071067094802856
+            0.6408493518829346,
+            -0.29885104298591616,
+            -0.2988511025905609,
+            0.640849232673645
           ],
           "scale": [
             0.10000000149011612,
@@ -5563,10 +5563,10 @@
             -7.903934478759766
           ],
           "rotation": [
-            0.7071068286895752,
-            0.0,
-            0.0,
-            0.7071067094802856
+            0.6408493518829346,
+            0.29885104298591616,
+            0.2988511025905609,
+            0.640849232673645
           ],
           "scale": [
             0.15000000596046449,
@@ -5888,7 +5888,7 @@
         },
         "Transform": {
           "position": [
-            0.44357776641845705,
+            0.3440000116825104,
             11.669855117797852,
             -17.612728118896486
           ],
@@ -5899,7 +5899,7 @@
             1.0
           ],
           "scale": [
-            0.02390213869512081,
+            0.02500000037252903,
             0.01290358230471611,
             0.2812490165233612
           ]
@@ -9098,9 +9098,9 @@
           ],
           "rotation": [
             0.0,
+            0.8870378732681274,
             0.0,
-            0.0,
-            1.0
+            0.46169644594192507
           ],
           "scale": [
             1.0,
@@ -9354,9 +9354,9 @@
           ],
           "rotation": [
             0.0,
+            0.5187985897064209,
             0.0,
-            0.0,
-            1.0
+            0.8548972606658936
           ],
           "scale": [
             1.0,
@@ -11898,10 +11898,10 @@
             -9.674206733703614
           ],
           "rotation": [
-            0.4999998211860657,
-            0.5000001788139343,
-            -0.4999998211860657,
-            0.5000001788139343
+            0.6644685864448547,
+            0.6644690632820129,
+            -0.24182909727096559,
+            0.2418292760848999
           ],
           "scale": [
             0.15000000596046449,
@@ -11986,10 +11986,10 @@
             -7.693473815917969
           ],
           "rotation": [
-            0.4999998211860657,
-            0.5000001788139343,
-            -0.4999998211860657,
-            0.5000001788139343
+            0.6644685864448547,
+            0.6644690632820129,
+            -0.24182909727096559,
+            0.2418292760848999
           ],
           "scale": [
             0.10000000149011612,
@@ -12074,10 +12074,10 @@
             -11.557196617126465
           ],
           "rotation": [
-            0.4999998211860657,
-            0.5000001788139343,
-            -0.4999998211860657,
-            0.5000001788139343
+            0.6644685864448547,
+            0.6644690632820129,
+            -0.24182909727096559,
+            0.2418292760848999
           ],
           "scale": [
             0.10000000149011612,
@@ -14016,9 +14016,9 @@
           ],
           "rotation": [
             0.0,
+            0.8870378732681274,
             0.0,
-            0.0,
-            1.0
+            0.46169644594192507
           ],
           "scale": [
             1.5,
@@ -14724,9 +14724,9 @@
           ],
           "rotation": [
             0.0,
+            0.8870378732681274,
             0.0,
-            0.0,
-            1.0
+            0.46169644594192507
           ],
           "scale": [
             1.5,
@@ -17876,9 +17876,9 @@
           ],
           "rotation": [
             0.0,
+            0.8870378732681274,
             0.0,
-            0.0,
-            1.0
+            0.46169644594192507
           ],
           "scale": [
             2.0,
@@ -21603,7 +21603,7 @@
         "Transform": {
           "position": [
             35.43168640136719,
-            7.739538192749023,
+            7.698905944824219,
             -223.41209411621095
           ],
           "rotation": [
@@ -21661,11 +21661,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -22435,7 +22435,7 @@
         "Transform": {
           "position": [
             49.6786994934082,
-            2.8630120754241945,
+            2.8223798274993898,
             -218.70953369140626
           ],
           "rotation": [
@@ -22493,11 +22493,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -23267,7 +23267,7 @@
         "Transform": {
           "position": [
             40.63077163696289,
-            3.4748620986938478,
+            3.434229850769043,
             -213.59352111816407
           ],
           "rotation": [
@@ -23325,11 +23325,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -24099,7 +24099,7 @@
         "Transform": {
           "position": [
             40.64946746826172,
-            5.985860824584961,
+            5.945228576660156,
             -193.76815795898438
           ],
           "rotation": [
@@ -24157,11 +24157,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -24931,7 +24931,7 @@
         "Transform": {
           "position": [
             25.467544555664064,
-            6.078822135925293,
+            6.038189888000488,
             -210.71484375
           ],
           "rotation": [
@@ -24989,11 +24989,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -25763,7 +25763,7 @@
         "Transform": {
           "position": [
             18.880647659301759,
-            5.706831932067871,
+            5.666199684143066,
             -228.0310516357422
           ],
           "rotation": [
@@ -25821,11 +25821,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -26595,7 +26595,7 @@
         "Transform": {
           "position": [
             18.847026824951173,
-            6.307188510894775,
+            6.266556262969971,
             -196.3971710205078
           ],
           "rotation": [
@@ -26653,11 +26653,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -27427,7 +27427,7 @@
         "Transform": {
           "position": [
             47.30696487426758,
-            4.22599983215332,
+            4.185367584228516,
             -176.23220825195313
           ],
           "rotation": [
@@ -27485,11 +27485,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -28259,7 +28259,7 @@
         "Transform": {
           "position": [
             32.28816223144531,
-            4.941508769989014,
+            4.900876522064209,
             -181.49838256835938
           ],
           "rotation": [
@@ -28317,11 +28317,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -29091,7 +29091,7 @@
         "Transform": {
           "position": [
             16.248126983642579,
-            4.22599983215332,
+            4.185367584228516,
             -181.49838256835938
           ],
           "rotation": [
@@ -29149,11 +29149,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -41754,7 +41754,7 @@
               "iconTexturePath": "",
               "selectedIconPath": "./Resources/Textures/UI/Skill_Shooting_Active.png",
               "unselectedIconPath": "./Resources/Textures/UI/Skill_Shooting_Inactive.png",
-              "isSelected": false,
+              "isSelected": true,
               "skillName": "Shoot",
               "keyBinding": "",
               "description": ""
@@ -48261,15 +48261,15 @@
         },
         "Transform": {
           "position": [
-            8.391876220703125,
+            8.42555046081543,
             1.0498716831207276,
-            37.97709655761719
+            37.985260009765628
           ],
           "rotation": [
             0.0,
-            -0.7832251191139221,
+            -0.7860047221183777,
             0.0,
-            0.6217381954193115
+            0.6182205080986023
           ],
           "scale": [
             0.01000000350177288,
@@ -48340,13 +48340,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.10000000149011612
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.10000000149011612
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -48356,13 +48356,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -48374,11 +48374,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
@@ -48409,14 +48409,14 @@
         "Transform": {
           "position": [
             0.0,
-            0.0,
+            451.0836486816406,
             0.0
           ],
           "rotation": [
+            0.003799906000494957,
             0.0,
             0.0,
-            0.0,
-            1.0
+            0.9999927878379822
           ],
           "scale": [
             100.0,
@@ -48913,7 +48913,7 @@
               {
                 "name": "IsMoving",
                 "type": 0,
-                "boolValue": false,
+                "boolValue": true,
                 "floatValue": 0.0,
                 "intValue": 0,
                 "triggerValue": false
@@ -49013,7 +49013,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "3c724a694cbac9438c9313a76eb05889"
+          "guid": "4a0ab126bdf28149aef9ccb0eacb51de"
         },
         "HierarchyComponent": {
           "parentGuid": "391312a00c129346be4c2717bedc87a6",
@@ -49226,7 +49226,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "1265b849b079344baccd92472d812722"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "391312a00c129346be4c2717bedc87a6",
@@ -49283,10 +49283,10 @@
             63.79701232910156
           ],
           "rotation": [
-            0.4998311996459961,
-            -0.49982357025146487,
-            0.5001763701438904,
-            0.5001688003540039
+            0.24160157144069673,
+            -0.24159805476665498,
+            0.6645572185516357,
+            0.6645470261573792
           ],
           "scale": [
             0.15000002086162568,
@@ -49349,7 +49349,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "1607fe176731384088b40a62e4c022f9"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "aaade5f51691bb43a64ba377906fc493",
@@ -52998,7 +52998,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "b118707045133343b138423825e9209c",
@@ -53077,7 +53077,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "3e40a88013c2e44f87cdf6506acf66b7",
@@ -53156,7 +53156,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "a3fdaec9b0851240bf4ecb5b8268e2c2",
@@ -53235,7 +53235,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "a940e49f4b8c124f967c650b001eb2ab",
@@ -53314,7 +53314,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "7027e195afa26f4eabc4b0ab12f8526c",
@@ -53393,7 +53393,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "14819af11c185f44850a78df9a787ef0",
@@ -53472,7 +53472,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "33018403720cac44b97bf2f1e64a6421",
@@ -53551,7 +53551,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "5857146eec76914086d5638a68d64196",
@@ -53630,7 +53630,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "666557cbebc1ba458cb162ddd1fcc87f",
@@ -53709,7 +53709,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "0559d15fd538fa4eaa3e96701529bd68",
@@ -53788,7 +53788,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "6483f45be447494083b8935a39f7aee9",
@@ -53903,7 +53903,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "c6c56994ca378f48a8f8d5372970403d",
@@ -53982,7 +53982,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "3109a10b9e4d8140b8f124351606df95",
@@ -54061,7 +54061,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "4c2b1ef1efa2314d972fdc5eea920ff8",
@@ -54140,7 +54140,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "f8bb46157e0cbd42af0c89fc91ee331a",
@@ -54219,7 +54219,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "cb2004905b39fa4d85a5ed770a7b1ad0",
@@ -54298,7 +54298,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "11e1a449e50f9a4ab338ac876b1e5cbd",
@@ -54377,7 +54377,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "17d8a3b47171ab4f85e014e20cd6a566",
@@ -54456,7 +54456,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "8957bdb288ded243972a344ae39b26a1",
@@ -54535,7 +54535,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "ee0b8d0b9eda4c4b8186cd24deffb1db",
@@ -54614,7 +54614,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "1967e4d8bee2fb4e915f3cce3354039b",
@@ -54693,7 +54693,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "7d6370b4cb1baf49a61c6a5ab69fd58c",
@@ -56215,7 +56215,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "c85254900ed8c8409426a8ec1fa3f24d",
@@ -56294,7 +56294,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "9c1a9adcee97e8468ac1b3706e21e3b4",
@@ -56373,7 +56373,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "4f65bbcb42336841aea1f44ea2776b69",
@@ -56452,7 +56452,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "8f265a94da8885478cf45f2ea999b987",
@@ -56531,7 +56531,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "3066d879d67a0a42834f7160efd47f54",
@@ -56610,7 +56610,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "9e176ffb22997f4babe1c99a7d8455d3"
+          "guid": "2fdbc7249de6394aaaba4ace7eef3cac"
         },
         "HierarchyComponent": {
           "parentGuid": "3259b20af40f364e978806aad14dbd31",
@@ -67293,7 +67293,7 @@
         "Transform": {
           "position": [
             -2.2360684871673586,
-            1.0499999523162842,
+            1.049999713897705,
             0.0
           ],
           "rotation": [
@@ -67364,7 +67364,7 @@
         "Transform": {
           "position": [
             16.088668823242189,
-            1.5805375576019288,
+            1.5805373191833497,
             -98.0146255493164
           ],
           "rotation": [
@@ -67435,7 +67435,7 @@
         "Transform": {
           "position": [
             -13.239480018615723,
-            0.9746693968772888,
+            0.9746694564819336,
             -51.43029022216797
           ],
           "rotation": [
@@ -67506,7 +67506,7 @@
         "Transform": {
           "position": [
             28.02081871032715,
-            1.4761559963226319,
+            1.4761557579040528,
             -120.59310150146485
           ],
           "rotation": [
@@ -67577,7 +67577,7 @@
         "Transform": {
           "position": [
             12.82515811920166,
-            3.285762310028076,
+            3.2857627868652345,
             -163.68154907226563
           ],
           "rotation": [
@@ -67709,13 +67709,13 @@
                   "t": 0,
                   "v": 2.0
                 },
-                "sceneName": {
-                  "t": 3,
-                  "v": "LevelTransitionCutscene.scene"
-                },
                 "eDuration": {
                   "t": 0,
                   "v": 3.0
+                },
+                "sceneName": {
+                  "t": 3,
+                  "v": "LevelTransitionCutscene.scene"
                 },
                 "dSpeed": {
                   "t": 0,
@@ -68122,33 +68122,6 @@
           "name": "ElevatorBase",
           "tag": "Untagged",
           "selfActive": true
-        },
-        "PhysicComponent": {
-          "bodyType": "Rigid",
-          "motionType": "Kinematic",
-          "mass": 0.0,
-          "shapeType": "Box",
-          "colliderpivot": [
-            0.0,
-            0.8999999761581421,
-            0.0
-          ],
-          "posx": false,
-          "posy": false,
-          "posz": false,
-          "colliderrot": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotx": false,
-          "roty": false,
-          "rotz": false,
-          "collidersize": [
-            130.0,
-            6.75,
-            130.0
-          ]
         },
         "ModelComponent": {
           "model": "ART1_Elevator_low.fbx",
@@ -69238,105 +69211,13 @@
       "id": 1407,
       "components": {
         "IDComponent": {
-          "guid": "51c38c6bcf64594eb23f5477fb41a92e"
+          "guid": "5044afad6091f44a9a50e9bc688df979"
         },
         "Transform": {
           "position": [
-            -30.67063331604004,
-            6.0781049728393559,
-            40.68724060058594
-          ],
-          "rotation": [
-            0.0,
-            -0.7121087908744812,
-            0.0,
-            0.7020691633224487
-          ],
-          "scale": [
-            1.0000009536743165,
-            1.0,
-            1.000002145767212
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "ElevatorParent",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "PhysicComponent": {
-          "bodyType": "Trigger",
-          "motionType": "Kinematic",
-          "mass": 0.0,
-          "shapeType": "Box",
-          "colliderpivot": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "posx": false,
-          "posy": false,
-          "posz": false,
-          "colliderrot": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotx": false,
-          "roty": false,
-          "rotz": false,
-          "collidersize": [
-            10.0,
-            10.0,
-            10.0
-          ]
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {},
-        "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "EndElevator",
-              "enabled": true,
-              "fields": {
-                "eSpeed": {
-                  "t": 0,
-                  "v": 2.0
-                },
-                "eDuration": {
-                  "t": 0,
-                  "v": 3.0
-                },
-                "sceneName": {
-                  "t": 3,
-                  "v": "m4-LEVEL2_AI.scene"
-                },
-                "dSpeed": {
-                  "t": 0,
-                  "v": 1.0
-                },
-                "dDuration": {
-                  "t": 0,
-                  "v": 2.0
-                }
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "id": 1408,
-      "components": {
-        "IDComponent": {
-          "guid": "434b0afdc2414945ab5477736d9e5329"
-        },
-        "Transform": {
-          "position": [
-            8.314050674438477,
-            10.611340522766114,
-            -6.598274230957031
+            33.80020523071289,
+            17.40029525756836,
+            -181.39205932617188
           ],
           "rotation": [
             0.0,
@@ -69345,22 +69226,60 @@
             1.0
           ],
           "scale": [
-            0.05000000074505806,
-            0.05000000074505806,
-            0.05000000074505806
+            0.08883491158485413,
+            0.08883491158485413,
+            0.08883491158485413
           ]
         },
         "ObjectMetaData": {
-          "name": "ElevatorFloor (1)",
+          "name": "JailConnector",
           "tag": "Untagged",
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "ART1_floor_low.fbx",
+          "model": "ART1_jail_connector_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
-          "parentGuid": "51c38c6bcf64594eb23f5477fb41a92e",
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1408,
+      "components": {
+        "IDComponent": {
+          "guid": "c0de674b3098db43b7579657bbe2cc9e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "e077899af7fe1e418fb350371cf488b5"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "5044afad6091f44a9a50e9bc688df979",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -69370,13 +69289,13 @@
       "id": 1409,
       "components": {
         "IDComponent": {
-          "guid": "98513c251dfb5c4f9873c8cd14ae080d"
+          "guid": "97506baff02b5544b3cd3e6fe7a0e9f5"
         },
         "Transform": {
           "position": [
-            -23.57988166809082,
-            0.0,
-            34.19743728637695
+            36.131874084472659,
+            19.09675407409668,
+            -199.07705688476563
           ],
           "rotation": [
             0.0,
@@ -69391,16 +69310,16 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_floor_low.fbx_floor_mesh0",
+          "name": "Mesh_ART1_jail_connector_low.fbx_chainedlink9_mesh1",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "09bedbcf1f780b41a2b642af90d65e0d"
+          "guid": "e077899af7fe1e418fb350371cf488b5"
         },
         "HierarchyComponent": {
-          "parentGuid": "434b0afdc2414945ab5477736d9e5329",
-          "depth": 2
+          "parentGuid": "5044afad6091f44a9a50e9bc688df979",
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -69409,53 +69328,13 @@
       "id": 1410,
       "components": {
         "IDComponent": {
-          "guid": "3d98b25d667b2541bc380e161f627a6b"
+          "guid": "b073c06d7bb3a9418bc5b10da44b2fde"
         },
         "Transform": {
           "position": [
-            9.378055572509766,
-            -6.01298189163208,
-            8.368698120117188
-          ],
-          "rotation": [
-            0.0,
-            -0.7077754139900208,
-            0.0,
-            0.7064375281333923
-          ],
-          "scale": [
-            0.041393768042325976,
-            0.05000000074505806,
-            0.050000376999378207
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "ElevatorWall (2)",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "ModelComponent": {
-          "model": "ART1_bars_low.fbx",
-          "isSkinFile": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "51c38c6bcf64594eb23f5477fb41a92e",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1411,
-      "components": {
-        "IDComponent": {
-          "guid": "42dd3e6e82a7db4b89f54c3564a4ef24"
-        },
-        "Transform": {
-          "position": [
-            -24.747726440429689,
-            0.0,
-            30.66478157043457
+            0.00013446807861328125,
+            -0.6669999957084656,
+            -3.820220947265625
           ],
           "rotation": [
             0.0,
@@ -69470,204 +69349,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_bars_low.fbx_pCylinder1_mesh0",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "42698273f1db5b47b3ad5395812ec36b"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "3d98b25d667b2541bc380e161f627a6b",
-          "depth": 2
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1412,
-      "components": {
-        "IDComponent": {
-          "guid": "706c4267fcd4d8439ed23c495d38bd16"
-        },
-        "Transform": {
-          "position": [
-            8.34263801574707,
-            -6.0129218101501469,
-            7.9548187255859379
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            0.0413937084376812,
-            0.05000000074505806,
-            0.05000000074505806
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "ElevatorWall (1)",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "ModelComponent": {
-          "model": "ART1_bars_low.fbx",
-          "isSkinFile": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "51c38c6bcf64594eb23f5477fb41a92e",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1413,
-      "components": {
-        "IDComponent": {
-          "guid": "414fdb277e02ee45988c5f133d7879c2"
-        },
-        "Transform": {
-          "position": [
-            -24.747726440429689,
-            0.0,
-            30.66478157043457
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_bars_low.fbx_pCylinder1_mesh0",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "42698273f1db5b47b3ad5395812ec36b"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "706c4267fcd4d8439ed23c495d38bd16",
-          "depth": 2
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1414,
-      "components": {
-        "IDComponent": {
-          "guid": "ca58ab16c996ad4faa6ced5836c1e46e"
-        },
-        "Transform": {
-          "position": [
-            -6.689592361450195,
-            -6.01298189163208,
-            8.33829116821289
-          ],
-          "rotation": [
-            0.0,
-            -0.7077754139900208,
-            0.0,
-            0.7064375281333923
-          ],
-          "scale": [
-            0.041393768042325976,
-            0.05000000074505806,
-            0.050000376999378207
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "ElevatorWall",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "ModelComponent": {
-          "model": "ART1_bars_low.fbx",
-          "isSkinFile": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "51c38c6bcf64594eb23f5477fb41a92e",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1415,
-      "components": {
-        "IDComponent": {
-          "guid": "a1e0bb58abc39a4c9e667ce2ea4d50b9"
-        },
-        "Transform": {
-          "position": [
-            -24.747726440429689,
-            0.0,
-            30.66478157043457
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_bars_low.fbx_pCylinder1_mesh0",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "42698273f1db5b47b3ad5395812ec36b"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "ca58ab16c996ad4faa6ced5836c1e46e",
-          "depth": 2
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1416,
-      "components": {
-        "IDComponent": {
-          "guid": "dd9f059f7f3546458a53665e5ace5802"
-        },
-        "Transform": {
-          "position": [
-            -22.318931579589845,
-            1.392836570739746,
-            37.83201599121094
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Empty Entity",
+          "name": "ElevatorCollider (3)",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -69693,172 +69375,14 @@
           "roty": false,
           "rotz": false,
           "collidersize": [
-            17.950000762939454,
-            1.0,
-            13.899999618530274
+            5.849999904632568,
+            2.0999999046325685,
+            5.5
           ]
         },
         "HierarchyComponent": {
-          "parentGuid": "51c38c6bcf64594eb23f5477fb41a92e",
+          "parentGuid": "9bee57bf237a4942b85249b1fa664277",
           "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1417,
-      "components": {
-        "IDComponent": {
-          "guid": "d7713054c67e6046b37734a3d4ec61bd"
-        },
-        "Transform": {
-          "position": [
-            -6.574999809265137,
-            -5.9631147384643559,
-            -8.15411376953125
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            0.0413937084376812,
-            0.05000000074505806,
-            0.05000000074505806
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "ElevatorDoor",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "ModelComponent": {
-          "model": "ART1_bars_low.fbx",
-          "isSkinFile": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "51c38c6bcf64594eb23f5477fb41a92e",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1418,
-      "components": {
-        "IDComponent": {
-          "guid": "8a1027b198a7b3478f4b04312670b688"
-        },
-        "Transform": {
-          "position": [
-            -24.747726440429689,
-            0.0,
-            30.66478157043457
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_bars_low.fbx_pCylinder1_mesh0",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "42698273f1db5b47b3ad5395812ec36b"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "d7713054c67e6046b37734a3d4ec61bd",
-          "depth": 2
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1419,
-      "components": {
-        "IDComponent": {
-          "guid": "82ea05f1384f0b46a4af82fab873b858"
-        },
-        "Transform": {
-          "position": [
-            8.388662338256836,
-            -5.56846284866333,
-            -7.1313934326171879
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            0.05000000074505806,
-            0.05000000074505806,
-            0.05000000074505806
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "ElevatorFloor",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "ModelComponent": {
-          "model": "ART1_floor_low.fbx",
-          "isSkinFile": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "51c38c6bcf64594eb23f5477fb41a92e",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 1420,
-      "components": {
-        "IDComponent": {
-          "guid": "7c09b665c0efc64da2530d7d14cdf95e"
-        },
-        "Transform": {
-          "position": [
-            -23.57988166809082,
-            0.0,
-            34.19743728637695
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_floor_low.fbx_floor_mesh0",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "09bedbcf1f780b41a2b642af90d65e0d"
-        },
-        "HierarchyComponent": {
-          "parentGuid": "82ea05f1384f0b46a4af82fab873b858",
-          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -69907,11 +69431,11 @@
     "vignetteFalloff": 0.20000000298023225,
     "vignetteMapStrength": 1.0,
     "vignetteMapRGBModifier": [
-      0.0,
-      0.0,
-      0.0
+      1.0,
+      1.0,
+      1.0
     ],
-    "vignetteMapPath": "",
+    "vignetteMapPath": "../Resources/Textures/White_Vignette_Alpha.png",
     "bloomStrength": 0.03999999910593033,
     "filmGrainEnabled": false,
     "grainIntensity": 0.014999999664723874,

@@ -14,7 +14,7 @@ public class CutsceneVideo: MonoBehaviour
     private bool finished = false;
     private float elapsedTime = 0f;
 
-
+    private GameObject blackScreen;
 
     void Start()
     {
@@ -30,6 +30,8 @@ public class CutsceneVideo: MonoBehaviour
         {
             Debug.LogError("CutsceneVideo: Failed to load video '" + VideoFileName + "'.");
         }
+
+        blackScreen = transform.GetChild(0).gameObject;
     }
 
     void Update()
@@ -39,12 +41,12 @@ public class CutsceneVideo: MonoBehaviour
         elapsedTime += Time.deltaTime;
 
 
-
         if (elapsedTime >= videoDurationSeconds)
         {
             Debug.Log("[CutsceneVideo] Timeout reached (" + videoDurationSeconds + "s)");
 
             finished = true;
+            blackScreen.SetActive(true);
             VideoManager.Stop();
             VideoManager.Free(VideoFileName);
             SceneManager.LoadScene(nextSceneName);
