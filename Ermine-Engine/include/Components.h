@@ -2013,9 +2013,6 @@ namespace Ermine
 		int currentVoiceIndex{ -1 };
 		int currentVoiceChannelId{ -1 };
 
-		// SFX channel tracking (name -> channel ID) for stoppable SFX
-		std::unordered_map<std::string, int> sfxChannels;
-
 		GlobalAudioComponent() = default;
 
 		// Music management
@@ -2050,7 +2047,6 @@ namespace Ermine
 		// SFX management
 		void PlaySFX(int index);
 		void PlaySFX(const std::string& name);
-		void StopSFX(const std::string& name);
 		void SetSFXVolume(float volume);
 
 		// Utility functions

@@ -85,9 +85,6 @@ public class DisableLightCone : MonoBehaviour
             //Physics.SetPosition((ulong)lightCone.GetInstanceID(), lightCone.transform.position);
             lightCone.SetActive(false);
         }
-
-        GlobalAudio.StopSFX("LightDamageLoop");
-        GlobalAudio.PlaySFX("LightDisable");
     }
 
     void RespawnLight()

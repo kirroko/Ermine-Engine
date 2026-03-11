@@ -151,12 +151,10 @@ public class SpotLightTrigger : MonoBehaviour
     void OnSpotEnter()
     {
         Debug.Log("Player entered spotlight cone");
-        GlobalAudio.PlaySFX("LightDamageLoop");
     }
 
     void OnSpotExit()
     {
         Debug.Log("Player left spotlight cone");
-        GlobalAudio.StopSFX("LightDamageLoop");
     }
 }
