@@ -223,7 +223,7 @@ public class PlayerController2 : MonoBehaviour
                     interactTimer = 0f;
                 }
 
-                if (obj.name == "Book1" && interactTimer > 1f)
+                if (obj.name == "Paper1" && interactTimer > 1f)
                 {
                     // Collect book
                     GlobalAudio.PlaySFX("BookPickUp");
@@ -245,7 +245,7 @@ public class PlayerController2 : MonoBehaviour
                     obj.SetActive(false);
                     interactTimer = 0f;
                 }
-                if (obj.name == "Book2" && interactTimer > 1f)
+                if (obj.name == "Paper2" && interactTimer > 1f)
                 {
                     // Collect book
                     GlobalAudio.PlaySFX("BookPickUp");
@@ -262,7 +262,7 @@ public class PlayerController2 : MonoBehaviour
                     obj.SetActive(false);
                     interactTimer = 0f;
                 }
-                if (obj.name == "Book3" && interactTimer > 1f)
+                if (obj.name == "Paper3" && interactTimer > 1f)
                 {
                     // Collect book
                     GlobalAudio.PlaySFX("BookPickUp");
@@ -279,7 +279,7 @@ public class PlayerController2 : MonoBehaviour
                     obj.SetActive(false);
                     interactTimer = 0f;
                 }
-                if (obj.name == "Book4" && interactTimer > 1f)
+                if (obj.name == "Paper4" && interactTimer > 1f)
                 {
                     // Collect book
                     GlobalAudio.PlaySFX("BookPickUp");
