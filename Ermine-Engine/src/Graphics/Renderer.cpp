@@ -4291,6 +4291,7 @@ void Renderer::CleanupPostProcessBuffer()
  */
 void Renderer::UpdateLightsUBO(const Mtx44& view)
 {
+	(void)view;
 	const auto& ecs = Ermine::ECS::GetInstance();
 	if (!m_LightSystem) {
 		return;
@@ -4358,7 +4359,7 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 	Frustum frustum;
 	glm::mat4 viewProj = projGlm * viewGlm;
 	frustum.ExtractFromViewProjection(viewProj);
-	const glm::mat4 sortView = ToGlm(view);
+	const glm::mat4 sortView = viewGlm;
 
 	struct SortedLightCandidate
 	{
