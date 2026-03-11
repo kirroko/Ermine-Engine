@@ -8,19 +8,19 @@ public class Chase : MonoBehaviour
     // If player is too far, stop chasing and return to previous state
     public float losePlayerDistance = 18.0f;
 
-    // Line of sight (raycast) settings
+    // LOS
     public float viewDistance = 25.0f;
     public float rayHeight = 0.8f;
     public float rayForwardOffset = 2.0f; // push ray out of own collider
     public float loseSightGraceTime = 0.35f; // prevents flicker behind corners
     public float attackEnterDistance = 5.0f;
+    public float closeDetectDistance = 2.0f;
 
     public float repathInterval = 0.10f;
 
     private GameObject playerGO;
     private ulong entityID;
 
-    //private bool collidingWithPlayer = false;
     private float repathTimer = 0f;
 
     // counts down while LOS is lost; resets while LOS is true
@@ -32,6 +32,10 @@ public class Chase : MonoBehaviour
     private float stunTimer = 0.0f;
     public static bool RightClickStunArmed = false;
     private float armTimer = 0.0f;
+
+    private Animator anim;
+    public float stunRecoverDelay = 5.0f;
+    private float recoverTimer = 0.0f;
 
     private void CachePlayerIfNeeded()
     {
@@ -47,6 +51,12 @@ public class Chase : MonoBehaviour
         isStunned = true;
         stunTimer = stunDuration;
 
+        if (anim != null)
+        {
+            anim.SetBool("IsMoving", false);
+            anim.SetBool("IsHit", true);
+        }
+
         // stop immediately while stunned
         NavAgent.SetDestination(entityID, transform.position);
     }
@@ -54,6 +64,7 @@ public class Chase : MonoBehaviour
     void Start()
     {
         entityID = (ulong)gameObject.GetInstanceID();
+        anim = GetComponent<Animator>();
         CachePlayerIfNeeded();
         loseSightTimer = loseSightGraceTime;
     }
@@ -62,11 +73,18 @@ public class Chase : MonoBehaviour
     {
         if (playerGO == null) return false;
 
-        Vector3 origin = transform.position
+        Vector3 enemyPos = transform.position;
+        Vector3 playerPos = playerGO.transform.position;
+        Vector3 flatToPlayer = playerPos - enemyPos;
+        flatToPlayer.y = 0f;
+        if (flatToPlayer.Magnitude <= closeDetectDistance)
+            return true;
+
+        Vector3 origin = enemyPos
                        + new Vector3(0f, rayHeight, 0f)
                        + transform.forward * rayForwardOffset;
 
-        Vector3 toPlayer = playerGO.transform.position - origin;
+        Vector3 toPlayer = playerPos - origin;
 
         float dist = toPlayer.Magnitude;
         if (dist <= 0.0001f) return true;
@@ -95,42 +113,67 @@ public class Chase : MonoBehaviour
 
         if (isStunned)
         {
-            //Debug.Log("stunned");
+            if (anim != null)
+            {
+                anim.SetBool("IsMoving", false);
+                anim.SetBool("IsHit", true);
+            }
+
             stunTimer -= Time.deltaTime;
             if (stunTimer <= 0.0f)
             {
                 isStunned = false;
+                recoverTimer = stunRecoverDelay;
+
+                if (anim != null)
+                    anim.SetBool("IsHit", false);
             }
-            return; // do NOTHING while stunned
+            return;
         }
+
+        if (recoverTimer > 0.0f)
+        {
+            recoverTimer -= Time.deltaTime;
+
+            if (anim != null)
+                anim.SetBool("IsMoving", false);
+
+            NavAgent.SetDestination(entityID, transform.position);
+            return;
+        }
+
+        if (anim != null)
+            anim.SetBool("IsMoving", true);
 
         CachePlayerIfNeeded();
         if (playerGO == null) return;
 
         float dist = (playerGO.transform.position - transform.position).Magnitude;
 
-        // LOS timer logic
         bool hasLOS = HasLineOfSightToPlayer();
         if (hasLOS)
             loseSightTimer = loseSightGraceTime;
         else
             loseSightTimer -= Time.deltaTime;
 
-        // Too far OR lost sight long enough back to previous
         if (dist > losePlayerDistance || loseSightTimer <= 0f)
         {
+            if (anim != null)
+                anim.SetBool("IsMoving", false);
+
             StateMachine.RequestPreviousState(entityID);
             return;
         }
 
-        // If near player go to Attack
         if (dist <= attackEnterDistance && hasLOS)
         {
+            if (anim != null)
+                anim.SetBool("IsMoving", false);
+
             StateMachine.RequestNextState(entityID);
             return;
         }
 
-        // Keep chasing, update destination periodically
         repathTimer -= Time.deltaTime;
         if (repathTimer <= 0f)
         {
@@ -141,9 +184,6 @@ public class Chase : MonoBehaviour
 
     void OnCollisionEnter(Collision col)
     {
-        //if (col.gameObject.name == playerName)
-        //    collidingWithPlayer = true;
-
         if (!RightClickStunArmed) return;
         if (col.gameObject.name == "Sphere")
         {
@@ -155,9 +195,6 @@ public class Chase : MonoBehaviour
 
     void OnCollisionStay(Collision col)
     {
-        //if (col.gameObject.name == playerName)
-        //    collidingWithPlayer = true;
-
         if (!RightClickStunArmed) return;
         if (col.gameObject.name == "Sphere")
         {
@@ -169,7 +206,5 @@ public class Chase : MonoBehaviour
 
     void OnCollisionExit(Collision col)
     {
-        //if (col.gameObject.name == playerName)
-        //    collidingWithPlayer = false;
     }
 }

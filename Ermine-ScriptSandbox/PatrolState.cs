@@ -40,8 +40,13 @@ public class Patrol : MonoBehaviour
     public float viewDistance = 15.0f;
     public float rayHeight = 0.8f;
     public float rayForwardOffset = 2.0f;
+    public float closeDetectDistance = 2.0f;
 
     private Vector3 patrolCenter;
+
+    private Animator anim;
+    public float stunRecoverDelay = 5.0f;
+    private float recoverTimer = 0.0f;
 
     private void CachePlayerIfNeeded()
     {
@@ -54,11 +59,19 @@ public class Patrol : MonoBehaviour
         CachePlayerIfNeeded();
         if (playerGO == null) return false;
 
-        Vector3 origin = transform.position
+        Vector3 enemyPos = transform.position;
+        Vector3 playerPoint = playerGO.transform.position;
+
+        // fallback for very close targets on tiny platforms
+        Vector3 flatToPlayer = playerPoint - enemyPos;
+        flatToPlayer.y = 0f;
+        if (flatToPlayer.Magnitude <= closeDetectDistance)
+            return true;
+
+        Vector3 origin = enemyPos
                        + new Vector3(0f, rayHeight, 0f)
                        + transform.forward * rayForwardOffset;
 
-        Vector3 playerPoint = playerGO.transform.position;
         Vector3 toPlayer = playerPoint - origin;
 
         float dist = toPlayer.Magnitude;
@@ -119,6 +132,12 @@ public class Patrol : MonoBehaviour
         isStunned = true;
         stunTimer = stunDuration;
 
+        if (anim != null)
+        {
+            anim.SetBool("IsMoving", false);
+            anim.SetBool("IsHit", true);
+        }
+
         // stop immediately while stunned
         NavAgent.SetDestination(entityID, transform.position);
     }
@@ -126,6 +145,7 @@ public class Patrol : MonoBehaviour
     void Start()
     {
         entityID = (ulong)gameObject.GetInstanceID();
+        anim = GetComponent<Animator>();
         CachePlayerIfNeeded();
 
         // Build patrol points around the spawn position
@@ -148,11 +168,21 @@ public class Patrol : MonoBehaviour
 
         if (isStunned)
         {
+            if (anim != null)
+            {
+                anim.SetBool("IsMoving", false);
+                anim.SetBool("IsHit", true);
+            }
+
             //Debug.Log("stunned");
             stunTimer -= Time.deltaTime;
             if (stunTimer <= 0.0f)
             {
                 isStunned = false;
+                recoverTimer = stunRecoverDelay;
+
+                if (anim != null)
+                    anim.SetBool("IsHit", false);
 
                 // Resume the current target after stun ends
                 if (patrolPoints != null && patrolPoints.Length > 0 && currentIndex >= 0)
@@ -160,6 +190,19 @@ public class Patrol : MonoBehaviour
             }
             return; // do NOTHING while stunned
         }
+        if (recoverTimer > 0.0f)
+        {
+            recoverTimer -= Time.deltaTime;
+
+            if (anim != null)
+                anim.SetBool("IsMoving", false);
+
+            NavAgent.SetDestination(entityID, transform.position);
+            return;
+        }
+
+        if (anim != null)
+            anim.SetBool("IsMoving", true);
 
         if (HasLineOfSightToPlayer())
         {

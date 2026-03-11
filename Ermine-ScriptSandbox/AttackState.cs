@@ -9,11 +9,12 @@ public class Attack : MonoBehaviour
     // If player no longer close enough go back to Chase
     public float disengageDistance = 8.0f;
 
-    // Line-of-sight (raycast) settings
+    // LOS
     public float viewDistance = 18.0f;
     public float rayHeight = 0.8f;
     public float rayForwardOffset = 2.0f; // push ray out of own collider
     public float loseSightGraceTime = 0.25f; // prevents flicker behind corners
+    public float closeDetectDistance = 2.0f;
 
     // Damage settings
     public float damagePerTick = 10f;
@@ -36,6 +37,10 @@ public class Attack : MonoBehaviour
     public static bool RightClickStunArmed = false;
     private float armTimer = 0.0f;
 
+    private Animator anim;
+    public float stunRecoverDelay = 5.0f;
+    private float recoverTimer = 0.0f;
+
     // replace to this
     // Name of the entity with UIHealthbarComponent (must match your scene)
     //public string playerHealthBarName = "Healthbar";
@@ -49,7 +54,12 @@ public class Attack : MonoBehaviour
         isStunned = true;
         stunTimer = stunDuration;
 
-        // stop immediately while stunned
+        if (anim != null)
+        {
+            anim.SetBool("IsMoving", false);
+            anim.SetBool("IsHit", true);
+        }
+
         NavAgent.SetDestination(entityID, transform.position);
     }
 
@@ -62,6 +72,7 @@ public class Attack : MonoBehaviour
     void Start()
     {
         entityID = (ulong)gameObject.GetInstanceID();
+        anim = GetComponent<Animator>();
         CachePlayerIfNeeded();
         tickTimer = tickInterval;
         loseSightTimer = loseSightGraceTime;
@@ -74,12 +85,18 @@ public class Attack : MonoBehaviour
     {
         if (playerGO == null) return false;
 
-        Vector3 origin = transform.position
+        Vector3 enemyPos = transform.position;
+        Vector3 playerPos = playerGO.transform.position;
+        Vector3 flatToPlayer = playerPos - enemyPos;
+        flatToPlayer.y = 0f;
+        if (flatToPlayer.Magnitude <= closeDetectDistance)
+            return true;
+
+        Vector3 origin = enemyPos
                        + new Vector3(0f, rayHeight, 0f)
                        + transform.forward * rayForwardOffset;
 
-        Vector3 playerPoint = playerGO.transform.position;
-        Vector3 toPlayer = playerPoint - origin;
+        Vector3 toPlayer = playerPos - origin;
 
         float dist = toPlayer.Magnitude;
         if (dist <= 0.0001f) return true;
@@ -96,6 +113,22 @@ public class Attack : MonoBehaviour
                hit.transform.gameObject.name == playerName;
     }
 
+    private void FacePlayer()
+    {
+        if (playerGO == null) return;
+
+        Vector3 toPlayer = playerGO.transform.position - transform.position;
+        toPlayer.y = 0f;
+
+        float dist = toPlayer.Magnitude;
+        if (dist <= 0.0001f) return;
+
+        // yaw in degrees
+        float yaw = (float)(Math.Atan2(toPlayer.x, toPlayer.z) * 180.0 / Math.PI);
+
+        Physics.SetRotationEuler(entityID, new Vector3(0f, yaw, 0f));
+    }
+
     void Update()
     {
         if (Input.GetMouseButtonDown(1))
@@ -108,13 +141,33 @@ public class Attack : MonoBehaviour
 
         if (isStunned)
         {
-            //Debug.Log("stunned");
+            if (anim != null)
+            {
+                anim.SetBool("IsMoving", false);
+                anim.SetBool("IsHit", true);
+            }
+
             stunTimer -= Time.deltaTime;
             if (stunTimer <= 0.0f)
             {
                 isStunned = false;
+                recoverTimer = stunRecoverDelay;
+
+                if (anim != null)
+                    anim.SetBool("IsHit", false);
             }
-            return; // do NOTHING while stunned
+            return;
+        }
+
+        if (recoverTimer > 0.0f)
+        {
+            recoverTimer -= Time.deltaTime;
+
+            if (anim != null)
+                anim.SetBool("IsMoving", false);
+
+            NavAgent.SetDestination(entityID, transform.position);
+            return;
         }
 
         CachePlayerIfNeeded();
@@ -122,14 +175,12 @@ public class Attack : MonoBehaviour
 
         float distToPlayer = (playerGO.transform.position - transform.position).Magnitude;
 
-        // LOS timer logic
         bool hasLOS = HasLineOfSightToPlayer();
         if (hasLOS)
             loseSightTimer = loseSightGraceTime;
         else
             loseSightTimer -= Time.deltaTime;
 
-        // If too far OR lost LOS back to Chase
         if (distToPlayer > disengageDistance || loseSightTimer <= 0f)
         {
             StateMachine.RequestPreviousState(entityID);
@@ -137,9 +188,11 @@ public class Attack : MonoBehaviour
             return;
         }
 
-        // If NOT in attack range, move towards player but stay in Attack state
         if (distToPlayer > attackRange)
         {
+            if (anim != null)
+                anim.SetBool("IsMoving", true);
+
             tickTimer = tickInterval; // don’t damage while out of range
 
             repathTimer -= Time.deltaTime;
@@ -152,6 +205,11 @@ public class Attack : MonoBehaviour
         }
 
         // IN attack range, stop moving and deal damage
+        FacePlayer();
+
+        if (anim != null)
+            anim.SetBool("IsMoving", false);
+
         NavAgent.SetDestination(entityID, transform.position);
 
         tickTimer -= Time.deltaTime;
@@ -161,7 +219,6 @@ public class Attack : MonoBehaviour
             tickTimer = tickInterval;
         }
     }
-
 
     private void DealDamageToPlayer(float dmg)
     {

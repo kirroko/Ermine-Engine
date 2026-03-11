@@ -74,6 +74,7 @@
     <Compile Include="AttackState.cs" />
     <Compile Include="Credits.cs" />
     <Compile Include="CutsceneVideo.cs" />
+    <Compile Include="GearRotateAnimationTest2.cs" />
     <Compile Include="GearRotateAnimationTest.cs" />
     <Compile Include="IdleState.cs" />
     <Compile Include="Level2KeySystem\UnlockDoor.cs" />
