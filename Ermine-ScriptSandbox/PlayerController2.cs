@@ -251,10 +251,14 @@ public class PlayerController2 : MonoBehaviour
                     GlobalAudio.PlaySFX("BookPickUp");
                     GlobalAudio.PlayVoice("Clue2");
                     GameObject msg = GameObject.Find("Clue2");
+                    GameObject hint2 = GameObject.Find("Hint2");
+                    GameObject hint3 = GameObject.Find("Hint3");
 
                     if (msg != null)
                     {
                         msg.SetActive(true);
+                        hint2.SetActive(false);
+                        hint3.SetActive(true);
                         activeClueMessage = msg;
                         clueMessageTimer = 0f;
                     }
@@ -295,6 +299,25 @@ public class PlayerController2 : MonoBehaviour
 
                     obj.SetActive(false);
                     interactTimer = 0f;
+
+                }
+                if (obj.name == "Paper5" && interactTimer > 1f)
+                {
+                    // Collect book
+                    GlobalAudio.PlaySFX("BookPickUp");
+                    //GlobalAudio.PlayVoice("Clue5");
+                    GameObject msg = GameObject.Find("Clue5");
+
+                    if (msg != null)
+                    {
+                        msg.SetActive(true);
+                        activeClueMessage = msg;
+                        clueMessageTimer = 0f;
+                    }
+
+                    obj.SetActive(false);
+                    interactTimer = 0f;
+
                 }
                 if (obj.name == "Book" && interactTimer > 1f)
                 {

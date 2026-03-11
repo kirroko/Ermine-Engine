@@ -128,6 +128,15 @@ public class UnlockDoor : MonoBehaviour
         {
             UnlockDoorBool();
             Debug.Log("Door Unlocked!");
+
+            GameObject hint = GameObject.Find("Hint4");
+            GameObject keyHint = GameObject.Find("Hint5");
+
+            if (hint != null && keyHint != null)
+            {
+                hint.SetActive(false);
+                keyHint.SetActive(true);
+            }
         }
     }
 }
