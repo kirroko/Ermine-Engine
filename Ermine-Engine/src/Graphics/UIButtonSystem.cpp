@@ -23,6 +23,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "GLFW/glfw3.h"
 #include "EditorGUI.h"
 #include "Window.h"
+#include "Renderer.h"
 
 #ifdef EE_EDITOR
 #include "EditorGUI.h"
@@ -481,104 +482,98 @@ namespace Ermine
                 TogglePauseMenu();
                 EE_CORE_INFO("Resume button clicked");
             }
+            // ===== Old Flow (Audio/Controls as separate main menu buttons) =====
             else if (button.actionData == "OpenControls")
             {
-                // Show ControlsScreen, hide main menu buttons
                 SetEntityActiveByName("ControlsScreen", true);
                 SetEntityActiveByName("Play Button", false);
-                SetEntityActiveByName("Controls", false);  // Use actual button name
+                SetEntityActiveByName("Controls", false);
                 SetEntityActiveByName("Audio", false);
                 SetEntityActiveByName("Quit Button", false);
-            }
-            else if (button.actionData == "CloseControlsScreen")
-            {
-                // Hide ControlsScreen, show main menu buttons
-                SetEntityActiveByName("ControlsScreen", false);
-                SetEntityActiveByName("Play Button", true);
-                SetEntityActiveByName("Controls", true);  // Use actual button name
-                SetEntityActiveByName("Audio", true);
-                SetEntityActiveByName("Quit Button", true);
+                SetEntityActiveByName("Title", false);
             }
             else if (button.actionData == "OpenSettings")
             {
-                auto& ecs = ECS::GetInstance();
-
-                // Show SettingsMenu
                 SetEntityActiveByName("SettingsMenu", true);
-
-                // Hide all buttons EXCEPT Back Button (which is inside SettingsMenu)
-                for (EntityID e = 0; e < MAX_ENTITIES; ++e)
-                {
-                    if (!ecs.IsEntityValid(e)) continue;
-                    if (!ecs.HasComponent<ObjectMetaData>(e)) continue;
-                    if (!ecs.HasComponent<UIButtonComponent>(e)) continue;
-
-                    auto& meta = ecs.GetComponent<ObjectMetaData>(e);
-
-                    // Don't hide buttons that are inside SettingsMenu
-                    if (ecs.HasComponent<HierarchyComponent>(e))
-                    {
-                        auto& hierarchy = ecs.GetComponent<HierarchyComponent>(e);
-                        EntityID parent = hierarchy.parent;
-
-                        // Check if parent is SettingsMenu
-                        if (ecs.IsEntityValid(parent) && ecs.HasComponent<ObjectMetaData>(parent))
-                        {
-                            auto& parentMeta = ecs.GetComponent<ObjectMetaData>(parent);
-                            if (parentMeta.name == "SettingsMenu")
-                            {
-                                continue; // Skip hiding this button
-                            }
-                        }
-                    }
-
-                    // Hide all other buttons
-                    meta.selfActive = false;
-                }
-
-                // Also hide backgrounds
-                SetEntityActiveByName("PauseBackground", false);
-                //SetEntityActiveByName("MenuBackground", false);
+                SetEntityActiveByName("Play Button", false);
+                SetEntityActiveByName("Controls", false);
+                SetEntityActiveByName("Audio", false);
+                SetEntityActiveByName("Quit Button", false);
+                SetEntityActiveByName("Title", false);
             }
             else if (button.actionData == "CloseSettings")
             {
-                auto& ecs = ECS::GetInstance();
-
-                // Hide SettingsMenu
                 SetEntityActiveByName("SettingsMenu", false);
+                SetEntityActiveByName("Play Button", true);
+                SetEntityActiveByName("Controls", true);
+                SetEntityActiveByName("Audio", true);
+                SetEntityActiveByName("Quit Button", true);
+                SetEntityActiveByName("Title", true);
+            }
+            // ===== New Settings Page Flow =====
+            else if (button.actionData == "OpenSettingsPage")
+            {
+                // Hide main menu buttons
+                SetEntityActiveByName("Play Button", false);
+                SetEntityActiveByName("Settings Button", false);
+                SetEntityActiveByName("Settings_Button", false);
+                SetEntityActiveByName("Quit Button", false);
+                SetEntityActiveByName("Title", false);
 
-                // Show all buttons that were hidden
-                for (EntityID e = 0; e < MAX_ENTITIES; ++e)
-                {
-                    if (!ecs.IsEntityValid(e)) continue;
-                    if (!ecs.HasComponent<ObjectMetaData>(e)) continue;
-                    if (!ecs.HasComponent<UIButtonComponent>(e)) continue;
+                // Hide pause menu buttons
+                SetEntityActiveByName("ResumeButton", false);
+                SetEntityActiveByName("Exit_Game", false);
+                SetEntityActiveByName("PauseBackground", false);
 
-                    auto& meta = ecs.GetComponent<ObjectMetaData>(e);
+                // Show settings page (Audio/Controls/Video buttons)
+                SetEntityActiveByName("SettingsPage", true);
+            }
+            // Settings Page -> Main Menu
+            else if (button.actionData == "CloseSettingsPage")
+            {
+                // Hide settings page
+                SetEntityActiveByName("SettingsPage", false);
 
-                    // Don't show buttons that are inside SettingsMenu
-                    if (ecs.HasComponent<HierarchyComponent>(e))
-                    {
-                        auto& hierarchy = ecs.GetComponent<HierarchyComponent>(e);
-                        EntityID parent = hierarchy.parent;
+                // Show main menu buttons
+                SetEntityActiveByName("Play Button", true);
+                SetEntityActiveByName("Settings Button", true);
+                SetEntityActiveByName("Settings_Button", true);
+                SetEntityActiveByName("Quit Button", true);
+                SetEntityActiveByName("Title", true);
 
-                        if (ecs.IsEntityValid(parent) && ecs.HasComponent<ObjectMetaData>(parent))
-                        {
-                            auto& parentMeta = ecs.GetComponent<ObjectMetaData>(parent);
-                            if (parentMeta.name == "SettingsMenu")
-                            {
-                                continue; // Skip showing this button
-                            }
-                        }
-                    }
-
-                    // Show all other buttons
-                    meta.selfActive = true;
-                }
-
-                // Show backgrounds
+                // Show pause menu buttons
+                SetEntityActiveByName("ResumeButton", true);
+                SetEntityActiveByName("Exit_Game", true);
                 SetEntityActiveByName("PauseBackground", true);
-                //SetEntityActiveByName("MenuBackground", true);
+            }
+            // Settings Page -> Audio (existing SettingsMenu with sliders)
+            else if (button.actionData == "OpenSettingsAudio")
+            {
+                SetEntityActiveByName("SettingsPage", false);
+                SetEntityActiveByName("SettingsMenu", true);
+            }
+            // Settings Page -> Controls
+            else if (button.actionData == "OpenSettingsControls")
+            {
+                SetEntityActiveByName("SettingsPage", false);
+                SetEntityActiveByName("ControlsScreen", true);
+            }
+            // Settings Page -> Video (gamma, brightness, etc.)
+            else if (button.actionData == "OpenSettingsVideo")
+            {
+                SetEntityActiveByName("SettingsPage", false);
+                SetEntityActiveByName("VideoSettings", true);
+            }
+            // Back from any sub-page -> Settings Page
+            else if (button.actionData == "BackToSettingsPage")
+            {
+                // Hide all sub-pages
+                SetEntityActiveByName("SettingsMenu", false);
+                SetEntityActiveByName("ControlsScreen", false);
+                SetEntityActiveByName("VideoSettings", false);
+
+                // Show settings page
+                SetEntityActiveByName("SettingsPage", true);
             }
             else if (button.actionData == "ShowTeleportInfo")
             {
@@ -860,8 +855,19 @@ namespace Ermine
         }
         else if (slider.target == UISliderComponent::SliderTarget::Custom)
         {
-            // Custom target handling can be extended here
-            EE_CORE_INFO("Custom slider '{}' value: {}", slider.customTarget, slider.value);
+            if (slider.customTarget == "Gamma")
+            {
+                // Gamma range: slider 0.0-1.0 maps to gamma 2.8-1.6
+                // 2.2 is standard, lower gamma = brighter, higher gamma = darker
+                // Inverted so sliding right = brighter (lower gamma)
+                float gamma = 2.8f - (slider.value * 1.2f);
+                ecs.GetSystem<graphics::Renderer>()->m_Gamma = gamma;
+                EE_CORE_INFO("Gamma slider: value={}, gamma={}", slider.value, gamma);
+            }
+            else
+            {
+                EE_CORE_INFO("Custom slider '{}' value: {}", slider.customTarget, slider.value);
+            }
         }
     }
 }
