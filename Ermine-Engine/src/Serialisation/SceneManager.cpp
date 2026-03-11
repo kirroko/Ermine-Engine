@@ -22,6 +22,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "EditorGUI.h"
 #include "ScriptSystem.h"
 #include "AudioSystem.h"
+#include "VideoManager.h"
 #include "../../../Ermine-ResourcePipeline/xresource_pipeline_v2-main/dependencies/xstrtool/source/xstrtool.h"
 #include "NavMesh.h"
 
@@ -105,6 +106,19 @@ namespace
                 const auto& childID = ecs.GetComponent<Ermine::IDComponent>(childEid);
                 hc.childrenGuids.push_back(childID.guid);
             }
+        }
+    }
+
+    static void CleanupSceneRuntimeSystems(Ermine::ECS& ecs)
+    {
+        if (auto scriptSystem = ecs.GetSystem<Ermine::scripting::ScriptSystem>()) {
+            EE_CORE_INFO("Scene transition: Cleaning up all script instances before entity destruction");
+            scriptSystem->CleanupAllScripts();
+        }
+
+        if (auto videoSystem = ecs.GetSystem<Ermine::VideoManager>()) {
+            EE_CORE_INFO("Scene transition: Cleaning up all loaded videos");
+            videoSystem->CleanupAllVideos();
         }
     }
 
@@ -323,11 +337,8 @@ void SceneManager::ClearScene()
 {
     auto& ecs = Ermine::ECS::GetInstance();
     
-    // STEP 1: Clean up scripts before clearing entities
-    if (auto scriptSystem = ecs.GetSystem<Ermine::scripting::ScriptSystem>()) {
-        EE_CORE_INFO("ClearScene: Cleaning up all script instances before entity destruction");
-        scriptSystem->CleanupAllScripts();
-    }
+    // STEP 1: Clean up scene-scoped runtime systems before clearing entities.
+    CleanupSceneRuntimeSystems(ecs);
     
     // STEP 2: Clear physics
     if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
@@ -369,10 +380,7 @@ void SceneManager::OpenScene(const std::string& path)
     EE_CORE_INFO("Loading scene from: {}", path);
     auto& ecs = Ermine::ECS::GetInstance();
 
-    if (auto scriptSystem = ecs.GetSystem<Ermine::scripting::ScriptSystem>()) {
-        EE_CORE_INFO("Cleaning up all script instances before entity destruction");
-        scriptSystem->CleanupAllScripts();
-    }
+    CleanupSceneRuntimeSystems(ecs);
 
     for (Ermine::EntityID e = 0; e < Ermine::MAX_ENTITIES; ++e) {
         if (!ecs.IsEntityValid(e)) continue;
