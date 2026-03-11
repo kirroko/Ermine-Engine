@@ -24,7 +24,7 @@
           "masterVolume": 1.0,
           "musicVolume": 0.23999999463558198,
           "sfxVolume": 1.0,
-          "ambienceVolume": 0.1,
+          "ambienceVolume": 0.10000000149011612,
           "voiceVolume": 1.0,
           "autoPlay": true,
           "music": [
@@ -3600,7 +3600,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "490ca5a39afc2c41b9c5a1d4b4164568",
@@ -3679,7 +3679,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "4fd0da134ff2f6459444da5a7366ac20",
@@ -3758,7 +3758,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "05ed3152190e3040934d7fcfd1bc355f",
@@ -4338,7 +4338,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "c3a34379b1692040b018a4bad49faf8e",
@@ -4417,7 +4417,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "28f3404d4772554cbfc5c72eb50138ff",
@@ -12940,7 +12940,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "308d27ea2c592946a9751fa84e05207d",
@@ -13019,7 +13019,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "3407252a948d654f9107ccb42d3793de",
@@ -13098,7 +13098,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "fc9950d857260c4b8b9a204c1e0204d6",
@@ -13177,7 +13177,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "75c42cfa4632ff46b96e440b0936d984",
@@ -13256,7 +13256,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "30c00c032c2e44428259c5594241f695",
@@ -13335,7 +13335,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "25e2b278cf651e4799647454a8545fa3",
@@ -14399,13 +14399,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -14564,13 +14564,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -14953,13 +14953,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -15118,13 +15118,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -18267,13 +18267,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -18432,13 +18432,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -21683,11 +21683,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -22515,11 +22515,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -23347,11 +23347,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -24179,11 +24179,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -25011,11 +25011,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -25843,11 +25843,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -26675,11 +26675,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -27507,11 +27507,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -28339,11 +28339,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -29171,11 +29171,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -30495,13 +30495,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -30660,13 +30660,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -30825,13 +30825,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -30990,13 +30990,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -31155,13 +31155,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -31320,13 +31320,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -31485,13 +31485,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -35521,9 +35521,9 @@
         },
         "Transform": {
           "position": [
-            18.135536193847658,
+            16.5,
             -3.281564474105835,
-            -20.656715393066408
+            -20.533000946044923
           ],
           "rotation": [
             0.022506961598992349,
@@ -35562,8 +35562,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -35572,22 +35572,22 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "name": "Mesh_ART1_machine_low.fbx_glass_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "d1390df6197190429507c752b4df35b6"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "9f6602360104b849bd0957a0cfb94561",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -35601,8 +35601,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -35611,13 +35611,13 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh1",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -35626,7 +35626,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "9f6602360104b849bd0957a0cfb94561",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -35639,7 +35639,7 @@
         },
         "Transform": {
           "position": [
-            18.19853401184082,
+            16.5,
             5.705631732940674,
             -20.533103942871095
           ],
@@ -35680,8 +35680,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -35690,22 +35690,22 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "name": "Mesh_ART1_machine_low.fbx_glass_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "d1390df6197190429507c752b4df35b6"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "ccaad93e97b3aa409161df991d2eab55",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -35719,8 +35719,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -35729,13 +35729,13 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh1",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -35744,7 +35744,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "ccaad93e97b3aa409161df991d2eab55",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -35757,9 +35757,9 @@
         },
         "Transform": {
           "position": [
-            12.6043119430542,
+            12.003999710083008,
             1.2089999914169312,
-            15.258903503417969
+            13.458999633789063
           ],
           "rotation": [
             0.0,
@@ -35769,7 +35769,7 @@
           ],
           "scale": [
             0.019999518990516664,
-            0.029999999329447748,
+            0.019999999552965165,
             0.019999518990516664
           ]
         },
@@ -35798,8 +35798,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -35808,22 +35808,22 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "name": "Mesh_ART1_machine_low.fbx_glass_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "d1390df6197190429507c752b4df35b6"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "8d54249810b224458ff8b156a2bcae1e",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -35837,8 +35837,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -35847,13 +35847,13 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh1",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -35862,7 +35862,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "8d54249810b224458ff8b156a2bcae1e",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -37955,7 +37955,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "395ecb28130d7444aba8d0190292c00a",
@@ -38034,7 +38034,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "7161b3551ef2f946877911e9136f002e",
@@ -38515,7 +38515,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "c19dfc326951904a8583b2d34ddbf2e4",
@@ -39441,8 +39441,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -39451,22 +39451,22 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "name": "Mesh_ART1_machine_low.fbx_glass_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "d1390df6197190429507c752b4df35b6"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "c2e9f6157352724d9a9f9f9e4b44049a",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -39480,8 +39480,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -39490,13 +39490,13 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh1",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -39505,7 +39505,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "c2e9f6157352724d9a9f9f9e4b44049a",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -39559,8 +39559,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -39569,22 +39569,22 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "name": "Mesh_ART1_machine_low.fbx_glass_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "d1390df6197190429507c752b4df35b6"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "fa9eae4abe3acf40880da7998941c150",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -39598,8 +39598,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -39608,13 +39608,13 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh1",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -39623,7 +39623,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "fa9eae4abe3acf40880da7998941c150",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -39770,8 +39770,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -39780,22 +39780,22 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "name": "Mesh_ART1_machine_low.fbx_glass_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "d1390df6197190429507c752b4df35b6"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "777a39841ac33147ba9679f72d67fa84",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -39809,8 +39809,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -39819,13 +39819,13 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh1",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -39834,7 +39834,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "777a39841ac33147ba9679f72d67fa84",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -40160,7 +40160,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "7ded8ed94af0234183581517c4289d5b",
@@ -40239,7 +40239,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "dcc98e4ce4d4d84ea8410c8e7274b50d",
@@ -47541,13 +47541,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "jumpHeight": {
-                  "t": 0,
-                  "v": 2.0
-                },
                 "mouseHorSens": {
                   "t": 0,
                   "v": 0.10000000149011612
+                },
+                "jumpHeight": {
+                  "t": 0,
+                  "v": 2.0
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -47557,13 +47557,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "camDefaultY": {
-                  "t": 0,
-                  "v": 4.5
-                },
                 "jumpspeed": {
                   "t": 0,
                   "v": 5.0
+                },
+                "camDefaultY": {
+                  "t": 0,
+                  "v": 4.5
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -47575,11 +47575,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
@@ -49140,9 +49140,9 @@
         },
         "Transform": {
           "position": [
-            2.1566877365112306,
+            -0.20100000500679017,
             0.6808373332023621,
-            2.345691680908203
+            0.09300000220537186
           ],
           "rotation": [
             0.0,
@@ -49208,8 +49208,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -49218,22 +49218,22 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "name": "Mesh_ART1_machine_low.fbx_glass_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "d1390df6197190429507c752b4df35b6"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "356afeef8f80bc43841d0c84a7b59623",
-          "depth": 3
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -49247,8 +49247,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -49257,13 +49257,13 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh1",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -49272,7 +49272,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "356afeef8f80bc43841d0c84a7b59623",
-          "depth": 3
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -49321,9 +49321,9 @@
         },
         "Transform": {
           "position": [
-            2.5570850372314455,
+            0.23199999332427979,
             0.6808373928070068,
-            2.8635101318359377
+            0.18799999356269837
           ],
           "rotation": [
             0.0,
@@ -49389,8 +49389,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -49399,22 +49399,22 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "name": "Mesh_ART1_machine_low.fbx_glass_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "d1390df6197190429507c752b4df35b6"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "10fe389c8efab24684591b96d8494cbc",
-          "depth": 3
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -49428,8 +49428,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -49438,13 +49438,13 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh1",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -49453,7 +49453,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "10fe389c8efab24684591b96d8494cbc",
-          "depth": 3
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -51479,9 +51479,9 @@
         },
         "Transform": {
           "position": [
-            2.109438896179199,
-            0.5374548435211182,
-            2.5279464721679689
+            -0.20100000500679017,
+            0.5370000004768372,
+            0.19300000369548798
           ],
           "rotation": [
             0.0,
@@ -51563,12 +51563,12 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "name": "Mesh_ART1_machine_low.fbx_glass_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "d1390df6197190429507c752b4df35b6"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "b4e1abf5d2f8824e8cdd90ae3ec9f43f",
@@ -51602,12 +51602,12 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh1",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
+          "guid": "d1390df6197190429507c752b4df35b6"
         },
         "HierarchyComponent": {
           "parentGuid": "b4e1abf5d2f8824e8cdd90ae3ec9f43f",
@@ -54691,16 +54691,16 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_2_low.fbx_polySurface39_mesh2",
+          "name": "Mesh_ART1_machine_2_low.fbx_polySurface39_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "bb4e2f0ef016494bbf2ed481f20e3572"
+          "guid": "dd82d39b1ef5614eb166541582f9b844"
         },
         "HierarchyComponent": {
           "parentGuid": "1ac0e6c3652f0c49a1da5dccb0952e8c",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -54735,11 +54735,11 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "bb4e2f0ef016494bbf2ed481f20e3572"
+          "guid": "dd82d39b1ef5614eb166541582f9b844"
         },
         "HierarchyComponent": {
           "parentGuid": "1ac0e6c3652f0c49a1da5dccb0952e8c",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -54769,16 +54769,16 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_2_low.fbx_polySurface39_mesh0",
+          "name": "Mesh_ART1_machine_2_low.fbx_polySurface39_mesh2",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "bb4e2f0ef016494bbf2ed481f20e3572"
+          "guid": "dd82d39b1ef5614eb166541582f9b844"
         },
         "HierarchyComponent": {
           "parentGuid": "1ac0e6c3652f0c49a1da5dccb0952e8c",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -55187,7 +55187,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "528a9f7bdd4d1b40a38de607b7a55172",
@@ -55345,7 +55345,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "13244f2856e23a47a55f515b01f2f6e0"
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb"
         },
         "HierarchyComponent": {
           "parentGuid": "bb3e087d00f72a46a2e95212c815038b",
@@ -56676,9 +56676,9 @@
         },
         "Transform": {
           "position": [
-            2.1566877365112306,
+            -0.20100000500679017,
             0.6808373332023621,
-            2.345691680908203
+            0.19300000369548798
           ],
           "rotation": [
             0.0,
@@ -56744,8 +56744,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -56754,22 +56754,22 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "name": "Mesh_ART1_machine_low.fbx_glass_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "d1390df6197190429507c752b4df35b6"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "abcbe829286fc448aba6f1ffbaeaac3d",
-          "depth": 3
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -56783,8 +56783,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -56793,13 +56793,13 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh1",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -56808,7 +56808,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "abcbe829286fc448aba6f1ffbaeaac3d",
-          "depth": 3
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -60735,9 +60735,9 @@
         },
         "Transform": {
           "position": [
-            2.1566877365112306,
+            -0.20100000500679017,
             0.6808373332023621,
-            2.345691680908203
+            0.19300000369548798
           ],
           "rotation": [
             0.0,
@@ -60803,8 +60803,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -60813,22 +60813,22 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "name": "Mesh_ART1_machine_low.fbx_glass_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "d1390df6197190429507c752b4df35b6"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "3475b1c1d76c814d9f571ce7719cff05",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -60842,8 +60842,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -60852,13 +60852,13 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh1",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -60867,7 +60867,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "3475b1c1d76c814d9f571ce7719cff05",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -61499,9 +61499,9 @@
         },
         "Transform": {
           "position": [
-            2.1566877365112306,
+            -0.20100000500679017,
             0.6808373332023621,
-            2.345691680908203
+            0.19300000369548798
           ],
           "rotation": [
             0.0,
@@ -61567,8 +61567,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -61577,22 +61577,22 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "name": "Mesh_ART1_machine_low.fbx_glass_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "d1390df6197190429507c752b4df35b6"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "5d686860c7238f4995adc228bfff1041",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -61606,8 +61606,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -61616,13 +61616,13 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh1",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -61631,7 +61631,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "5d686860c7238f4995adc228bfff1041",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -64654,9 +64654,9 @@
         },
         "Transform": {
           "position": [
-            2.1566877365112306,
+            -0.20100000500679017,
             0.6808373332023621,
-            2.345691680908203
+            0.19300000369548798
           ],
           "rotation": [
             0.0,
@@ -64722,8 +64722,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -64732,22 +64732,22 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh0",
+          "name": "Mesh_ART1_machine_low.fbx_glass_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "d1390df6197190429507c752b4df35b6"
+          "guid": "54ff6cef95c39b46a02f7feaf309b2da"
         },
         "HierarchyComponent": {
           "parentGuid": "9922bf02ae3c254693c866404fdb070f",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -64761,8 +64761,8 @@
         "Transform": {
           "position": [
             0.0,
-            -542.9864501953125,
-            -2779.45556640625
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -64771,13 +64771,13 @@
             1.0
           ],
           "scale": [
-            100.0,
-            100.0,
-            100.0
+            1.0,
+            1.0,
+            1.0
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_machine_low.fbx_Machine_1_mesh1",
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh1",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -64786,7 +64786,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "9922bf02ae3c254693c866404fdb070f",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -65101,13 +65101,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -65567,13 +65567,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -65762,13 +65762,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -66075,13 +66075,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -66913,13 +66913,13 @@
                   "t": 0,
                   "v": 2.0
                 },
-                "eDuration": {
-                  "t": 0,
-                  "v": 3.0
-                },
                 "sceneName": {
                   "t": 3,
                   "v": "LevelTransitionCutscene.scene"
+                },
+                "eDuration": {
+                  "t": 0,
+                  "v": 3.0
                 },
                 "dSpeed": {
                   "t": 0,
@@ -72891,6 +72891,513 @@
             0.0
           ],
           "renderOrder": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1473,
+      "components": {
+        "IDComponent": {
+          "guid": "31efb23a16b75649abf2dbc19065248c"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "dd82d39b1ef5614eb166541582f9b844"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9f6602360104b849bd0957a0cfb94561",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1474,
+      "components": {
+        "IDComponent": {
+          "guid": "6e01d2e2d80398419adc3e49f6e88fe4"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "dd82d39b1ef5614eb166541582f9b844"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "ccaad93e97b3aa409161df991d2eab55",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1475,
+      "components": {
+        "IDComponent": {
+          "guid": "c4565652e958c84093014bf1d961138f"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "dd82d39b1ef5614eb166541582f9b844"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "8d54249810b224458ff8b156a2bcae1e",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1476,
+      "components": {
+        "IDComponent": {
+          "guid": "d4da989c72ec204783a8d18ec6d2542b"
+        },
+        "Transform": {
+          "position": [
+            1984.062744140625,
+            1864.21240234375,
+            -182.17417907714845
+          ],
+          "rotation": [
+            -0.6464338302612305,
+            0.24101127684116364,
+            -0.13223929703235627,
+            0.7117229700088501
+          ],
+          "scale": [
+            46.3988037109375,
+            50.00094223022461,
+            38.188438415527347
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "dd82d39b1ef5614eb166541582f9b844"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "c2e9f6157352724d9a9f9f9e4b44049a",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1477,
+      "components": {
+        "IDComponent": {
+          "guid": "6378179a74e18842a4a03a422482992b"
+        },
+        "Transform": {
+          "position": [
+            -1859.6214599609376,
+            2013.47802734375,
+            -730.5209350585938
+          ],
+          "rotation": [
+            -0.6906806826591492,
+            -0.21777553856372834,
+            0.21416603028774262,
+            0.6554898619651794
+          ],
+          "scale": [
+            45.24150466918945,
+            49.230194091796878,
+            40.50786590576172
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "dd82d39b1ef5614eb166541582f9b844"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "fa9eae4abe3acf40880da7998941c150",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1478,
+      "components": {
+        "IDComponent": {
+          "guid": "77205cf78bc75d4e83f760cd4d0c3a29"
+        },
+        "Transform": {
+          "position": [
+            1730.54248046875,
+            -1271.8787841796876,
+            131.27330017089845
+          ],
+          "rotation": [
+            0.24764326214790345,
+            -0.5955485701560974,
+            0.7559118270874023,
+            -0.11221438646316529
+          ],
+          "scale": [
+            46.732200622558597,
+            49.64695739746094,
+            38.24340057373047
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "dd82d39b1ef5614eb166541582f9b844"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "777a39841ac33147ba9679f72d67fa84",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1479,
+      "components": {
+        "IDComponent": {
+          "guid": "deba56a4b33c2748930abd63d60bbc29"
+        },
+        "Transform": {
+          "position": [
+            1901.7799072265626,
+            -22.965320587158204,
+            297.9403381347656
+          ],
+          "rotation": [
+            0.0,
+            -0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            33.3337287902832,
+            33.333335876464847,
+            33.3337287902832
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "dd82d39b1ef5614eb166541582f9b844"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "356afeef8f80bc43841d0c84a7b59623",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1480,
+      "components": {
+        "IDComponent": {
+          "guid": "b12933f16e33274cae242f93f00b07ca"
+        },
+        "Transform": {
+          "position": [
+            1325.5506591796876,
+            -18.799776077270509,
+            246.798095703125
+          ],
+          "rotation": [
+            0.0,
+            -0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            28.906841278076173,
+            27.287195205688478,
+            27.38969612121582
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "dd82d39b1ef5614eb166541582f9b844"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "10fe389c8efab24684591b96d8494cbc",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1481,
+      "components": {
+        "IDComponent": {
+          "guid": "b906c4e2b0f92943b7de425c51460633"
+        },
+        "Transform": {
+          "position": [
+            -1709.3555908203126,
+            -27.884859085083009,
+            522.6679077148438
+          ],
+          "rotation": [
+            0.0,
+            0.7050118446350098,
+            0.0,
+            0.7091955542564392
+          ],
+          "scale": [
+            33.332054138183597,
+            40.0,
+            33.332054138183597
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "dd82d39b1ef5614eb166541582f9b844"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "b4e1abf5d2f8824e8cdd90ae3ec9f43f",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1482,
+      "components": {
+        "IDComponent": {
+          "guid": "06c9ed9ee5b25043b16e60e9c8732177"
+        },
+        "Transform": {
+          "position": [
+            1275.3238525390626,
+            -22.965320587158204,
+            297.9402770996094
+          ],
+          "rotation": [
+            0.0,
+            -0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            33.3337287902832,
+            33.333335876464847,
+            33.3337287902832
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "dd82d39b1ef5614eb166541582f9b844"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "abcbe829286fc448aba6f1ffbaeaac3d",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1483,
+      "components": {
+        "IDComponent": {
+          "guid": "92fd74146575f44fa4553e064b95422b"
+        },
+        "Transform": {
+          "position": [
+            -708.857421875,
+            -22.69698143005371,
+            1510.322021484375
+          ],
+          "rotation": [
+            0.0,
+            -0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            33.3337287902832,
+            33.333335876464847,
+            33.3337287902832
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "dd82d39b1ef5614eb166541582f9b844"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3475b1c1d76c814d9f571ce7719cff05",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1484,
+      "components": {
+        "IDComponent": {
+          "guid": "d97b8dfe2464204cae18b5265a4bd7af"
+        },
+        "Transform": {
+          "position": [
+            -1034.5479736328126,
+            -22.69698143005371,
+            1510.322021484375
+          ],
+          "rotation": [
+            0.0,
+            -0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            33.3337287902832,
+            33.333335876464847,
+            33.3337287902832
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "dd82d39b1ef5614eb166541582f9b844"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "5d686860c7238f4995adc228bfff1041",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1485,
+      "components": {
+        "IDComponent": {
+          "guid": "2de00bda8e5ebe479c33110a6a1d26f5"
+        },
+        "Transform": {
+          "position": [
+            982.5047607421875,
+            -22.696956634521486,
+            -2942.0439453125
+          ],
+          "rotation": [
+            0.0,
+            0.9999995231628418,
+            0.0,
+            0.0009842518484219909
+          ],
+          "scale": [
+            33.333717346191409,
+            33.333335876464847,
+            33.333717346191409
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_machine_low.fbx_polySurface1_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "dd82d39b1ef5614eb166541582f9b844"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9922bf02ae3c254693c866404fdb070f",
+          "depth": 2
         },
         "GlobalTransform": {}
       }
