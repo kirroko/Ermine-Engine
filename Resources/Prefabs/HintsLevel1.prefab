@@ -3,7 +3,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "ba7f81abaac40a4e9654bb5c0e7a34d1"
+          "guid": "dab363c1a137824f8bb96b9e4d82d2fc"
         },
         "Transform": {
           "position": [
@@ -30,208 +30,14 @@
         },
         "HierarchyComponent": {
           "depth": 0
-        }
+        },
+        "GlobalTransform": {}
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "a8c17ed9c50e7f41a6fba63b8753e280"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Hint3",
-          "tag": "Untagged",
-          "selfActive": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "ba7f81abaac40a4e9654bb5c0e7a34d1",
-          "depth": 1
-        },
-        "UIImageComponent": {
-          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\aft_weapon.png",
-          "fullscreen": false,
-          "position": [
-            0.800000011920929,
-            0.6850000023841858,
-            0.0
-          ],
-          "width": 1.0,
-          "height": 0.23000000417232514,
-          "tintColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "alpha": 1.0,
-          "maintainAspectRatio": true,
-          "caption": "",
-          "showCaption": false,
-          "captionColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "captionFontSize": 24.0,
-          "captionPosition": [
-            0.5,
-            0.10000000149011612,
-            0.0
-          ]
-        }
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "80ae2d01cb5a064bbccb2a9d2788aabb"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Hint2",
-          "tag": "Untagged",
-          "selfActive": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "ba7f81abaac40a4e9654bb5c0e7a34d1",
-          "depth": 1
-        },
-        "UIImageComponent": {
-          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\aft_note.png",
-          "fullscreen": false,
-          "position": [
-            0.800000011920929,
-            0.7099999785423279,
-            0.0
-          ],
-          "width": 1.0,
-          "height": 0.18000000715255738,
-          "tintColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "alpha": 1.0,
-          "maintainAspectRatio": true,
-          "caption": "",
-          "showCaption": false,
-          "captionColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "captionFontSize": 24.0,
-          "captionPosition": [
-            0.5,
-            0.10000000149011612,
-            0.0
-          ]
-        }
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "b35ea45e5aa89f4caf24893bbf2b9a2d"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Hint1",
-          "tag": "Untagged",
-          "selfActive": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "ba7f81abaac40a4e9654bb5c0e7a34d1",
-          "depth": 1
-        },
-        "UIImageComponent": {
-          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\Spawn_UI.png",
-          "fullscreen": false,
-          "position": [
-            0.800000011920929,
-            0.7099999785423279,
-            0.0
-          ],
-          "width": 1.0,
-          "height": 0.18000000715255738,
-          "tintColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "alpha": 1.0,
-          "maintainAspectRatio": true,
-          "caption": "",
-          "showCaption": false,
-          "captionColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "captionFontSize": 24.0,
-          "captionPosition": [
-            0.5,
-            0.10000000149011612,
-            0.0
-          ]
-        }
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "2a63b4ae27d69e468101725a5b00ecc1"
+          "guid": "0dbba16fc485b14d8f772ba6db8112cb"
         },
         "Transform": {
           "position": [
@@ -252,16 +58,16 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Clue4",
+          "name": "Clue1",
           "tag": "Untagged",
           "selfActive": false
         },
         "HierarchyComponent": {
-          "parentGuid": "ba7f81abaac40a4e9654bb5c0e7a34d1",
+          "parentGuid": "dab363c1a137824f8bb96b9e4d82d2fc",
           "depth": 1
         },
         "UIImageComponent": {
-          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\4thClue.png",
+          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\1stClue.png",
           "fullscreen": true,
           "position": [
             0.5,
@@ -297,73 +103,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "cbd54aa5f95120438d95b9993a9df05d"
-        },
-        "Transform": {
-          "position": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.7320507764816285,
-            1.7320507764816285,
-            1.7320507764816285
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Clue3",
-          "tag": "Untagged",
-          "selfActive": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "ba7f81abaac40a4e9654bb5c0e7a34d1",
-          "depth": 1
-        },
-        "UIImageComponent": {
-          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\3rdClue.png",
-          "fullscreen": true,
-          "position": [
-            0.5,
-            0.5,
-            0.0
-          ],
-          "width": 1.0,
-          "height": 1.0,
-          "tintColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "alpha": 1.0,
-          "maintainAspectRatio": true,
-          "caption": "",
-          "showCaption": false,
-          "captionColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "captionFontSize": 24.0,
-          "captionPosition": [
-            0.5,
-            0.10000000149011612,
-            0.0
-          ]
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "c95d15f068ede74caf504fb1c9e5f55f"
+          "guid": "9cb232121d78e04fbbb2af2c31de59e8"
         },
         "Transform": {
           "position": [
@@ -389,7 +129,7 @@
           "selfActive": false
         },
         "HierarchyComponent": {
-          "parentGuid": "ba7f81abaac40a4e9654bb5c0e7a34d1",
+          "parentGuid": "dab363c1a137824f8bb96b9e4d82d2fc",
           "depth": 1
         },
         "UIImageComponent": {
@@ -429,7 +169,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "bbb28847d0397144887bea4194e66e01"
+          "guid": "76bde57d4e407944b973ff7750f00d58"
         },
         "Transform": {
           "position": [
@@ -450,16 +190,16 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Clue1",
+          "name": "Clue3",
           "tag": "Untagged",
           "selfActive": false
         },
         "HierarchyComponent": {
-          "parentGuid": "ba7f81abaac40a4e9654bb5c0e7a34d1",
+          "parentGuid": "dab363c1a137824f8bb96b9e4d82d2fc",
           "depth": 1
         },
         "UIImageComponent": {
-          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\1stClue.png",
+          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\3rdClue.png",
           "fullscreen": true,
           "position": [
             0.5,
@@ -468,6 +208,270 @@
           ],
           "width": 1.0,
           "height": 1.0,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ]
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "a4b337b472b2d54a944563a534419082"
+        },
+        "Transform": {
+          "position": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.7320507764816285,
+            1.7320507764816285,
+            1.7320507764816285
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Clue4",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "dab363c1a137824f8bb96b9e4d82d2fc",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\4thClue.png",
+          "fullscreen": true,
+          "position": [
+            0.5,
+            0.5,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 1.0,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ]
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "125d5f459038bf439923b54207ab7ebc"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Hint1",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "dab363c1a137824f8bb96b9e4d82d2fc",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\Spawn_UI.png",
+          "fullscreen": false,
+          "position": [
+            0.800000011920929,
+            0.7099999785423279,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 0.18000000715255738,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ]
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "118cd01fb7fbe14aafb27c930c896061"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Hint2",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "dab363c1a137824f8bb96b9e4d82d2fc",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\aft_note.png",
+          "fullscreen": false,
+          "position": [
+            0.800000011920929,
+            0.7099999785423279,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 0.18000000715255738,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ]
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "1484182a386a984f932d73de05a56f80"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Hint3",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "dab363c1a137824f8bb96b9e4d82d2fc",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\aft_weapon.png",
+          "fullscreen": false,
+          "position": [
+            0.800000011920929,
+            0.6850000023841858,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 0.23000000417232514,
           "tintColor": [
             1.0,
             1.0,
