@@ -2996,6 +2996,24 @@ namespace
 		agent.jumpDuration = (link.jumpDuration > 0.0f) ? link.jumpDuration : autoDuration;
 		agent.jumpHeight = (link.jumpHeight > 0.0f) ? link.jumpHeight : autoHeight;
 	}
+
+	void icall_navagent_set_auto_rotate(uint64_t agentEntityID, bool enabled)
+	{
+		using namespace Ermine;
+
+		auto& ecs = ECS::GetInstance();
+		EntityID agentID = (EntityID)agentEntityID;
+
+		if (!ecs.IsEntityValid(agentID))
+			return;
+
+		if (!ecs.HasComponent<NavMeshAgent>(agentID))
+			return;
+
+		auto& agent = ecs.GetComponent<NavMeshAgent>(agentID);
+
+		agent.autoRotate = enabled;
+	}
 #pragma endregion
 
 #pragma region UI ICalls
@@ -4254,6 +4272,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 			Ermine::RequestPathForAgent((Ermine::EntityID)entityID, v);
 		});
 	mono_add_internal_call("ErmineEngine.NavAgent::StartJump", (const void*)icall_navagent_start_jump);
+	mono_add_internal_call("ErmineEngine.NavAgent::SetAutoRotate", (void*)icall_navagent_set_auto_rotate);
 #pragma endregion
 
 #pragma region Physics ICalls

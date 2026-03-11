@@ -8,6 +8,7 @@ public class Idle : MonoBehaviour
     public float viewDistance = 15.0f;
     public float rayHeight = 0.8f;
     public float rayForwardOffset = 2.0f;
+    public float closeDetectDistance = 2.0f;
 
     private GameObject playerGO;
     private ulong entityID;
@@ -24,6 +25,10 @@ public class Idle : MonoBehaviour
     public static bool RightClickStunArmed = false;
     private float armTimer = 0.0f;
 
+    private Animator anim;
+    public float stunRecoverDelay = 5.0f;
+    private float recoverTimer = 0.0f;
+
     private void CachePlayerIfNeeded()
     {
         if (playerGO == null)
@@ -38,6 +43,11 @@ public class Idle : MonoBehaviour
         isStunned = true;
         stunTimer = stunDuration;
 
+        if (anim != null)
+        {
+            anim.SetBool("IsHit", true);
+        }
+
         // stop immediately while stunned
         NavAgent.SetDestination(entityID, transform.position);
     }
@@ -47,11 +57,19 @@ public class Idle : MonoBehaviour
         CachePlayerIfNeeded();
         if (playerGO == null) return false;
 
-        Vector3 origin = transform.position
+        Vector3 enemyPos = transform.position;
+        Vector3 playerPoint = playerGO.transform.position;
+
+        // fallback for very close targets on tiny platforms
+        Vector3 flatToPlayer = playerPoint - enemyPos;
+        flatToPlayer.y = 0f;
+        if (flatToPlayer.Magnitude <= closeDetectDistance)
+            return true;
+
+        Vector3 origin = enemyPos
                        + new Vector3(0f, rayHeight, 0f)
                        + transform.forward * rayForwardOffset;
 
-        Vector3 playerPoint = playerGO.transform.position;
         Vector3 toPlayer = playerPoint - origin;
 
         float dist = toPlayer.Magnitude;
@@ -72,25 +90,46 @@ public class Idle : MonoBehaviour
     void Start()
     {
         entityID = (ulong)gameObject.GetInstanceID();
+        anim = GetComponent<Animator>();
         CachePlayerIfNeeded();
     }
 
     void Update()
     {
-        if (jumpCooldownTimer > 0.0f)
-            jumpCooldownTimer -= Time.deltaTime;
+        if (Input.GetMouseButtonDown(1))
+            armTimer = 0.3f;
+
+        if (armTimer > 0.0f)
+            armTimer -= Time.deltaTime;
 
         RightClickStunArmed = armTimer > 0f;
 
+        if (jumpCooldownTimer > 0.0f)
+            jumpCooldownTimer -= Time.deltaTime;
+
         if (isStunned)
         {
+            if (anim != null)
+            {
+                anim.SetBool("IsHit", true);
+            }
+
             //Debug.Log("stunned");
             stunTimer -= Time.deltaTime;
             if (stunTimer <= 0.0f)
             {
                 isStunned = false;
+                recoverTimer = stunRecoverDelay;
+
+                if (anim != null)
+                    anim.SetBool("IsHit", false);
             }
             return; // do NOTHING while stunned
+        }
+        if (recoverTimer > 0.0f)
+        {
+            recoverTimer -= Time.deltaTime;
+            return;
         }
 
         // If player is visible, switch state

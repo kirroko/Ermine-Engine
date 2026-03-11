@@ -133,6 +133,6 @@ public class EndElevator : MonoBehaviour
 
     void LoadNextScene()
     {
-        SceneManager.LoadScene($"../Resources/Scenes/{sceneName}");
+        SceneManager.LoadScene($"../Resources/Scenes/LevelTransitionCutscene.scene");
     }
 }
