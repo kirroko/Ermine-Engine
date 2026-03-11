@@ -3542,6 +3542,15 @@ namespace
 		return 0;
 	}
 
+	void icall_videomanager_set_audio_volume(MonoString* name, float volume)
+	{
+		auto videoSystem = GetVideoManager();
+		if (!videoSystem || !name) return;
+		char* nameStr = mono_string_to_utf8(name);
+		videoSystem->SetAudioVolume(nameStr, volume);
+		mono_free(nameStr);
+	}
+
 #pragma endregion
 
 #pragma region Animation ICalls
@@ -4439,6 +4448,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 
 	mono_add_internal_call("ErmineEngine.VideoManager::Internal_SetRenderEnabled", (const void*)icall_videomanager_set_render_enabled);
 	mono_add_internal_call("ErmineEngine.VideoManager::Internal_GetRenderEnabled", (const void*)icall_videomanager_get_render_enabled);
+	mono_add_internal_call("ErmineEngine.VideoManager::Internal_SetAudioVolume", (const void*)icall_videomanager_set_audio_volume);
 #pragma endregion VideoManager ICalls
 
 #pragma region Animation ICalls
