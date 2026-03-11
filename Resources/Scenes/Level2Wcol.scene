@@ -196535,13 +196535,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.10000000149011612
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.10000000149011612
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -196551,13 +196551,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -196569,11 +196569,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
@@ -245993,6 +245993,210 @@
           "soundVolume": 1.0,
           "renderOrder": 0
         }
+      }
+    },
+    {
+      "id": 5672,
+      "components": {
+        "IDComponent": {
+          "guid": "367557254045684685e8585d18f7b860"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LocksSub",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "fc843dd18656e44386dcb9bcb615d0a0",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\Sub5.png",
+          "fullscreen": false,
+          "position": [
+            0.5184307098388672,
+            0.11167362332344055,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 0.19312970340251923,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ],
+          "renderOrder": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 5673,
+      "components": {
+        "IDComponent": {
+          "guid": "64cd52b6d99ec5429f53a491d4b3ece5"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Key1Sub",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "fc843dd18656e44386dcb9bcb615d0a0",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\Sub6.png",
+          "fullscreen": false,
+          "position": [
+            0.509528636932373,
+            0.11062756925821305,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 0.1868535578250885,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ],
+          "renderOrder": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 5674,
+      "components": {
+        "IDComponent": {
+          "guid": "3997607324090e49a15013bfe870df17"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Key2Sub",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "fc843dd18656e44386dcb9bcb615d0a0",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\Sub7.png",
+          "fullscreen": false,
+          "position": [
+            0.5213980674743652,
+            0.11062755435705185,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 0.19103765487670899,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ],
+          "renderOrder": 0
+        },
+        "GlobalTransform": {}
       }
     }
   ],

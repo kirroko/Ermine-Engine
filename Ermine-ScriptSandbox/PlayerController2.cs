@@ -45,6 +45,12 @@ public class PlayerController2 : MonoBehaviour
     private float clueMessageTimer = 0f;
     private float clueMessageDuration = 5f;
 
+    private int gearKeysPickedUp = 0;
+
+    private GameObject activeSubtitle = null;
+    private float subtitleTimer = 0f;
+    private float currentSubtitleDuration = 5f;
+
     void Start()
     {
         cam = GameObject.Find("Main Camera").GetComponent<Transform>();
@@ -67,6 +73,7 @@ public class PlayerController2 : MonoBehaviour
         HandleAnimUpdate();
         UpdateAudioListener();
         HandleClueMessageTimer();
+        HandleSubtitleTimer();
     }
 
     private void HandleInput()
@@ -227,7 +234,7 @@ public class PlayerController2 : MonoBehaviour
                 {
                     // Collect book
                     GlobalAudio.PlaySFX("BookPickUp");
-                    GlobalAudio.PlayVoice("Clue1");
+                    PlayVoiceWithSubtitle("Clue1", 7f);
                     GameObject msg = GameObject.Find("Clue1");
                     GameObject hint1 = GameObject.Find("Hint1");
                     GameObject hint2 = GameObject.Find("Hint2");
@@ -249,7 +256,7 @@ public class PlayerController2 : MonoBehaviour
                 {
                     // Collect book
                     GlobalAudio.PlaySFX("BookPickUp");
-                    GlobalAudio.PlayVoice("Clue2");
+                    PlayVoiceWithSubtitle("Clue2", 10f);
                     GameObject msg = GameObject.Find("Clue2");
                     GameObject hint2 = GameObject.Find("Hint2");
                     GameObject hint3 = GameObject.Find("Hint3");
@@ -270,7 +277,7 @@ public class PlayerController2 : MonoBehaviour
                 {
                     // Collect book
                     GlobalAudio.PlaySFX("BookPickUp");
-                    GlobalAudio.PlayVoice("Clue3");
+                    PlayVoiceWithSubtitle("Clue3", 9f);
                     GameObject msg = GameObject.Find("Clue3");
 
                     if (msg != null)
@@ -287,7 +294,7 @@ public class PlayerController2 : MonoBehaviour
                 {
                     // Collect book
                     GlobalAudio.PlaySFX("BookPickUp");
-                    GlobalAudio.PlayVoice("Clue4");
+                    PlayVoiceWithSubtitle("Clue4", 7f);
                     GameObject msg = GameObject.Find("Clue4");
 
                     if (msg != null)
@@ -305,7 +312,7 @@ public class PlayerController2 : MonoBehaviour
                 {
                     // Collect book
                     GlobalAudio.PlaySFX("BookPickUp");
-                    //GlobalAudio.PlayVoice("Clue5");
+                    PlayVoiceWithSubtitle("Locks", 6f);
                     GameObject msg = GameObject.Find("Clue5");
 
                     if (msg != null)
@@ -341,6 +348,16 @@ public class PlayerController2 : MonoBehaviour
                     // Collect key
                     //GlobalAudio.PlaySFX("BookPickUp");
                     UnlockDoor.I.IncrementKeys();
+                    gearKeysPickedUp++;
+
+                    if (gearKeysPickedUp == 1)
+                    {
+                        PlayVoiceWithSubtitle("Key1", 6f);
+                    }
+                    else if (gearKeysPickedUp == 2)
+                    {
+                        PlayVoiceWithSubtitle("Key2", 5f);
+                    }
 
                     obj.SetActive(false);
                     interactTimer = 0f;
@@ -394,6 +411,43 @@ public class PlayerController2 : MonoBehaviour
                 clueMessageTimer = 0f;
             }
         }
+    }
+
+    private void HandleSubtitleTimer()
+    {
+        if (activeSubtitle != null)
+        {
+            subtitleTimer += Time.deltaTime;
+
+            if (subtitleTimer >= currentSubtitleDuration)
+            {
+                activeSubtitle.SetActive(false);
+                activeSubtitle = null;
+                subtitleTimer = 0f;
+            }
+        }
+    }
+
+    private void ShowSubtitle(string subtitleObjectName, float duration)
+    {
+        GameObject msg = GameObject.Find(subtitleObjectName + "Sub");
+
+        if (msg != null)
+        {
+            if (activeSubtitle != null)
+                activeSubtitle.SetActive(false);
+
+            msg.SetActive(true);
+            activeSubtitle = msg;
+            subtitleTimer = 0f;
+            currentSubtitleDuration = duration;
+        }
+    }
+
+    private void PlayVoiceWithSubtitle(string voiceName, float duration)
+    {
+        GlobalAudio.PlayVoice(voiceName);
+        ShowSubtitle(voiceName, duration);
     }
 
     void OnCollisionEnter(Collision col)

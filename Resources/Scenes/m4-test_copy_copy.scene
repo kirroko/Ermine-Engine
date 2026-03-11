@@ -35587,7 +35587,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "9f6602360104b849bd0957a0cfb94561",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -35626,7 +35626,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "9f6602360104b849bd0957a0cfb94561",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -35705,7 +35705,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "ccaad93e97b3aa409161df991d2eab55",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -35744,7 +35744,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "ccaad93e97b3aa409161df991d2eab55",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -35823,7 +35823,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "8d54249810b224458ff8b156a2bcae1e",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -35862,7 +35862,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "8d54249810b224458ff8b156a2bcae1e",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -39466,7 +39466,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "c2e9f6157352724d9a9f9f9e4b44049a",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -39505,7 +39505,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "c2e9f6157352724d9a9f9f9e4b44049a",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -39584,7 +39584,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "fa9eae4abe3acf40880da7998941c150",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -39623,7 +39623,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "fa9eae4abe3acf40880da7998941c150",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -39795,7 +39795,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "777a39841ac33147ba9679f72d67fa84",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -39834,7 +39834,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "777a39841ac33147ba9679f72d67fa84",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -49233,7 +49233,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "356afeef8f80bc43841d0c84a7b59623",
-          "depth": 1
+          "depth": 3
         },
         "GlobalTransform": {}
       }
@@ -49272,7 +49272,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "356afeef8f80bc43841d0c84a7b59623",
-          "depth": 1
+          "depth": 3
         },
         "GlobalTransform": {}
       }
@@ -49414,7 +49414,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "10fe389c8efab24684591b96d8494cbc",
-          "depth": 1
+          "depth": 3
         },
         "GlobalTransform": {}
       }
@@ -49453,7 +49453,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "10fe389c8efab24684591b96d8494cbc",
-          "depth": 1
+          "depth": 3
         },
         "GlobalTransform": {}
       }
@@ -51572,7 +51572,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "b4e1abf5d2f8824e8cdd90ae3ec9f43f",
-          "depth": 1
+          "depth": 3
         },
         "GlobalTransform": {}
       }
@@ -51611,7 +51611,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "b4e1abf5d2f8824e8cdd90ae3ec9f43f",
-          "depth": 1
+          "depth": 3
         },
         "GlobalTransform": {}
       }
@@ -54700,7 +54700,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "1ac0e6c3652f0c49a1da5dccb0952e8c",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -54739,7 +54739,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "1ac0e6c3652f0c49a1da5dccb0952e8c",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -54778,7 +54778,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "1ac0e6c3652f0c49a1da5dccb0952e8c",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -56769,7 +56769,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "abcbe829286fc448aba6f1ffbaeaac3d",
-          "depth": 1
+          "depth": 3
         },
         "GlobalTransform": {}
       }
@@ -56808,7 +56808,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "abcbe829286fc448aba6f1ffbaeaac3d",
-          "depth": 1
+          "depth": 3
         },
         "GlobalTransform": {}
       }
@@ -60828,7 +60828,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "3475b1c1d76c814d9f571ce7719cff05",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -60867,7 +60867,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "3475b1c1d76c814d9f571ce7719cff05",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -61592,7 +61592,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "5d686860c7238f4995adc228bfff1041",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -61631,7 +61631,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "5d686860c7238f4995adc228bfff1041",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -64747,7 +64747,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "9922bf02ae3c254693c866404fdb070f",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -64786,7 +64786,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "9922bf02ae3c254693c866404fdb070f",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -72929,7 +72929,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "9f6602360104b849bd0957a0cfb94561",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -72968,7 +72968,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "ccaad93e97b3aa409161df991d2eab55",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -73007,7 +73007,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "8d54249810b224458ff8b156a2bcae1e",
-          "depth": 1
+          "depth": 2
         },
         "GlobalTransform": {}
       }
@@ -73398,6 +73398,278 @@
         "HierarchyComponent": {
           "parentGuid": "9922bf02ae3c254693c866404fdb070f",
           "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1486,
+      "components": {
+        "IDComponent": {
+          "guid": "ebaa89b23458a9438470e0c463b3c4ab"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Clue1Sub",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3b2bdf8c6946e14197badb9152d3c7bb",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\Sub1.png",
+          "fullscreen": false,
+          "position": [
+            0.49010878801345827,
+            0.0658995509147644,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 0.08577403426170349,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ],
+          "renderOrder": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1487,
+      "components": {
+        "IDComponent": {
+          "guid": "175c729943295145b2a082e2f3b56e42"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Clue2Sub",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3b2bdf8c6946e14197badb9152d3c7bb",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\Sub2.png",
+          "fullscreen": false,
+          "position": [
+            0.5,
+            0.05334725230932236,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 0.0857740268111229,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ],
+          "renderOrder": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1488,
+      "components": {
+        "IDComponent": {
+          "guid": "e0cb070868bbfc41918db819bfc76338"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Clue3Sub",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3b2bdf8c6946e14197badb9152d3c7bb",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\Sub3.png",
+          "fullscreen": false,
+          "position": [
+            0.49010878801345827,
+            0.09937235713005066,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 0.152719646692276,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ],
+          "renderOrder": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1489,
+      "components": {
+        "IDComponent": {
+          "guid": "7418353b711c6942b9014d035d70c8ca"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Clue4Sub",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3b2bdf8c6946e14197badb9152d3c7bb",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\Sub4.png",
+          "fullscreen": false,
+          "position": [
+            0.49010878801345827,
+            0.10251042991876602,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 0.15899579226970673,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
