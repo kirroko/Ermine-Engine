@@ -55,6 +55,7 @@ namespace Ermine
         static void PlayGlobalMusic(GlobalAudioComponent& globalAudio, int index);
         static void PlayGlobalSFX(GlobalAudioComponent& globalAudio, int index);
         static void PlayGlobalSFX(GlobalAudioComponent& globalAudio, const std::string& name);
+        static void StopGlobalSFX(GlobalAudioComponent& globalAudio, const std::string& name);
         static void StopGlobalMusic(GlobalAudioComponent& globalAudio);
 
         // *** NEW: Ambience playback ***
