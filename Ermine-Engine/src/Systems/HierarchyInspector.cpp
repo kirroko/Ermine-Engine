@@ -717,6 +717,9 @@ namespace Ermine::editor {
 		if (ECS::GetInstance().HasComponent<UISliderComponent>(selected))
 			DrawUISliderComponent(selected);
 
+		if (ECS::GetInstance().HasComponent<UITextComponent>(selected))
+			DrawUITextComponent(selected);
+
 		ImGui::PopID();
 
 		ImGui::Separator();
@@ -4094,6 +4097,10 @@ namespace Ermine::editor {
 			// Caption position
 			ImGui::DragFloat2("Caption Position", &imageComp.captionPosition.x, 0.01f, 0.0f, 1.0f);
 		}
+
+		ImGui::Separator();
+		ImGui::DragInt("Render Order", &imageComp.renderOrder, 1, -100, 100);
+		ImGui::TextDisabled("Lower = behind, Higher = on top");
 	}
 
 	void HierarchyInspector::DrawAddComponentMenu(EntityID entity)
@@ -4302,11 +4309,12 @@ namespace Ermine::editor {
 			{"UI Book Counter",      [&](EntityID e) { ecs.AddComponent(e, UIBookCounterComponent{}); }},
 			{"UI Image",             [&](EntityID e) { ecs.AddComponent(e, UIImageComponent{}); }},
 			{"UI Button",            [&](EntityID e) { ecs.AddComponent(e, UIButtonComponent{}); }},
-			{"UI Slider",            [&](EntityID e) { ecs.AddComponent(e, UISliderComponent{}); }}
+			{"UI Slider",            [&](EntityID e) { ecs.AddComponent(e, UISliderComponent{}); }},
+			{"UI Text",              [&](EntityID e) { ecs.AddComponent(e, UITextComponent{}); }}
 		};
 
 		if (shouldShowMenu("UI", { "UI Component (Legacy)", "UI Healthbar","UI Crosshair",
-								   "UI Skills","UI Mana Bar","UI Book Counter","UI Image","UI Button","UI Slider" }) &&
+								   "UI Skills","UI Mana Bar","UI Book Counter","UI Image","UI Button","UI Slider","UI Text" }) &&
 			ImGui::BeginMenu("UI"))
 		{
 			for (auto& [name, addFunc] : uiComponents)
@@ -4393,24 +4401,64 @@ namespace Ermine::editor {
 	}
 
 	// Action data (scene path or custom event)
-	if (button.action != UIButtonComponent::ButtonAction::None && button.action != UIButtonComponent::ButtonAction::Quit)
+	if (button.action == UIButtonComponent::ButtonAction::LoadScene)
 	{
 		char actionDataBuffer[256];
 		strncpy_s(actionDataBuffer, button.actionData.c_str(), sizeof(actionDataBuffer) - 1);
 		actionDataBuffer[sizeof(actionDataBuffer) - 1] = '\0';
 
-		const char* label = (button.action == UIButtonComponent::ButtonAction::LoadScene)
-			? "Scene Path"
-			: "Event Name";
-
-		if (ImGui::InputText(label, actionDataBuffer, sizeof(actionDataBuffer))) {
+		if (ImGui::InputText("Scene Path", actionDataBuffer, sizeof(actionDataBuffer))) {
 			button.actionData = actionDataBuffer;
 		}
+		ImGui::TextDisabled("Example: ../Resources/Scenes/level.scene");
+	}
+	else if (button.action == UIButtonComponent::ButtonAction::Custom)
+	{
+		// Dropdown for known custom actions
+		static const char* customActions[] = {
+			"OpenControls",
+			"CloseControlsScreen",
+			"OpenSettings",
+			"CloseSettings",
+			"OpenSettingsPage",
+			"CloseSettingsPage",
+			"OpenSettingsAudio",
+			"OpenSettingsControls",
+			"OpenSettingsVideo",
+			"BackToSettingsPage",
+			"Resume",
+			"ShowTeleportInfo",
+			"ShowShootingInfo",
+			"ShowReturnInfo",
+			"ShowLightDInfo"
+		};
+		static const int numCustomActions = IM_ARRAYSIZE(customActions);
 
-		// Helper text
-		if (button.action == UIButtonComponent::ButtonAction::LoadScene) {
-			ImGui::TextDisabled("Example: ../Resources/Scenes/level.scene");
+		// Find current selection index
+		int currentCustomAction = -1;
+		for (int i = 0; i < numCustomActions; ++i)
+		{
+			if (button.actionData == customActions[i])
+			{
+				currentCustomAction = i;
+				break;
+			}
 		}
+
+		// Show dropdown
+		if (ImGui::Combo("Custom Action", &currentCustomAction, customActions, numCustomActions))
+		{
+			button.actionData = customActions[currentCustomAction];
+		}
+
+		// Also allow manual input for custom events not in the list
+		char actionDataBuffer[256];
+		strncpy_s(actionDataBuffer, button.actionData.c_str(), sizeof(actionDataBuffer) - 1);
+		actionDataBuffer[sizeof(actionDataBuffer) - 1] = '\0';
+		if (ImGui::InputText("Action (Manual)", actionDataBuffer, sizeof(actionDataBuffer))) {
+			button.actionData = actionDataBuffer;
+		}
+		ImGui::TextDisabled("Use dropdown above or type a custom event name");
 	}
 
 	// Audio settings
@@ -4434,6 +4482,10 @@ namespace Ermine::editor {
 	ImGui::TextDisabled("Example: button_click.wav");
 
 	ImGui::SliderFloat("Sound Volume", &button.soundVolume, 0.0f, 1.0f);
+
+	ImGui::Separator();
+	ImGui::DragInt("Render Order", &button.renderOrder, 1, -100, 100);
+	ImGui::TextDisabled("Lower = behind, Higher = on top");
 
 	// Show button state (read-only)
 	ImGui::Separator();
@@ -4547,12 +4599,62 @@ void HierarchyInspector::DrawUISliderComponent(EntityID entity)
 		slider.labelActiveImagePath = labelActiveImageBuffer;
 	}
 
+	// Value display settings
+	ImGui::Separator();
+	ImGui::Text("Value Display");
+
+	ImGui::Checkbox("Show Value", &slider.showValue);
+	ImGui::Checkbox("As Percentage", &slider.valueAsPercentage);
+	ImGui::ColorEdit3("Value Color", &slider.valueColor.x);
+	ImGui::DragFloat("Value Scale", &slider.valueScale, 0.1f, 0.1f, 3.0f);
+	ImGui::DragFloat2("Value Offset", &slider.valueOffset.x, 0.01f, -1.0f, 1.0f);
+
+	ImGui::Separator();
+	ImGui::DragInt("Render Order", &slider.renderOrder, 1, -100, 100);
+	ImGui::TextDisabled("Lower = behind, Higher = on top");
+
 	// Show slider state (read-only)
 	ImGui::Separator();
 	ImGui::Text("State (Read-Only)");
 	ImGui::Checkbox("Is Hovered", &slider.isHovered);
 	ImGui::SameLine();
 	ImGui::Checkbox("Is Dragging", &slider.isDragging);
+}
+
+void HierarchyInspector::DrawUITextComponent(EntityID entity)
+{
+	if (!ComponentHeaderWithRemove<UITextComponent>("UI Text Component", entity))
+		return;
+
+	auto& textComp = ECS::GetInstance().GetComponent<UITextComponent>(entity);
+
+	// Text (multiline)
+	char textBuffer[1024];
+	strncpy_s(textBuffer, textComp.text.c_str(), sizeof(textBuffer) - 1);
+	textBuffer[sizeof(textBuffer) - 1] = '\0';
+	if (ImGui::InputTextMultiline("Text", textBuffer, sizeof(textBuffer), ImVec2(-1.0f, ImGui::GetTextLineHeight() * 4))) {
+		textComp.text = textBuffer;
+	}
+
+	// Position
+	ImGui::DragFloat2("Position (X, Y)", &textComp.position.x, 0.01f, 0.0f, 1.0f);
+
+	// Font size
+	ImGui::DragFloat("Font Size", &textComp.fontSize, 0.1f, 0.1f, 10.0f);
+
+	// Color
+	ImGui::ColorEdit3("Color", &textComp.color.x);
+
+	// Alpha
+	ImGui::SliderFloat("Alpha", &textComp.alpha, 0.0f, 1.0f);
+
+	// Alignment
+	const char* alignmentNames[] = { "Left", "Center", "Right" };
+	ImGui::Combo("Alignment", &textComp.alignment, alignmentNames, IM_ARRAYSIZE(alignmentNames));
+
+	ImGui::Separator();
+	ImGui::DragInt("Render Order", &textComp.renderOrder, 1, -100, 100);
+	ImGui::TextDisabled("Lower = behind, Higher = on top");
 }
 
 } // namespace Ermine::editor
