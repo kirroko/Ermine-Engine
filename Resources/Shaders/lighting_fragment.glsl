@@ -1,7 +1,6 @@
 #version 460 core
 #extension GL_ARB_bindless_texture : require
 
-const int MAX_LIGHTS = 32;
 const int NUM_CASCADES = 4;
 
 in vec2 TexCoord;
@@ -61,9 +60,9 @@ struct Light {
     vec4 splitDepths[(NUM_CASCADES + 3) / 4]; // Split depths for cascaded shadow maps
 };
 
-layout (std140, binding = 1) uniform LightsUBO {
+layout (std430, binding = 4) readonly buffer LightsSSBO { // Matches LIGHT_SSBO_BINDING in SSBO_Bindings.h
     vec4 lightCount;
-    Light lights[MAX_LIGHTS]; // Fixed-size array required for UBO
+    Light lights[];
 };
 
 // Light Probe structure

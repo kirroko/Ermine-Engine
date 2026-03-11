@@ -1957,6 +1957,24 @@ namespace
 		}
 	}
 
+	void icall_globalaudio_stop_sfx(MonoString* name)
+	{
+		using namespace Ermine;
+		std::string sfxName;
+		ToTempUTF8(name, sfxName);
+
+		auto& ecs = ECS::GetInstance();
+		for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+		{
+			if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+			{
+				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+				globalAudio.StopSFX(sfxName);
+				return;
+			}
+		}
+	}
+
 	void icall_globalaudio_set_voice_volume(float volume)
 	{
 		using namespace Ermine;
@@ -4176,6 +4194,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 
 #pragma region GlobalAudio ICalls
 	mono_add_internal_call("ErmineEngine.GlobalAudio::PlaySFX", (const void*)icall_globalaudio_play_sfx);
+	mono_add_internal_call("ErmineEngine.GlobalAudio::StopSFX", (const void*)icall_globalaudio_stop_sfx);
 	mono_add_internal_call("ErmineEngine.GlobalAudio::PlayMusic", (const void*)icall_globalaudio_play_music);
 	mono_add_internal_call("ErmineEngine.GlobalAudio::SetMusicVolume", (const void*)icall_globalaudio_set_music_volume);
 	mono_add_internal_call("ErmineEngine.GlobalAudio::SetSFXVolume", (const void*)icall_globalaudio_set_sfx_volume);

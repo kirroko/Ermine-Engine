@@ -55,6 +55,10 @@ void GlobalAudioComponent::PlaySFX(const std::string& name) {
     AudioSystem::PlayGlobalSFX(*this, name);
 }
 
+void GlobalAudioComponent::StopSFX(const std::string& name) {
+    AudioSystem::StopGlobalSFX(*this, name);
+}
+
 void GlobalAudioComponent::SetSFXVolume(float volume) {
     sfxVolume = std::clamp(volume, 0.0f, 1.0f);
     // Note: SFX volumes will be applied to new SFX plays
@@ -874,7 +878,8 @@ void AudioSystem::PlayGlobalSFX(GlobalAudioComponent& globalAudio, int index)
     Vector3D position(0.0f, 0.0f, 0.0f);
     // PlaySounds() creates a new channel and explicitly unpauses it,
     // so UI sounds will play even if other channels are paused
-    CAudioEngine::PlaySounds(sfxSource.audioPath, position, finalVolume);
+    int channelId = CAudioEngine::PlaySounds(sfxSource.audioPath, position, finalVolume);
+    globalAudio.sfxChannels[sfxSource.audioName] = channelId;
 }
 
 void AudioSystem::PlayGlobalSFX(GlobalAudioComponent& globalAudio, const std::string& name)
@@ -891,6 +896,16 @@ void AudioSystem::PlayGlobalSFX(GlobalAudioComponent& globalAudio, const std::st
 
     // SFX not found
     std::cout << "SFX '" << name << "' not found in GlobalAudioComponent" << std::endl;
+}
+
+void AudioSystem::StopGlobalSFX(GlobalAudioComponent& globalAudio, const std::string& name)
+{
+    auto it = globalAudio.sfxChannels.find(name);
+    if (it != globalAudio.sfxChannels.end())
+    {
+        CAudioEngine::StopChannel(it->second, false, 0.0f);
+        globalAudio.sfxChannels.erase(it);
+    }
 }
 
 void AudioSystem::StopGlobalMusic(GlobalAudioComponent& globalAudio)

@@ -682,10 +682,12 @@ namespace Ermine::graphics
          */
         bool GetShadingMode() const { return m_IsBlinnPhong; }
         /**
-         * @brief Updates the lights' shader UBO with the current light and transform data from all living entities.
-         * @param view The view matrix to transform the positions and directions of the lights into view space.
+         * @brief Updates the lights' shader SSBO with the current light and transform data from all living entities.
+         * @param view Legacy caller-provided view matrix. Active camera selection is resolved internally.
          */
-        void UpdateLightsUBO(const Mtx44& view);
+        void UpdateLightsSSBO(const Mtx44& view);
+        size_t GetUploadedLightCount() const { return m_LastUploadedLightCount; }
+        size_t GetLightSSBOCapacity() const { return m_LightsSSBOCapacity; }
         
 		/**
 		 * @brief Updates the light probes UBO with current probe data from all probe entities.
@@ -1081,6 +1083,9 @@ namespace Ermine::graphics
 		
 
     private:
+        void EnsureLightsSSBO(size_t requiredLightCount);
+        void BindLightsSSBO() const;
+
         // Texture Array Management (Bindless Texture System)
         struct TextureArrayEntry
         {
@@ -1112,10 +1117,10 @@ namespace Ermine::graphics
 		std::shared_ptr<MaterialSystem> m_MaterialSystem = nullptr;
         std::shared_ptr<OffscreenBuffer> m_OffscreenBuffer;
 
-        // Lighting UBO
-        GLuint m_LightsUBO = 0;
-        static constexpr GLuint LightsBindingPoint = 1;
-        std::unordered_set<GLuint> m_LightBlockBoundPrograms;
+        // Lighting SSBO
+        GLuint m_LightsSSBO = 0;
+        size_t m_LightsSSBOCapacity = 0;
+        size_t m_LastUploadedLightCount = 0;
         bool m_IsBlinnPhong = false; // Default to PBR shading
 
 		// Light Probe UBO
