@@ -41,6 +41,10 @@ public class PlayerController2 : MonoBehaviour
     private bool flipSwitch2 = false;
     private float interactTimer = 0f;
 
+    private GameObject activeClueMessage = null;
+    private float clueMessageTimer = 0f;
+    private float clueMessageDuration = 5f;
+
     void Start()
     {
         cam = GameObject.Find("Main Camera").GetComponent<Transform>();
@@ -62,6 +66,7 @@ public class PlayerController2 : MonoBehaviour
         HandleInteract();
         HandleAnimUpdate();
         UpdateAudioListener();
+        HandleClueMessageTimer();
     }
 
     private void HandleInput()
@@ -218,6 +223,102 @@ public class PlayerController2 : MonoBehaviour
                     interactTimer = 0f;
                 }
 
+                if (obj.name == "Paper1" && interactTimer > 1f)
+                {
+                    // Collect book
+                    GlobalAudio.PlaySFX("BookPickUp");
+                    GlobalAudio.PlayVoice("Clue1");
+                    GameObject msg = GameObject.Find("Clue1");
+                    GameObject hint1 = GameObject.Find("Hint1");
+                    GameObject hint2 = GameObject.Find("Hint2");
+
+
+                    if (msg != null && hint1 != null && hint2 != null)
+                    {
+                        msg.SetActive(true);
+                        hint1.SetActive(false);
+                        hint2.SetActive(true);
+                        activeClueMessage = msg;
+                        clueMessageTimer = 0f;
+                    }
+
+                    obj.SetActive(false);
+                    interactTimer = 0f;
+                }
+                if (obj.name == "Paper2" && interactTimer > 1f)
+                {
+                    // Collect book
+                    GlobalAudio.PlaySFX("BookPickUp");
+                    GlobalAudio.PlayVoice("Clue2");
+                    GameObject msg = GameObject.Find("Clue2");
+                    GameObject hint2 = GameObject.Find("Hint2");
+                    GameObject hint3 = GameObject.Find("Hint3");
+
+                    if (msg != null)
+                    {
+                        msg.SetActive(true);
+                        hint2.SetActive(false);
+                        hint3.SetActive(true);
+                        activeClueMessage = msg;
+                        clueMessageTimer = 0f;
+                    }
+
+                    obj.SetActive(false);
+                    interactTimer = 0f;
+                }
+                if (obj.name == "Paper3" && interactTimer > 1f)
+                {
+                    // Collect book
+                    GlobalAudio.PlaySFX("BookPickUp");
+                    GlobalAudio.PlayVoice("Clue3");
+                    GameObject msg = GameObject.Find("Clue3");
+
+                    if (msg != null)
+                    {
+                        msg.SetActive(true);
+                        activeClueMessage = msg;
+                        clueMessageTimer = 0f;
+                    }
+
+                    obj.SetActive(false);
+                    interactTimer = 0f;
+                }
+                if (obj.name == "Paper4" && interactTimer > 1f)
+                {
+                    // Collect book
+                    GlobalAudio.PlaySFX("BookPickUp");
+                    GlobalAudio.PlayVoice("Clue4");
+                    GameObject msg = GameObject.Find("Clue4");
+
+                    if (msg != null)
+                    {
+                        msg.SetActive(true);
+                        activeClueMessage = msg;
+                        clueMessageTimer = 0f;
+                    }
+
+                    obj.SetActive(false);
+                    interactTimer = 0f;
+
+                }
+                if (obj.name == "Paper5" && interactTimer > 1f)
+                {
+                    // Collect book
+                    GlobalAudio.PlaySFX("BookPickUp");
+                    //GlobalAudio.PlayVoice("Clue5");
+                    GameObject msg = GameObject.Find("Clue5");
+
+                    if (msg != null)
+                    {
+                        msg.SetActive(true);
+                        activeClueMessage = msg;
+                        clueMessageTimer = 0f;
+                    }
+
+                    obj.SetActive(false);
+                    interactTimer = 0f;
+
+                }
                 if (obj.name == "Book" && interactTimer > 1f)
                 {
                     // Collect book
@@ -279,6 +380,21 @@ public class PlayerController2 : MonoBehaviour
 
     //    return (ulong)field.GetValue(hit);
     //}
+
+    private void HandleClueMessageTimer()
+    {
+        if (activeClueMessage != null)
+        {
+            clueMessageTimer += Time.deltaTime;
+
+            if (clueMessageTimer >= clueMessageDuration)
+            {
+                activeClueMessage.SetActive(false);
+                activeClueMessage = null;
+                clueMessageTimer = 0f;
+            }
+        }
+    }
 
     void OnCollisionEnter(Collision col)
     {
