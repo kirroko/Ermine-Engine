@@ -60,14 +60,19 @@ uniform float pbrAO = 1.0;
 uniform vec3 pbrEmissive = vec3(0.0);
 uniform float pbrEmissiveIntensity = 0.0;
 
+const int NUM_CASCADES = 4;
+
 struct Light {
     vec4 position_type;
     vec4 color_intensity;
     vec4 direction_range;
-    vec4 spot_angles;
+    vec4 spot_angles_castshadows_startOffset;
+    mat4 lightSpaceMatrix[NUM_CASCADES];
+    mat4 pointLightMatrices[6];
+    vec4 splitDepths[(NUM_CASCADES + 3) / 4];
 };
 
-layout (std430, binding = 1) restrict readonly buffer LightsSSBO {
+layout (std430, binding = 4) restrict readonly buffer LightsSSBO { // Matches LIGHT_SSBO_BINDING in SSBO_Bindings.h
     vec4 lightCount;
     Light lights[];
 };
@@ -222,8 +227,8 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
         if (lightType == SPOT_LIGHT) {
             vec3 spotDir = normalize(lights[lightIndex].direction_range.xyz);
             float cosAngle = dot(-lightDir, spotDir);
-            float innerCos = lights[lightIndex].spot_angles.x;
-            float outerCos = lights[lightIndex].spot_angles.y;
+            float innerCos = lights[lightIndex].spot_angles_castshadows_startOffset.x;
+            float outerCos = lights[lightIndex].spot_angles_castshadows_startOffset.y;
             
             float spotFactor = clamp((cosAngle - outerCos) / (innerCos - outerCos), 0.0, 1.0);
             attenuation *= spotFactor;
@@ -314,7 +319,7 @@ void main()
         result += ambient;
 
         // Add contribution from each light
-        for (int i = 0; i < numLights && i < 16; ++i) {
+        for (int i = 0; i < numLights; ++i) {
             result += calculateBlinnPhong(i, norm, viewDir, ViewPos, albedo);
         }
         
@@ -331,7 +336,7 @@ void main()
         result += ambient;
 
         // Add contribution from each light
-        for (int i = 0; i < numLights && i < 16; ++i) {
+        for (int i = 0; i < numLights; ++i) {
             result += calculatePBR(i, norm, viewDir, ViewPos, albedo, F0, roughness, metallic);
         }
         

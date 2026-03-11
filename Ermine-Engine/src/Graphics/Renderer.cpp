@@ -658,6 +658,39 @@ void Renderer::RenderDebugTriangles(const Mtx44& view, const Mtx44& proj)
  * @param height The height of the offscreen buffer
  * @return OffscreenBuffer The offscreen buffer
  */
+void Renderer::EnsureLightsSSBO(size_t requiredLightCount)
+{
+	if (!m_LightsSSBO)
+	{
+		glGenBuffers(1, &m_LightsSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsSSBO);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LIGHT_SSBO_BINDING, m_LightsSSBO);
+		EE_CORE_INFO("Created Lights SSBO at binding point {0}", LIGHT_SSBO_BINDING);
+	}
+	else
+	{
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsSSBO);
+	}
+
+	BindLightsSSBO();
+
+	if (requiredLightCount > m_LightsSSBOCapacity || m_LightsSSBOCapacity == 0)
+	{
+		const GLsizeiptr headerSize = static_cast<GLsizeiptr>(sizeof(glm::vec4));
+		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(requiredLightCount * sizeof(LightGPU));
+		glBufferData(GL_SHADER_STORAGE_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
+		m_LightsSSBOCapacity = requiredLightCount;
+	}
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	glCheckError();
+}
+
+void Renderer::BindLightsSSBO() const
+{
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LIGHT_SSBO_BINDING, m_LightsSSBO);
+}
+
 Renderer::OffscreenBuffer Renderer::CreateOffscreenBuffer(const int& width, const int& height)
 {
 	OffscreenBuffer buffer{};
@@ -670,17 +703,7 @@ Renderer::OffscreenBuffer Renderer::CreateOffscreenBuffer(const int& width, cons
 		glDeleteRenderbuffers(1, &m_OffscreenBuffer->RBO);
 	}
 
-	if (!m_LightsUBO)
-	{
-		glGenBuffers(1, &m_LightsUBO);
-		glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
-		const GLsizeiptr headerSize = static_cast<GLsizeiptr>(sizeof(glm::vec4));
-		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(MAX_LIGHTS * sizeof(LightGPU));
-		glBufferData(GL_UNIFORM_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
-		glBindBufferBase(GL_UNIFORM_BUFFER, LightsBindingPoint, m_LightsUBO);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-		glCheckError();
-	}
+	EnsureLightsSSBO(0);
 
 	// Create FBO
 	glGenFramebuffers(1, &buffer.FBO);
@@ -831,18 +854,7 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
 		EE_CORE_ERROR("ERROR: Invalid G-Buffer dimensions: {0}x{1}", width, height);
 	}
 
-	// If Light UBO doesn't exist, create it
-	if (!m_LightsUBO)
-	{
-		glGenBuffers(1, &m_LightsUBO);
-		glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
-		const GLsizeiptr headerSize = static_cast<GLsizeiptr>(sizeof(glm::vec4));
-		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(MAX_LIGHTS * sizeof(LightGPU));
-		glBufferData(GL_UNIFORM_BUFFER, headerSize + bodySize, nullptr, GL_DYNAMIC_DRAW);
-		glBindBufferBase(GL_UNIFORM_BUFFER, LightsBindingPoint, m_LightsUBO);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-		glCheckError();
-	}
+	EnsureLightsSSBO(0);
 
 	// Create framebuffer
 	glGenFramebuffers(1, &gBuffer.FBO);
@@ -3651,8 +3663,8 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 	m_BloomShader->SetUniform1f("u_BloomThreshold", m_BloomThreshold);
 	m_BloomShader->SetUniform1f("u_BloomRadius", m_BloomRadius);
 
-	// Bind Lights UBO for god rays
-	glBindBufferBase(GL_UNIFORM_BUFFER, 1, m_LightsUBO);
+	// Bind light SSBO for god rays
+	BindLightsSSBO();
 
 	// Bind bindless textures for god rays
 	if (m_GBuffer)
@@ -3907,12 +3919,12 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 	if (frameCounter % SHADOW_MAP_REFRESH_INTERVAL_IN_FRAMES == 0)
 	{
 		// Build shadow light list and layer allocation for this frame's shadow pass
-		UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
+		UpdateLightsSSBO(editor::EditorCamera::GetInstance().GetViewMatrix());
 		RenderShadowPass();
 	}
 
 	// Re-sync lights UBO after shadow layer allocation/matrix updates
-	UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
+	UpdateLightsSSBO(editor::EditorCamera::GetInstance().GetViewMatrix());
 
 	// Update light probes UBO
 	UpdateLightProbesUBO();
@@ -4286,21 +4298,15 @@ void Renderer::CleanupPostProcessBuffer()
 }
 
 /**
- * @brief Updates the lights' uniform buffer object (UBO) with the current light and transform data from all living entities.
- * @param view The view matrix to transform the positions and directions of the lights into view space.
+ * @brief Updates the lights' shader storage buffer object (SSBO) with current light data.
+ * @param view Legacy caller-provided view matrix. Active camera selection is resolved internally.
  */
-void Renderer::UpdateLightsUBO(const Mtx44& view)
+void Renderer::UpdateLightsSSBO(const Mtx44& view)
 {
 	(void)view;
 	const auto& ecs = Ermine::ECS::GetInstance();
 	if (!m_LightSystem) {
-		return;
-	}
-
-	// Ensure UBO is initialized before trying to update it
-	if (m_LightsUBO == 0)
-	{
-		EE_CORE_ERROR("Lights UBO not initialized!");
+		m_LastUploadedLightCount = 0;
 		return;
 	}
 
@@ -4371,7 +4377,7 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 	visibleLights.reserve(m_LightSystem->m_Entities.size());
 
 	std::vector<LightGPU> lights;
-	lights.reserve(MAX_LIGHTS);
+	lights.reserve(visibleLights.capacity());
 
 	// Clear and prepare shadow casting light list and layer allocator
 	m_ShadowCastingLights.clear();
@@ -4421,11 +4427,6 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 			// View-space forward is -Z, so the light with the larger Z value is nearer.
 			return a.viewZ > b.viewZ;
 		});
-	if (visibleLights.size() > MAX_LIGHTS)
-	{
-		visibleLights.resize(MAX_LIGHTS);
-	}
-
 	for (const SortedLightCandidate& candidate : visibleLights)
 	{
 		EntityID e = candidate.entity;
@@ -4490,21 +4491,24 @@ void Renderer::UpdateLightsUBO(const Mtx44& view)
 
 	// Calculate total shadow instances for cascade rendering
 	m_TotalShadowInstances = currentLayer;
+	m_LastUploadedLightCount = lights.size();
 
-	// Upload to UBO
-	glBindBuffer(GL_UNIFORM_BUFFER, m_LightsUBO);
+	// Upload to SSBO
+	EnsureLightsSSBO(lights.size());
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsSSBO);
+	BindLightsSSBO();
 
 	glm::vec4 count(static_cast<float>(lights.size()), 0.0f, 0.0f, 0.0f);
-	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::vec4), &count);
+	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::vec4), &count);
 
 	if (!lights.empty())
 	{
 		const GLsizeiptr bodyOffset = static_cast<GLsizeiptr>(sizeof(glm::vec4));
 		const GLsizeiptr bodySize = static_cast<GLsizeiptr>(lights.size() * sizeof(LightGPU));
-		glBufferSubData(GL_UNIFORM_BUFFER, bodyOffset, bodySize, lights.data());
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, bodyOffset, bodySize, lights.data());
 	}
 
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	glCheckError();
 }
 
@@ -4892,7 +4896,7 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 		glUseProgram(0);
 	}
 
-	// Inject direct lighting into voxel emissive using LightsUBO
+	// Inject direct lighting into voxel emissive using the light SSBO
 	if (m_ProbeLightInjectComputeShader && m_ProbeLightInjectComputeShader->IsValid()) {
 		const GLuint program = m_ProbeLightInjectComputeShader->GetRendererID();
 		glUseProgram(program);
@@ -4904,7 +4908,7 @@ void Renderer::CaptureLightProbe(EntityID probeEntity)
 		if (locVoxelMax != -1) glUniform3f(locVoxelMax, worldBoundsMax.x, worldBoundsMax.y, worldBoundsMax.z);
 		if (locVoxelRes != -1) glUniform1i(locVoxelRes, m_ProbeVoxelResolution);
 
-		glBindBufferBase(GL_UNIFORM_BUFFER, LightsBindingPoint, m_LightsUBO);
+		BindLightsSSBO();
 		glBindImageTexture(0, m_ProbeVoxelAlbedoTexture, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
 		glBindImageTexture(1, m_ProbeVoxelEmissiveTexture, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA8);
 		glBindImageTexture(2, m_ProbeVoxelNormalTexture, 0, GL_TRUE, 0, GL_READ_ONLY, GL_RGBA8);
@@ -5453,9 +5457,9 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 	// Accumulate elapsed time for shader effects
 	m_ElapsedTime += FrameController::GetDeltaTime();
 
-	// Update lights UBO
+	// Update light SSBO
 	if (!m_UseDeferredRendering) {
-		UpdateLightsUBO(editor::EditorCamera::GetInstance().GetViewMatrix());
+		UpdateLightsSSBO(editor::EditorCamera::GetInstance().GetViewMatrix());
 		UpdateLightProbesUBO();
 	}
 
@@ -5880,10 +5884,12 @@ Renderer::~Renderer()
 		CleanupPostProcessBuffer();
 
 		// Now delete buffers
-		if (m_LightsUBO)
+		if (m_LightsSSBO)
 		{
-			glDeleteBuffers(1, &m_LightsUBO);
-			m_LightsUBO = 0;
+			glDeleteBuffers(1, &m_LightsSSBO);
+			m_LightsSSBO = 0;
+			m_LightsSSBOCapacity = 0;
+			m_LastUploadedLightCount = 0;
 		}
 
 		if (m_MaterialSSBO)
