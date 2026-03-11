@@ -40,6 +40,10 @@ public class CutsceneVideo: MonoBehaviour
 
         elapsedTime += Time.deltaTime;
 
+        if (elapsedTime >= 0.2f && blackScreen.activeSelf)
+        {
+            blackScreen.SetActive(false);
+        }
 
         if (elapsedTime >= videoDurationSeconds)
         {
