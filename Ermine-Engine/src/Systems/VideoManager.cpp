@@ -601,6 +601,17 @@ namespace Ermine
         }
     }
 
+    void VideoManager::SetAudioVolume(const std::string& name, float volume)
+    {
+        std::lock_guard<std::mutex> lock(m_stateMutex);
+        auto it = m_videos.find(name);
+        if (it == m_videos.end() || !it->second)
+            return;
+        auto& video = it->second;
+        if (video->audioChannel)
+            video->audioChannel->setVolume(std::max(0.0f, std::min(1.0f, volume)));
+    }
+
 #pragma region Private Methods
 
     /**

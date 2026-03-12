@@ -82,9 +82,12 @@ public class DisableLightCone : MonoBehaviour
         if (lightCone.activeSelf)
         {
             lightCone.transform.position = new Vector3(0, -100, 0);
-            Physics.SetPosition((ulong)lightCone.GetInstanceID(), lightCone.transform.position);
+            //Physics.SetPosition((ulong)lightCone.GetInstanceID(), lightCone.transform.position);
             lightCone.SetActive(false);
         }
+
+        GlobalAudio.StopSFX("LightDamageLoop");
+        GlobalAudio.PlaySFX("LightDisable");
     }
 
     void RespawnLight()

@@ -1,7 +1,6 @@
 #version 460
 #extension GL_ARB_bindless_texture : require
 
-const int MAX_LIGHTS = 32;
 const int NUM_CASCADES = 4;
 
 // Material texture flag bits (must match C++ MaterialTextureFlags enum)
@@ -87,9 +86,9 @@ struct Light {
     vec4 splitDepths[(NUM_CASCADES + 3) / 4]; // Split depths for cascaded shadow maps
 };
 
-layout (std140, binding = 1) uniform LightsUBO {
+layout (std430, binding = 4) readonly buffer LightsSSBO { // Matches LIGHT_SSBO_BINDING in SSBO_Bindings.h
     vec4 lightCount;
-    Light lights[MAX_LIGHTS]; // Fixed size array
+    Light lights[];
 };
 
 const float PI = 3.14159265359;
@@ -379,7 +378,7 @@ void main()
         result += ambient;
 
         // Add contribution from each light
-        for (int i = 0; i < numLights && i < 16; ++i) {
+        for (int i = 0; i < numLights; ++i) {
             result += calculateBlinnPhong(i, normalView, viewDir, fragPosView, albedo);
         }
         
@@ -396,7 +395,7 @@ void main()
         result += ambient;
 
         // Add contribution from each light
-        for (int i = 0; i < numLights && i < 16; ++i) {
+        for (int i = 0; i < numLights; ++i) {
             result += calculatePBR(i, normalView, viewDir, fragPosView, albedo, F0, roughness, metallic);
         }
         

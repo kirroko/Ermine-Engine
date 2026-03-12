@@ -6,7 +6,7 @@ public class Idle : MonoBehaviour
     public string playerName = "Player";
 
     public float viewDistance = 15.0f;
-    public float rayHeight = 0.8f;
+    public float rayHeight = 5.5f;
     public float rayForwardOffset = 2.0f;
     public float closeDetectDistance = 2.0f;
 
@@ -26,7 +26,7 @@ public class Idle : MonoBehaviour
     private float armTimer = 0.0f;
 
     private Animator anim;
-    public float stunRecoverDelay = 5.0f;
+    public float stunRecoverDelay = 8.0f;
     private float recoverTimer = 0.0f;
 
     private void CachePlayerIfNeeded()
@@ -81,6 +81,15 @@ public class Idle : MonoBehaviour
         RaycastHit hit;
         bool didHit = Physics.Raycast(origin, dirToPlayer, out hit, dist);
         if (!didHit) return false;
+
+                var hitGO = hit.transform.gameObject;
+
+        // Ignore self-hit
+        ulong hitID = (ulong)hitGO.GetInstanceID();
+        if (hitID == entityID) return false;
+
+        string n = hitGO.name;
+        if (n.StartsWith("SpawnPoint_")) return false;
 
         return hit.transform != null &&
                hit.transform.gameObject != null &&

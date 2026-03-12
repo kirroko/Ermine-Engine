@@ -53,6 +53,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "EditorGUI.h"
 
 #if defined(EE_EDITOR)
+#define JPH_DEBUG_RENDERER
 #include "GraphicsDebugGUI.h"
 #include "AssetBrowser.h"
 #include "EditorCamera.h"

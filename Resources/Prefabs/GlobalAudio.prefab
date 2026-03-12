@@ -14,7 +14,7 @@
           "masterVolume": 1.0,
           "musicVolume": 0.23999999463558198,
           "sfxVolume": 1.0,
-          "ambienceVolume": 0.08900000154972077,
+          "ambienceVolume": 0.1,
           "voiceVolume": 1.0,
           "autoPlay": true,
           "music": [
@@ -79,13 +79,23 @@
               "name": "HealthDrain3",
               "path": "../Resources/Audio/HealthDrain_v2_Part3.wav",
               "volume": 1.0
+            },
+            {
+              "name": "LightDisable",
+              "path": "../Resources/Audio/LightDisable.wav",
+              "volume": 0.699999988079071
+            },
+            {
+              "name": "LightDamageLoop",
+              "path": "../Resources/Audio/LightDamage_Loop.wav",
+              "volume": 0.3499999940395355
             }
           ],
           "ambience": [
             {
               "name": "Steampunk",
               "path": "../Resources/Audio/Ambience_Factory_v2.wav",
-              "volume": 1.0
+              "volume": 0.75
             }
           ],
           "voice": [

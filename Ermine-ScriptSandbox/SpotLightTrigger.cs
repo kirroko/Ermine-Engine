@@ -36,6 +36,7 @@ public class SpotLightTrigger : MonoBehaviour
     void Update()
     {
         if (player == null) return;
+        if (Physics.Internal_GetLightValue((ulong)gameObject.GetInstanceID()) == 0) return;
 
         bool inside = IsPointInsideSpot(player.transform.position);
 
@@ -55,7 +56,7 @@ public class SpotLightTrigger : MonoBehaviour
         {
             playerInside = false;
             OnSpotExit();
-            timer = tickInterval;
+            timer = 0;
         }
 
         // Damage tick while inside
@@ -151,10 +152,12 @@ public class SpotLightTrigger : MonoBehaviour
     void OnSpotEnter()
     {
         Debug.Log("Player entered spotlight cone");
+        GlobalAudio.PlaySFX("LightDamageLoop");
     }
 
     void OnSpotExit()
     {
         Debug.Log("Player left spotlight cone");
+        GlobalAudio.StopSFX("LightDamageLoop");
     }
 }

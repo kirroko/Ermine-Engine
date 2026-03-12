@@ -474,8 +474,13 @@ void GraphicsDebugGUI::DrawLightingControls()
     {
         ImGui::Indent(10.0f);
         
-        ImGui::Text("Maximum Lights: %d", MAX_LIGHTS);
-        DrawTooltip("Maximum number of lights that can be processed simultaneously");
+        auto renderer = ECS::GetInstance().GetSystem<Renderer>();
+        const int uploadedLights = renderer ? static_cast<int>(renderer->GetUploadedLightCount()) : 0;
+        const int lightCapacity = renderer ? static_cast<int>(renderer->GetLightSSBOCapacity()) : 0;
+        ImGui::Text("Uploaded Lights: %d", uploadedLights);
+        DrawTooltip("Number of lights uploaded to the light SSBO for the current frame");
+        ImGui::Text("Light SSBO Capacity: %d", lightCapacity);
+        DrawTooltip("Current light SSBO capacity in light entries before a resize is required");
         
         // Count active lights
         auto lightSystem = ECS::GetInstance().GetSystem<LightSystem>();
@@ -511,7 +516,6 @@ void GraphicsDebugGUI::DrawLightingControls()
         ImGui::Separator();
 
         // Volumetric Spotlight Rays
-        auto renderer = ECS::GetInstance().GetSystem<Renderer>();
         if (renderer) {
             if (DrawToggleButton("Volumetric Spotlight Rays", &renderer->m_SpotlightRaysEnabled,
                                 "Enable volumetric god rays for spotlights")) {

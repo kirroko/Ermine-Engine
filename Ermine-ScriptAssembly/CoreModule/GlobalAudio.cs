@@ -23,6 +23,9 @@ namespace ErmineEngine
         public static extern void PlaySFX(string name);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void StopSFX(string name);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void PlayMusic(string name);
 
         [MethodImpl(MethodImplOptions.InternalCall)]

@@ -86,13 +86,13 @@
                   "t": 3,
                   "v": "../Resources/Scenes/loading_level1.scene"
                 },
-                "videoDurationSeconds": {
-                  "t": 0,
-                  "v": 16.416667938232423
-                },
                 "VideoFileName": {
                   "t": 3,
                   "v": "IntroCinematic.mpeg"
+                },
+                "videoDurationSeconds": {
+                  "t": 0,
+                  "v": 16.416667938232423
                 },
                 "assumedFPS": {
                   "t": 1,
@@ -131,7 +131,7 @@
         "ObjectMetaData": {
           "name": "BlackScreenPrefab",
           "tag": "Untagged",
-          "selfActive": false
+          "selfActive": true
         },
         "HierarchyComponent": {
           "parentGuid": "3db3a3b89e7dc348b32afa32408882db",
