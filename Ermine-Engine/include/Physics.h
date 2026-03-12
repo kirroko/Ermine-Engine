@@ -277,7 +277,7 @@ namespace Ermine
 
 		bool HasPhysicComp(EntityID ID);
 
-		void TurnOffLight(EntityID ID);
+		void SetLightValue(EntityID ID,float value);
 
 		void ForceUpdate();
 

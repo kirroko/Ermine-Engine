@@ -2773,11 +2773,31 @@ namespace
 		auto physics = ECS::GetInstance().GetSystem<Physics>();
 		physics->ForceUpdate();
 	}
-	void icall_physics_turn_off_light(uint64_t entityID)
+	void icall_physics_set_light_value(uint64_t entityID, float value)
 	{
-		if (entityID == 0 || !ECS::GetInstance().IsEntityValid(entityID))
+		auto& ecs = ECS::GetInstance();
+		if (entityID == 0 || !ecs.IsEntityValid(entityID))
 			return;
-		ECS::GetInstance().GetSystem<Physics>()->TurnOffLight(entityID);
+
+		if (auto physics = ecs.GetSystem<Physics>())
+		{
+			physics->SetLightValue(entityID, value);
+		}
+	}
+
+	float icall_physics_get_light_value(uint64_t entityID)
+	{
+		using namespace Ermine;
+
+		auto& ecs = ECS::GetInstance();
+		if (entityID == 0 || !ecs.IsEntityValid(entityID))
+			return 0.0f;
+
+		if (!ecs.HasComponent<Light>(entityID))
+			return 0.0f;
+
+		const auto& lightobj = ecs.GetComponent<Light>(entityID);
+		return lightobj.intensity;
 	}
 
 #pragma endregion
@@ -4295,7 +4315,8 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Physics::CheckMotionType", (const void*)icall_Physics_CheckMotionType);
 	mono_add_internal_call("ErmineEngine.Physics::ForceUpdate", (const void*)icall_Physics_ForceUpdate);
 	mono_add_internal_call("ErmineEngine.Physics::HasPhysicComp", (const void*)icall_Physics_HasPhysicComp);
-	mono_add_internal_call("ErmineEngine.Physics::Internal_TurnOffLight",(const void*)icall_physics_turn_off_light);
+	mono_add_internal_call("ErmineEngine.Physics::Internal_SetLightValue",(const void*)icall_physics_set_light_value);
+	mono_add_internal_call("ErmineEngine.Physics::Internal_GetLightValue",(const void*)icall_physics_get_light_value);
 #pragma endregion
 
 #pragma region Cursor ICalls

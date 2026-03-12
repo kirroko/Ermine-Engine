@@ -1538,12 +1538,12 @@ namespace Ermine
 		return false;
 	}
 
-	void Physics::TurnOffLight(EntityID ID)
+	void Physics::SetLightValue(EntityID ID, float value)
 	{
 		if (ECS::GetInstance().HasComponent<Light>(ID))
 		{
 			auto& lightobj = ECS::GetInstance().GetComponent<Light>(ID);
-			lightobj.intensity = 0;
+			lightobj.intensity = value;
 		}
 	}
 
