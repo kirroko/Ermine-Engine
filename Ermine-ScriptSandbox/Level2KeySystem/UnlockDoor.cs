@@ -8,7 +8,8 @@ public class UnlockDoor : MonoBehaviour
     public float doorOpenDistance = 3f;
 
     private int numOfKeys = 0;
-    private int ComputerUnlocked = 0;
+    private bool computer1Unlocked = false;
+    private bool computer2Unlocked = false;
 
     private Transform doorLeft;
     private Transform doorRight;
@@ -21,16 +22,19 @@ public class UnlockDoor : MonoBehaviour
 
     private bool doorUnlocked = false;
 
+
     void Awake()
     {
         I = this;
+    }
 
-        GameObject leftObj = GameObject.Find("FinalGateL");
-        GameObject rightObj = GameObject.Find("FinalGateR");
+    void Start()
+    {
+        doorLeft = transform.GetChild(1);
+        doorRight = transform.GetChild(0);
 
-        if (leftObj != null && leftObj.transform != null)
+        if (doorLeft != null)
         {
-            doorLeft = leftObj.transform;
             leftClosedX = doorLeft.position.x;
         }
         else
@@ -38,9 +42,8 @@ public class UnlockDoor : MonoBehaviour
             Debug.Log("FinalGateL not found in the scene.");
         }
 
-        if (rightObj != null && rightObj.transform != null)
+        if (doorRight != null)
         {
-            doorRight = rightObj.transform;
             rightClosedX = doorRight.position.x;
         }
         else
@@ -105,10 +108,13 @@ public class UnlockDoor : MonoBehaviour
         }
     }
 
-    public void IncrementKeys() { numOfKeys++; }
-    public void DecrementKeys() { numOfKeys--; }
+    public void IncrementKeys()
+    {
+        numOfKeys++;
+        Debug.Log("Key collected! Total keys: " + numOfKeys);
+    }
 
-    public void UnlockDoorBool()
+    private void UnlockDoorBool()
     {
         if (doorLeft == null || doorRight == null)
         {
@@ -119,15 +125,65 @@ public class UnlockDoor : MonoBehaviour
         doorUnlocked = true;
     }
 
-    public void Evaluate()
+    // Called when player interacts with ComputerDoorUnlock1
+    public void UnlockComputer1()
     {
-        ComputerUnlocked++;
-        DecrementKeys();
+        // Check if player has at least 1 key
+        if (numOfKeys <= 0)
+        {
+            Debug.Log("No keys available! Collect a key first.");
+            return;
+        }
 
-        if (ComputerUnlocked >= 2 && numOfKeys <= 0)
+        // Check if this computer is already unlocked
+        if (computer1Unlocked)
+        {
+            Debug.Log("Computer 1 is already unlocked!");
+            return;
+        }
+
+        // Use a key and unlock computer 1
+        numOfKeys--;
+        computer1Unlocked = true;
+        Debug.Log("Computer 1 unlocked! Keys remaining: " + numOfKeys);
+
+        // Check if door should open
+        CheckDoorUnlock();
+    }
+
+    // Called when player interacts with ComputerDoorUnlock2
+    public void UnlockComputer2()
+    {
+        // Check if player has at least 1 key
+        if (numOfKeys <= 0)
+        {
+            Debug.Log("No keys available! Collect a key first.");
+            return;
+        }
+
+        // Check if this computer is already unlocked
+        if (computer2Unlocked)
+        {
+            Debug.Log("Computer 2 is already unlocked!");
+            return;
+        }
+
+        // Use a key and unlock computer 2
+        numOfKeys--;
+        computer2Unlocked = true;
+        Debug.Log("Computer 2 unlocked! Keys remaining: " + numOfKeys);
+
+        // Check if door should open
+        CheckDoorUnlock();
+    }
+
+    private void CheckDoorUnlock()
+    {
+        // Only unlock door if BOTH computers are unlocked
+        if (computer1Unlocked && computer2Unlocked)
         {
             UnlockDoorBool();
-            Debug.Log("Door Unlocked!");
+            Debug.Log("Door Unlocked! Both computers activated!");
 
             GameObject hint = GameObject.Find("Hint4");
             GameObject keyHint = GameObject.Find("Hint5");
@@ -138,5 +194,19 @@ public class UnlockDoor : MonoBehaviour
                 keyHint.SetActive(true);
             }
         }
+    }
+    public int GetKeyCount()
+    {
+        return numOfKeys;
+    }
+
+    public bool IsComputer1Unlocked()
+    {
+        return computer1Unlocked;
+    }
+
+    public bool IsComputer2Unlocked()
+    {
+        return computer2Unlocked;
     }
 }
