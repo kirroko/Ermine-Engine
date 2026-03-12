@@ -90,6 +90,7 @@
     <Compile Include="GearRotateAnimation.cs" />
     <Compile Include="HealthDrivenMaterialFill.cs" />
     <Compile Include="LifeEssenceSkillController.cs" />
+    <Compile Include="LoadingScreen.cs" />
     <Compile Include="MainMenu.cs" />
     <Compile Include="MainMenuVideo.cs" />
     <Compile Include="MoveState.cs" />
