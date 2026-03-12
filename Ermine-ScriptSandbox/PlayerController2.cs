@@ -264,7 +264,7 @@ public class PlayerController2 : MonoBehaviour
                 {
                     // Collect book
                     GlobalAudio.PlaySFX("BookPickUp");
-                    PlayVoiceWithSubtitle("Clue2", 10f);
+                    PlayVoiceWithSubtitle("Clue3", 10f);
                     GameObject msg = GameObject.Find("Clue2");
                     GameObject hint2 = GameObject.Find("Hint2");
                     GameObject hint3 = GameObject.Find("Hint3");
@@ -285,7 +285,7 @@ public class PlayerController2 : MonoBehaviour
                 {
                     // Collect book
                     GlobalAudio.PlaySFX("BookPickUp");
-                    PlayVoiceWithSubtitle("Clue3", 9f);
+                    PlayVoiceWithSubtitle("Clue2", 9f);
                     GameObject msg = GameObject.Find("Clue3");
 
                     if (msg != null)
