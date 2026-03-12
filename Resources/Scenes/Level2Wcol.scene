@@ -257818,6 +257818,35 @@
         },
         "GlobalTransform": {}
       }
+    },
+    {
+      "id": 5917,
+      "components": {
+        "IDComponent": {
+          "guid": "4f8c236b0a4e49dfa28b341350d87e7c"
+        },
+        "Transform": {
+          "position": [0.0, -9999.0, 0.0],
+          "rotation": [0.0, 0.0, 0.0, 1.0],
+          "scale": [0.0, 0.0, 0.0]
+        },
+        "ObjectMetaData": {
+          "name": "SphereMaterialPreload",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": { "type": "Sphere", "size": [1, 1, 1] }
+        },
+        "Material": {
+          "guid": "6a4a6d1a5d3f4b26b9f8c0a1e2d7f314"
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
     }
   ],
   "globalGraphics": {
