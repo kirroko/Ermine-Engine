@@ -1302,6 +1302,14 @@ Ermine::EntityID LoadPrefabFromFile(Ermine::ECS& ecs, const std::filesystem::pat
     //ecs.GetSystem<Ermine::HierarchySystem>()->ForceUpdateAllTransforms();
     ecs.GetSystem<Ermine::Physics>()->UpdatePhysicList();
 
+    if (auto renderer = ecs.GetSystem<Ermine::graphics::Renderer>()) {
+        // Prefab instantiation can introduce materials that were not part of the
+        // currently compiled scene set, so refresh GPU material bindings now.
+        renderer->MarkMaterialsDirty();
+        renderer->CompileMaterials();
+        renderer->ForceDrawDataRebuild();
+    }
+
     // Return detected root; fallback to first created if none marked as root
     if (rootEntity != 0) return rootEntity;
     if (!oldGuidToNew.empty()) return oldGuidToNew.begin()->second;

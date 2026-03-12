@@ -588,6 +588,9 @@ namespace Ermine
             m_videos.clear();
             m_currentVideo.clear();
             m_isPlaying = false;
+            m_renderEnabled = true;
+            m_fitMode = VideoFitMode::AspectFit;
+            m_quadDirty = true;
         }
 
         m_decodeCv.notify_all();

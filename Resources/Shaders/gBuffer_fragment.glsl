@@ -33,6 +33,7 @@ const uint MAT_FLAG_AO_MAP        = 1u << 4u;  // bit 4
 const uint MAT_FLAG_EMISSIVE_MAP  = 1u << 5u;  // bit 5
 const uint FLAG_CAMERA_ATTACHED   = 1u << 1u;  // DrawInfo flag bit 1
 const float FILL_FULL_EPSILON     = 0.99;
+const float UV_LOD_GRADIENT_SCALE = 0.5; // Stronger bias toward the sharper mip to avoid 0/1 ping-pong
 
 // Bindless texture array SSBO - stores texture handles as uvec2 (64-bit split into two 32-bit values)
 layout(std430, binding = 5) restrict readonly buffer TextureArrayBlock
@@ -105,9 +106,9 @@ flat in uint vTextureFlags;
 flat in ivec4 vTextureIndices;     // albedo, normal, roughness, metallic
 flat in ivec2 vTextureIndices2;    // ao, emissive
 flat in float vFillAmount;
+flat in vec4 vUVTransform;
 in float vFillCoord;
 
-in vec2 vTransformedUV;   // UV with scale/offset already applied
 in vec4 vCurrClipPos; // Current clip-space position
 in vec4 vPrevClipPos; // Previous clip-space position
 
@@ -151,29 +152,33 @@ void main()
         return;
     }
 
+    vec2 transformedUV = fma(TexCoord, vUVTransform.xy, vUVTransform.zw);
+    vec2 uvDx = dFdxFine(transformedUV) * UV_LOD_GRADIENT_SCALE;
+    vec2 uvDy = dFdyFine(transformedUV) * UV_LOD_GRADIENT_SCALE;
+
     // ========== BATCH TEXTURE SAMPLES ==========
     vec3 albedoSample = ((vTextureFlags & MAT_FLAG_ALBEDO_MAP) != 0u && vTextureIndices.x >= 0)
-        ? texture(sampler2D(textureHandles[vTextureIndices.x]), vTransformedUV).rgb
+        ? textureGrad(sampler2D(textureHandles[vTextureIndices.x]), transformedUV, uvDx, uvDy).rgb
         : vec3(1.0);
 
     vec2 normalSample = ((vTextureFlags & MAT_FLAG_NORMAL_MAP) != 0u && vTextureIndices.y >= 0)
-        ? texture(sampler2D(textureHandles[vTextureIndices.y]), vTransformedUV).rg
+        ? textureGrad(sampler2D(textureHandles[vTextureIndices.y]), transformedUV, uvDx, uvDy).rg
         : vec2(0.5, 0.5);
 
     float roughnessSample = ((vTextureFlags & MAT_FLAG_ROUGHNESS_MAP) != 0u && vTextureIndices.z >= 0)
-        ? texture(sampler2D(textureHandles[vTextureIndices.z]), vTransformedUV).r
+        ? textureGrad(sampler2D(textureHandles[vTextureIndices.z]), transformedUV, uvDx, uvDy).r
         : 1.0;
 
     float metallicSample = ((vTextureFlags & MAT_FLAG_METALLIC_MAP) != 0u && vTextureIndices.w >= 0)
-        ? texture(sampler2D(textureHandles[vTextureIndices.w]), vTransformedUV).r
+        ? textureGrad(sampler2D(textureHandles[vTextureIndices.w]), transformedUV, uvDx, uvDy).r
         : 1.0;
 
     float aoSample = ((vTextureFlags & MAT_FLAG_AO_MAP) != 0u && vTextureIndices2.x >= 0)
-        ? texture(sampler2D(textureHandles[vTextureIndices2.x]), vTransformedUV).r
+        ? textureGrad(sampler2D(textureHandles[vTextureIndices2.x]), transformedUV, uvDx, uvDy).r
         : 1.0;
 
     vec3 emissiveSample = ((vTextureFlags & MAT_FLAG_EMISSIVE_MAP) != 0u && vTextureIndices2.y >= 0)
-        ? texture(sampler2D(textureHandles[vTextureIndices2.y]), vTransformedUV).rgb
+        ? textureGrad(sampler2D(textureHandles[vTextureIndices2.y]), transformedUV, uvDx, uvDy).rgb
         : vec3(1.0);
 
     // ========== PROCESS SAMPLES ==========

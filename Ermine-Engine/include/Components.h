@@ -1201,8 +1201,9 @@ namespace Ermine
 		 * @brief Constructor taking a modular material.
 		 * @param material A shared pointer to a `graphics::Material` object that will be used to initialize the Material.
 		 */
-		Material(std::shared_ptr<graphics::Material> material, Guid guid = {}) : m_material(std::move(material)), materialGuid(guid)
+		Material(std::shared_ptr<graphics::Material> material, Guid guid = {})
 		{
+			SetMaterial(material, guid);
 		}
 
 		/**
@@ -1231,6 +1232,7 @@ namespace Ermine
 		 */
 		Material(const Material& other) : m_material(other.m_material), materialGuid(other.materialGuid)
 		{
+			CopyCachedAuthoringState(other);
 			// Shared ownership - multiple entities can share the same material
 		}
 
@@ -1245,6 +1247,7 @@ namespace Ermine
 			{
 				m_material = other.m_material; // Shared ownership
 				materialGuid = other.materialGuid;
+				CopyCachedAuthoringState(other);
 			}
 			return *this;
 		}
@@ -1255,6 +1258,7 @@ namespace Ermine
 		 */
 		Material(Material&& other) noexcept : m_material(std::move(other.m_material)), materialGuid(other.materialGuid)
 		{
+			MoveCachedAuthoringState(std::move(other));
 		}
 
 		/**
@@ -1268,6 +1272,7 @@ namespace Ermine
 			{
 				m_material = std::move(other.m_material);
 				materialGuid = other.materialGuid;
+				MoveCachedAuthoringState(std::move(other));
 			}
 			return *this;
 		}
@@ -1297,7 +1302,60 @@ namespace Ermine
 		void SetMaterial(const std::shared_ptr<graphics::Material>& material, Guid guid) {
 			m_material = material;
 			materialGuid = guid;
+			if (m_material) {
+				SyncFromMaterial();
+			}
+			SyncCustomFragmentShaderCache();
 		}
+
+	private:
+		void CopyCachedAuthoringState(const Material& other)
+		{
+			materialTemplate = other.materialTemplate;
+			hasAlbedo = other.hasAlbedo;
+			cacheAlbedo = other.cacheAlbedo;
+			hasRough = other.hasRough;
+			cacheRoughness = other.cacheRoughness;
+			hasMetal = other.hasMetal;
+			cacheMetallic = other.cacheMetallic;
+			hasEmiss = other.hasEmiss;
+			cacheEmissive = other.cacheEmissive;
+			cacheEmissiveIntensity = other.cacheEmissiveIntensity;
+			customFragmentShader = other.customFragmentShader;
+			cacheCastsShadows = other.cacheCastsShadows;
+		}
+
+		void MoveCachedAuthoringState(Material&& other) noexcept
+		{
+			materialTemplate = std::move(other.materialTemplate);
+			hasAlbedo = other.hasAlbedo;
+			cacheAlbedo = other.cacheAlbedo;
+			hasRough = other.hasRough;
+			cacheRoughness = other.cacheRoughness;
+			hasMetal = other.hasMetal;
+			cacheMetallic = other.cacheMetallic;
+			hasEmiss = other.hasEmiss;
+			cacheEmissive = other.cacheEmissive;
+			cacheEmissiveIntensity = other.cacheEmissiveIntensity;
+			customFragmentShader = std::move(other.customFragmentShader);
+			cacheCastsShadows = other.cacheCastsShadows;
+		}
+
+		void SyncCustomFragmentShaderCache()
+		{
+			if (!materialGuid.IsValid()) {
+				return;
+			}
+
+			if (const std::string* frag = AssetManager::GetInstance().GetMaterialCustomFragmentShader(materialGuid)) {
+				customFragmentShader = *frag;
+			}
+			else {
+				customFragmentShader.clear();
+			}
+		}
+
+	public:
 
 		/**
 		* @brief Sets the albedo color for the material.

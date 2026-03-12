@@ -1279,6 +1279,8 @@ namespace Ermine::graphics
         bool m_DrawDataNeedsFullRebuild = true;               // Force full rebuild (entity add/remove/major change)
         bool m_NeedsTransparentSort = true;                   // Trigger transparent object sorting (set during full rebuild)
         uint64_t m_LastEntityListHash = 0;                    // Hash of entity list to detect add/remove
+        bool m_PresentPreviousFrameOnce = false;              // Reuse the last presented frame once after a full rebuild
+        bool m_HasPreviousPresentedFrame = false;             // Tracks whether a valid presented-frame history exists
 
         // Draw data optimization - Cache for fast path (avoids expensive lookups)
         struct CachedDrawItem {
@@ -1326,6 +1328,7 @@ namespace Ermine::graphics
         std::shared_ptr<PostProcessBuffer> m_AntiAliasingBuffer;
         std::shared_ptr<PostProcessBuffer> m_MotionBlurBuffer;
         std::shared_ptr<PostProcessBuffer> m_MotionBlurMaskBuffer;
+        std::shared_ptr<PostProcessBuffer> m_PreviousPresentedBuffer;
         GLuint m_NoiseTexture = 0; // Film grain noise texture
         std::shared_ptr<Texture> m_VignetteMapTexture = nullptr; // Optional vignette map texture
         std::shared_ptr<Shader> m_BloomShader = 0; // Shader for bloom effect

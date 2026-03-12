@@ -34,8 +34,31 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #ifndef GL_COMPRESSED_RGBA_BPTC_UNORM
 #define GL_COMPRESSED_RGBA_BPTC_UNORM     0x8E8C
 #endif
+#ifndef GL_TEXTURE_MAX_ANISOTROPY_EXT
+#define GL_TEXTURE_MAX_ANISOTROPY_EXT     0x84FE
+#endif
+#ifndef GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT
+#define GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT 0x84FF
+#endif
 
 using namespace Ermine::graphics;
+
+namespace
+{
+    void ConfigureTextureSampling(bool enableMipmaps)
+    {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, enableMipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        if (glfwExtensionSupported("GL_EXT_texture_filter_anisotropic")) {
+            GLfloat maxAnisotropy = 1.0f;
+            glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, std::max(1.0f, maxAnisotropy));
+        }
+    }
+}
 
 bool Texture::LoadFromDDS(const std::string& ddsFilePath)
 {
@@ -97,10 +120,7 @@ bool Texture::LoadFromDDS(const std::string& ddsFilePath)
     glBindTexture(GL_TEXTURE_2D, m_RendererID);
 
     // Set texture parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    ConfigureTextureSampling(true);
 
     // Convert DirectX format to OpenGL format
     GLenum internalFormat;
@@ -161,6 +181,8 @@ bool Texture::LoadFromDDS(const std::string& ddsFilePath)
 
     size_t totalSize = 0;
 
+    bool uploadedSingleMip = (metadata.mipLevels <= 1);
+
     // Upload each mip level
     for (size_t mipLevel = 0; mipLevel < metadata.mipLevels; ++mipLevel) {
         const Image* img = image.GetImage(mipLevel, 0, 0);
@@ -187,7 +209,7 @@ bool Texture::LoadFromDDS(const std::string& ddsFilePath)
     }
 
     // If only one mip level and uncompressed, generate mipmaps
-    if (metadata.mipLevels == 1 && !isCompressed) {
+    if (uploadedSingleMip) {
         glGenerateMipmap(GL_TEXTURE_2D);
     }
 
@@ -263,10 +285,7 @@ Texture::Texture(const std::string& filePath) : m_filePath(filePath)
     glGenTextures(1, &m_RendererID);
     glBindTexture(GL_TEXTURE_2D, m_RendererID);
     
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    ConfigureTextureSampling(true);
     
     stbi_set_flip_vertically_on_load(1);
     m_LocalBuffer = stbi_load(filePath.c_str(), &m_Width, &m_Height, &m_BPP, 4);
