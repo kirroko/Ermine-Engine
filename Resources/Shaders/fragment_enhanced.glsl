@@ -21,7 +21,7 @@ flat in uint vMaterialIndex;
 
 out vec4 FragColor;
 
-// Material structure (112 bytes, matches C++ MaterialSSBO)
+// Material structure (112 bytes, matches C++ MaterialSSBO exactly)
 struct MaterialData {
     vec4 albedo;                // 16 bytes (0-15)
     float metallic;             // 4 bytes (16-19)
@@ -34,8 +34,8 @@ struct MaterialData {
 
     int shadingModel;           // 4 bytes (48-51) - 0 = PBR, 1 = Blinn-Phong
     uint textureFlags;          // 4 bytes (52-55) - Packed bitfield for all texture flags
-    float _pad0;                // 4 bytes (56-59)
-    float _pad1;                // 4 bytes (60-63)
+    int castsShadows;           // 4 bytes (56-59) - Kept for CPU/GPU layout parity
+    float fillAmount;           // 4 bytes (60-63)
 
     vec2 uvScale;               // 8 bytes (64-71) - UV scale for texture tiling
     vec2 uvOffset;              // 8 bytes (72-79) - UV offset for texture positioning
@@ -48,8 +48,8 @@ struct MaterialData {
 
     int aoMapIndex;             // 4 bytes (96-99)
     int emissiveMapIndex;       // 4 bytes (100-103)
-    int _pad2;                  // 4 bytes (104-107)
-    int _pad3;                  // 4 bytes (108-111)
+    float fillDirOctX;          // 4 bytes (104-107)
+    float fillDirOctY;          // 4 bytes (108-111)
     // Total: 112 bytes
 };
 
@@ -109,14 +109,21 @@ bool lightCastsRays(Light light) {
     return (int(light.spot_angles_castshadows_startOffset.z) & LIGHT_FLAG_CASTS_RAYS) != 0;
 }
 
+vec3 decodeTangentNormal(MaterialData material, vec2 uv)
+{
+    vec2 tangentXY = texture(sampler2D(textureHandles[material.normalMapIndex]), uv).rg * 2.0 - 1.0;
+    tangentXY *= material.normalStrength;
+    float tangentZ = sqrt(max(1.0 - dot(tangentXY, tangentXY), 0.0));
+    return normalize(vec3(tangentXY, tangentZ));
+}
+
 // Normal mapping function
 vec3 calculateNormal(MaterialData material, vec2 uv)
 {
     vec3 normal = normalize(Normal);
 
     if ((material.textureFlags & MAT_FLAG_NORMAL_MAP) != 0u && material.normalMapIndex >= 0) {
-        vec3 normalMap = texture(sampler2D(textureHandles[material.normalMapIndex]), uv).rgb * 2.0 - 1.0;
-        normalMap.xy *= material.normalStrength;
+        vec3 normalMap = decodeTangentNormal(material, uv);
 
         vec3 T = normalize(Tangent);
         vec3 B = normalize(Bitangent);

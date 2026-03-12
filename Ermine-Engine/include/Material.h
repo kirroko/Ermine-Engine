@@ -116,6 +116,7 @@ namespace Ermine::graphics
         float fillDirOctY{ 1.0f };              // 4 bytes (108-111) - Normalized UV fill axis Y
         // Total: 112 bytes (down from 128 bytes) - 12.5% reduction
     };
+    static_assert(sizeof(MaterialSSBO) == 112, "MaterialSSBO must remain 112 bytes");
 
     // Forward declaration
     class Material;

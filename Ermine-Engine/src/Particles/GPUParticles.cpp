@@ -205,6 +205,10 @@ namespace Ermine {
             auto& emitter = ecs.GetComponent<GPUParticleEmitter>(entity);
             if (!emitter.active) continue;
 
+            if (ecs.HasComponent<ObjectMetaData>(entity)) {
+                if (!ecs.GetComponent<ObjectMetaData>(entity).selfActive) continue;
+            }
+
             // Initialize if needed
             if (!emitter.initialized) {
                 InitializeEmitter(emitter);
@@ -308,14 +312,16 @@ namespace Ermine {
             glUniform1f(glGetUniformLocation(program, "u_ConeInnerAngle"), emitter.coneInnerAngle);
             glUniform1i(glGetUniformLocation(program, "u_BoundsMode"), emitter.boundsMode);
             glUniform1i(glGetUniformLocation(program, "u_BoundsShape"), emitter.boundsShape);
-            
-            // Apply overall scale to bounds parameters
+
+            float avgScale = (transform.scale.x + transform.scale.y + transform.scale.z) / 3.0f;
+
+            // Apply overall scale AND entity transform scale to bounds parameters
             glUniform3f(glGetUniformLocation(program, "u_BoundsBoxExtents"),
-                        emitter.boundsBoxExtents.x * emitter.overallScale, 
-                        emitter.boundsBoxExtents.y * emitter.overallScale, 
-                        emitter.boundsBoxExtents.z * emitter.overallScale);
-            glUniform1f(glGetUniformLocation(program, "u_BoundsRadius"), emitter.boundsRadius * emitter.overallScale);
-            glUniform1f(glGetUniformLocation(program, "u_BoundsRadiusInner"), emitter.boundsRadiusInner * emitter.overallScale);
+                        emitter.boundsBoxExtents.x * emitter.overallScale * transform.scale.x, 
+                        emitter.boundsBoxExtents.y * emitter.overallScale * transform.scale.y, 
+                        emitter.boundsBoxExtents.z * emitter.overallScale * transform.scale.z);
+            glUniform1f(glGetUniformLocation(program, "u_BoundsRadius"), emitter.boundsRadius * emitter.overallScale * avgScale);
+            glUniform1f(glGetUniformLocation(program, "u_BoundsRadiusInner"), emitter.boundsRadiusInner * emitter.overallScale * avgScale);
             
             glUniform1f(glGetUniformLocation(program, "u_SpeedMin"), emitter.speedMin);
             glUniform1f(glGetUniformLocation(program, "u_SpeedMax"), emitter.speedMax);
@@ -331,11 +337,11 @@ namespace Ermine {
             glUniform1f(glGetUniformLocation(program, "u_AlphaStart"), emitter.alphaStart);
             glUniform1f(glGetUniformLocation(program, "u_AlphaEnd"), emitter.alphaEnd);
             
-            // Apply overall scale to particle sizes
-            glUniform1f(glGetUniformLocation(program, "u_SizeStartMin"), emitter.sizeStartMin * emitter.overallScale);
-            glUniform1f(glGetUniformLocation(program, "u_SizeStartMax"), emitter.sizeStartMax * emitter.overallScale);
-            glUniform1f(glGetUniformLocation(program, "u_SizeEndMin"), emitter.sizeEndMin * emitter.overallScale);
-            glUniform1f(glGetUniformLocation(program, "u_SizeEndMax"), emitter.sizeEndMax * emitter.overallScale);
+            // Apply overall scale AND entity transform scale to particle sizes
+            glUniform1f(glGetUniformLocation(program, "u_SizeStartMin"), emitter.sizeStartMin * emitter.overallScale * avgScale);
+            glUniform1f(glGetUniformLocation(program, "u_SizeStartMax"), emitter.sizeStartMax * emitter.overallScale * avgScale);
+            glUniform1f(glGetUniformLocation(program, "u_SizeEndMin"), emitter.sizeEndMin * emitter.overallScale * avgScale);
+            glUniform1f(glGetUniformLocation(program, "u_SizeEndMax"), emitter.sizeEndMax * emitter.overallScale * avgScale);
             glUniform1f(glGetUniformLocation(program, "u_LifetimeMin"), emitter.lifetimeMin);
             glUniform1f(glGetUniformLocation(program, "u_LifetimeMax"), emitter.lifetimeMax);
 
@@ -419,6 +425,10 @@ namespace Ermine {
 
             auto& emitter = ecs.GetComponent<GPUParticleEmitter>(entity);
             if (!emitter.active || !emitter.initialized) continue;
+
+            if (ecs.HasComponent<ObjectMetaData>(entity)) {
+                if (!ecs.GetComponent<ObjectMetaData>(entity).selfActive) continue;
+            }
 
             // Bind particle buffer
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, emitter.particleBuffer);

@@ -81,6 +81,13 @@ vec4 packMaterialProperties(float roughness, float metallic, float ao) {
     );
 }
 
+vec3 decodeTangentNormal(vec2 encodedXY, float normalStrength) {
+    vec2 tangentXY = fma(encodedXY, vec2(2.0), vec2(-1.0));
+    tangentXY *= normalStrength;
+    float tangentZ = sqrt(max(1.0 - dot(tangentXY, tangentXY), 0.0));
+    return normalize(vec3(tangentXY, tangentZ));
+}
+
 void writeGBuffer(vec3 albedo, vec3 normal, vec3 emissive, float emissiveIntensity,
                   float roughness, float metallic, float ao, vec2 velocity) {
     gBuffer0 = packAlbedo(albedo);
@@ -149,9 +156,9 @@ void main()
         ? texture(sampler2D(textureHandles[vTextureIndices.x]), vTransformedUV).rgb
         : vec3(1.0);
 
-    vec3 normalSample = ((vTextureFlags & MAT_FLAG_NORMAL_MAP) != 0u && vTextureIndices.y >= 0)
-        ? texture(sampler2D(textureHandles[vTextureIndices.y]), vTransformedUV).rgb
-        : vec3(0.5, 0.5, 1.0);
+    vec2 normalSample = ((vTextureFlags & MAT_FLAG_NORMAL_MAP) != 0u && vTextureIndices.y >= 0)
+        ? texture(sampler2D(textureHandles[vTextureIndices.y]), vTransformedUV).rg
+        : vec2(0.5, 0.5);
 
     float roughnessSample = ((vTextureFlags & MAT_FLAG_ROUGHNESS_MAP) != 0u && vTextureIndices.z >= 0)
         ? texture(sampler2D(textureHandles[vTextureIndices.z]), vTransformedUV).r
@@ -174,13 +181,7 @@ void main()
 
     vec3 finalNormal = ViewNormal;
     if ((vTextureFlags & MAT_FLAG_NORMAL_MAP) != 0u && vTextureIndices.y >= 0) {
-        vec3 tangentNormal = fma(normalSample, vec3(2.0), vec3(-1.0));
-        tangentNormal.xy *= normalStrength;
-
-        if (abs(normalStrength - 1.0) > 0.01) {
-            tangentNormal = normalize(tangentNormal);
-        }
-
+        vec3 tangentNormal = decodeTangentNormal(normalSample, normalStrength);
         finalNormal = normalize(ViewTangent * tangentNormal.x +
                                ViewBitangent * tangentNormal.y +
                                ViewNormal * tangentNormal.z);

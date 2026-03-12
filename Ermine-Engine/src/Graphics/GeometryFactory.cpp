@@ -16,6 +16,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "MathUtils.h"
 #include "Renderer.h"
 #include "ECS.h"
+#include "TangentSpace.h"
 
 using namespace Ermine::graphics;
 
@@ -26,7 +27,7 @@ using namespace Ermine::graphics;
  * @param indices The index data forming triangles
  * @return Vector of tangents, one per vertex
  */
-std::vector<glm::vec3> GeometryFactory::CalculateTangents(
+std::vector<glm::vec4> GeometryFactory::CalculateTangents(
     const std::vector<Vertex>& vertices,
     const std::vector<unsigned int>& indices)
 {
@@ -55,7 +56,12 @@ std::vector<glm::vec3> GeometryFactory::CalculateTangents(
         glm::vec2 deltaUV1 = glm::vec2(uv1.x - uv0.x, uv1.y - uv0.y);
         glm::vec2 deltaUV2 = glm::vec2(uv2.x - uv0.x, uv2.y - uv0.y);
 
-        float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+        const float determinant = deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y;
+        if (std::abs(determinant) <= Ermine::kTangentSpaceEpsilon) {
+            continue;
+        }
+
+        const float f = 1.0f / determinant;
 
         glm::vec3 tangent;
         tangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
@@ -78,21 +84,14 @@ std::vector<glm::vec3> GeometryFactory::CalculateTangents(
     }
 
     // Orthogonalize and normalize tangents using Gram-Schmidt process
+    std::vector<glm::vec4> tangentData(vertices.size(), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
     for (size_t i = 0; i < vertices.size(); ++i)
     {
-        glm::vec3 n = glm::vec3(vertices[i].norms.x, vertices[i].norms.y, vertices[i].norms.z);
-        glm::vec3 t = tangents[i];
-
-        // Gram-Schmidt orthogonalize
-        t = glm::normalize(t - n * glm::dot(n, t));
-
-        // Calculate handedness (optional, for bitangent calculation)
-        // float handedness = (glm::dot(glm::cross(n, t), bitangents[i]) < 0.0f) ? -1.0f : 1.0f;
-
-        tangents[i] = t;
+        const glm::vec3 n(vertices[i].norms.x, vertices[i].norms.y, vertices[i].norms.z);
+        tangentData[i] = Ermine::BuildTangentData(n, tangents[i], bitangents[i]);
     }
 
-    return tangents;
+    return tangentData;
 }
 
 /**
@@ -194,7 +193,7 @@ Ermine::Mesh GeometryFactory::CreateCube(float width, float height, float depth)
     auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
     if (renderer) {
         // Calculate tangents
-        std::vector<glm::vec3> tangents = CalculateTangents(vertices, indices);
+        std::vector<glm::vec4> tangents = CalculateTangents(vertices, indices);
 
         // Convert local Vertex to MeshTypes::Vertex
         std::vector<graphics::Vertex> meshVertices;
@@ -276,7 +275,7 @@ Ermine::Mesh GeometryFactory::CreateQuad(float width, float height)
     auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
     if (renderer) {
         // Calculate tangents
-        std::vector<glm::vec3> tangents = CalculateTangents(vertices, indices);
+        std::vector<glm::vec4> tangents = CalculateTangents(vertices, indices);
 
         // Convert local Vertex to MeshTypes::Vertex
         std::vector<graphics::Vertex> meshVertices;
@@ -398,7 +397,7 @@ Ermine::Mesh GeometryFactory::CreateSphere(float radius, unsigned int sectors, u
     auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
     if (renderer) {
         // Calculate tangents
-        std::vector<glm::vec3> tangents = CalculateTangents(vertices, indices);
+        std::vector<glm::vec4> tangents = CalculateTangents(vertices, indices);
 
         // Convert local Vertex to MeshTypes::Vertex
         std::vector<graphics::Vertex> meshVertices;
@@ -570,7 +569,7 @@ Ermine::Mesh GeometryFactory::CreateCone(float radius, float height, unsigned in
     auto renderer = Ermine::ECS::GetInstance().GetSystem<Renderer>();
     if (renderer) {
         // Calculate tangents for normal mapping support
-        std::vector<glm::vec3> tangents = CalculateTangents(vertices, indices);
+        std::vector<glm::vec4> tangents = CalculateTangents(vertices, indices);
 
         // Convert local Vertex to MeshTypes::Vertex
         std::vector<graphics::Vertex> meshVertices;

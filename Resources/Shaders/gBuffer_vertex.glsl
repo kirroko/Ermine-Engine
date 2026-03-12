@@ -3,7 +3,7 @@
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec2 aTexCoord;
-layout(location = 3) in vec3 aTangent;
+layout(location = 3) in vec4 aTangent;
 layout(location = 4) in ivec4 aBoneIDs;      // Only present in SkinnedVAO
 layout(location = 5) in vec4 aBoneWeights;    // Only present in SkinnedVAO
 
@@ -47,7 +47,7 @@ struct MaterialData {
 
     int shadingModel;               // 4 bytes
     uint textureFlags;              // 4 bytes - Packed bitfield
-    int castsShadows;               // 4 bytes
+    int castsShadows;               // 4 bytes - Kept for CPU/GPU layout parity
     float fillAmount;               // 4 bytes
 
     vec2 uvScale;                   // 8 bytes
@@ -126,7 +126,8 @@ void main()
 
     vec4 skinnedPos = vec4(aPos, 1.0);
     vec3 skinnedNormal  = aNormal;
-    vec3 skinnedTangent = aTangent;
+    vec3 skinnedTangent = aTangent.xyz;
+    float tangentSign = aTangent.w;
 
     // Apply skeletal animation if enabled
     if (useSkinning) {
@@ -144,7 +145,7 @@ void main()
             mat4 boneTransform = boneTransforms[boneOffset + aBoneIDs[0]];
             skinnedPosition += boneTransform * vec4(aPos, 1.0) * aBoneWeights[0];
             skinnedNormalVec += mat3(boneTransform) * aNormal * aBoneWeights[0];
-            skinnedTangentVec += mat3(boneTransform) * aTangent * aBoneWeights[0];
+            skinnedTangentVec += mat3(boneTransform) * aTangent.xyz * aBoneWeights[0];
         }
 
         // Bone 1
@@ -152,7 +153,7 @@ void main()
             mat4 boneTransform = boneTransforms[boneOffset + aBoneIDs[1]];
             skinnedPosition += boneTransform * vec4(aPos, 1.0) * aBoneWeights[1];
             skinnedNormalVec += mat3(boneTransform) * aNormal * aBoneWeights[1];
-            skinnedTangentVec += mat3(boneTransform) * aTangent * aBoneWeights[1];
+            skinnedTangentVec += mat3(boneTransform) * aTangent.xyz * aBoneWeights[1];
         }
 
         // Bone 2
@@ -160,7 +161,7 @@ void main()
             mat4 boneTransform = boneTransforms[boneOffset + aBoneIDs[2]];
             skinnedPosition += boneTransform * vec4(aPos, 1.0) * aBoneWeights[2];
             skinnedNormalVec += mat3(boneTransform) * aNormal * aBoneWeights[2];
-            skinnedTangentVec += mat3(boneTransform) * aTangent * aBoneWeights[2];
+            skinnedTangentVec += mat3(boneTransform) * aTangent.xyz * aBoneWeights[2];
         }
 
         // Bone 3
@@ -168,7 +169,7 @@ void main()
             mat4 boneTransform = boneTransforms[boneOffset + aBoneIDs[3]];
             skinnedPosition += boneTransform * vec4(aPos, 1.0) * aBoneWeights[3];
             skinnedNormalVec += mat3(boneTransform) * aNormal * aBoneWeights[3];
-            skinnedTangentVec += mat3(boneTransform) * aTangent * aBoneWeights[3];
+            skinnedTangentVec += mat3(boneTransform) * aTangent.xyz * aBoneWeights[3];
         }
 
         skinnedPos = skinnedPosition;
@@ -202,13 +203,9 @@ void main()
     ViewNormal = normalize(modelViewNormalMatrix * skinnedNormal);
     ViewTangent = normalize(modelViewNormalMatrix * skinnedTangent);
 
-    // Calculate bitangent in view space
-    ViewBitangent = cross(ViewNormal, ViewTangent);
-
     // Re-orthogonalize TBN vectors in view space using Gram-Schmidt process
-    // Only tangent needs correction; bitangent is recalculated from corrected tangent
     ViewTangent = normalize(ViewTangent - dot(ViewTangent, ViewNormal) * ViewNormal);
-    ViewBitangent = cross(ViewNormal, ViewTangent);
+    ViewBitangent = cross(ViewNormal, ViewTangent) * tangentSign;
 
     // Pass material index to fragment shader
     vMaterialIndex = drawInfo.materialIndex;
