@@ -479,7 +479,7 @@ namespace Ermine {
 
         // Load the image
         ScratchImage image;
-        HRESULT hr = LoadFromWICFile(wInput.c_str(), WIC_FLAGS_NONE, nullptr, image);
+        HRESULT hr = LoadFromWICFile(wInput.c_str(), WIC_FLAGS_DEFAULT_SRGB, nullptr, image);
         if (FAILED(hr)) {
             std::cerr << "    Failed to load texture with WIC" << std::endl;
             return false;

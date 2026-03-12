@@ -165,7 +165,8 @@
           "actionData": "../Resources/Scenes/cutscene_intro.scene",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 0.0
+          "soundVolume": 0.0,
+          "renderOrder": 0
         }
       }
     },
@@ -242,7 +243,8 @@
           "actionData": "",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 0.0
+          "soundVolume": 0.0,
+          "renderOrder": 0
         }
       }
     },
@@ -280,6 +282,7 @@
           "musicVolume": 0.5099999904632568,
           "sfxVolume": 0.800000011920929,
           "ambienceVolume": 1.0,
+          "voiceVolume": 1.0,
           "autoPlay": true,
           "music": [
             {
@@ -305,7 +308,8 @@
               "volume": 0.75
             }
           ],
-          "ambience": []
+          "ambience": [],
+          "voice": []
         },
         "HierarchyComponent": {
           "depth": 0
@@ -390,15 +394,15 @@
           "depth": 0
         },
         "UIImageComponent": {
-          "imagePath": "C:\\Users\\Kean\\Desktop\\Personal\\Ermine Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Game_Title_WIP.png",
+          "imagePath": "C:\\Users\\Kean\\Desktop\\Personal\\Ermine Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Game_Title.png",
           "fullscreen": false,
           "position": [
-            0.19499999284744264,
+            0.22499999403953553,
             0.800000011920929,
             0.0
           ],
           "width": 1.0,
-          "height": 0.30000001192092898,
+          "height": 0.4099999964237213,
           "tintColor": [
             1.0,
             1.0,
@@ -418,7 +422,8 @@
             0.5,
             0.10000000149011612,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -496,7 +501,8 @@
           "actionData": "OpenSettings",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 0.0
+          "soundVolume": 0.0,
+          "renderOrder": 0
         }
       }
     },
@@ -573,7 +579,8 @@
           "actionData": "OpenControls",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 0.0
+          "soundVolume": 0.0,
+          "renderOrder": 0
         }
       }
     },
@@ -686,7 +693,8 @@
           "actionData": "BackToSettingsPage",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
@@ -788,7 +796,8 @@
             0.10999999940395355,
             0.019999999552965165
           ],
-          "valueAsPercentage": true
+          "valueAsPercentage": true,
+          "renderOrder": 0
         }
       }
     },
@@ -854,7 +863,8 @@
             0.5,
             0.10000000149011612,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -968,7 +978,8 @@
           "actionData": "OpenSettingsAudio",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 0.0
+          "soundVolume": 0.0,
+          "renderOrder": 0
         }
       }
     },
@@ -1046,7 +1057,8 @@
           "actionData": "OpenSettingsControls",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 0.0
+          "soundVolume": 0.0,
+          "renderOrder": 0
         }
       }
     },
@@ -1112,7 +1124,8 @@
             0.5,
             0.10000000149011612,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -1191,7 +1204,8 @@
           "actionData": "CloseSettingsPage",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
@@ -1269,7 +1283,8 @@
           "actionData": "OpenSettingsVideo",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
@@ -1370,7 +1385,8 @@
             0.6100000143051148,
             0.75,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -1473,7 +1489,8 @@
             0.05999999865889549,
             0.019999999552965165
           ],
-          "valueAsPercentage": true
+          "valueAsPercentage": true,
+          "renderOrder": 0
         }
       }
     },
@@ -1575,7 +1592,8 @@
             0.05999999865889549,
             0.019999999552965165
           ],
-          "valueAsPercentage": true
+          "valueAsPercentage": true,
+          "renderOrder": 0
         }
       }
     },
@@ -1677,7 +1695,8 @@
             0.05999999865889549,
             0.019999999552965165
           ],
-          "valueAsPercentage": true
+          "valueAsPercentage": true,
+          "renderOrder": 0
         }
       }
     },
@@ -1755,7 +1774,8 @@
           "actionData": "BackToSettingsPage",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
@@ -1821,7 +1841,8 @@
             0.5,
             0.10000000149011612,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -1899,7 +1920,8 @@
           "actionData": "OpenSettingsPage",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
@@ -2000,7 +2022,8 @@
             0.5,
             0.10000000149011612,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -2079,7 +2102,8 @@
           "actionData": "ShowTeleportInfo",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
@@ -2157,7 +2181,8 @@
           "actionData": "ShowShootingInfo",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
@@ -2235,7 +2260,8 @@
           "actionData": "ShowLightDInfo",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
@@ -2313,7 +2339,8 @@
           "actionData": "ShowReturnInfo",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
@@ -2391,7 +2418,8 @@
           "actionData": "BackToSettingsPage",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
@@ -2457,7 +2485,8 @@
             0.5,
             0.10000000149011612,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -2524,7 +2553,8 @@
             0.5,
             0.10000000149011612,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -2591,7 +2621,8 @@
             0.5,
             0.10000000149011612,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -2658,7 +2689,8 @@
             0.5,
             0.10000000149011612,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -2703,12 +2735,26 @@
     "gamma": 2.200000047683716,
     "vignetteIntensity": 0.30000001192092898,
     "vignetteRadius": 0.800000011920929,
+    "vignetteCoverage": 0.0,
+    "vignetteFalloff": 0.20000000298023225,
+    "vignetteMapStrength": 1.0,
+    "vignetteMapRGBModifier": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "vignetteMapPath": "",
     "bloomStrength": 0.03999999910593033,
     "filmGrainEnabled": false,
     "grainIntensity": 0.014999999664723874,
     "grainScale": 1.5,
     "chromaticAberrationEnabled": false,
     "chromaticAmount": 0.003000000026077032,
+    "radialBlurEnabled": false,
+    "radialBlurStrength": 0.0,
+    "radialBlurSamples": 12,
+    "radialBlurCenterX": 0.5,
+    "radialBlurCenterY": 0.5,
     "fxaaSpanMax": 8.0,
     "fxaaReduceMin": 0.0078125,
     "fxaaReduceMul": 0.125,
