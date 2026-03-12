@@ -134684,6 +134684,33 @@
           "tag": "Untagged",
           "selfActive": true
         },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
         "ModelComponent": {
           "model": "ART1_clock_low.fbx",
           "isSkinFile": false
@@ -175198,14 +175225,14 @@
         },
         "Transform": {
           "position": [
-            -160.96644592285157,
-            25.541000366210939,
-            54.736915588378909
+            -125.1095199584961,
+            29.407739639282228,
+            54.78900909423828
           ],
           "rotation": [
             0.9961947202682495,
-            -1.9255108618665419e-9,
-            -0.08715558797121048,
+            -1.9255115280003567e-9,
+            -0.08715559542179108,
             -4.3380207870313828e-8
           ],
           "scale": [
@@ -176710,7 +176737,7 @@
         },
         "Transform": {
           "position": [
-            -160.9196319580078,
+            -125.08614349365235,
             -2.190600872039795,
             54.737632751464847
           ],
@@ -196535,13 +196562,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.10000000149011612
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.10000000149011612
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -196551,13 +196578,13 @@
                   "t": 0,
                   "v": 5.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -196569,11 +196596,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
@@ -246277,8 +246304,8 @@
         },
         "Transform": {
           "position": [
-            -160.86700439453126,
-            29.75830841064453,
+            -124.84857940673828,
+            29.758256912231447,
             54.76439666748047
           ],
           "rotation": [
@@ -248054,7 +248081,20 @@
             {
               "class": "RotatingPlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "speed": {
+                  "t": 0,
+                  "v": 0.800000011920929
+                },
+                "active": {
+                  "t": 2,
+                  "v": true
+                },
+                "audioActivationRange": {
+                  "t": 0,
+                  "v": 120.0
+                }
+              }
             }
           ]
         }
@@ -248214,6 +248254,458 @@
         "HierarchyComponent": {
           "parentGuid": "f8e329eeb85aac40b2deb5fe829d4046",
           "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 5716,
+      "components": {
+        "IDComponent": {
+          "guid": "b4ed873a7177274d9637e95dbea80535"
+        },
+        "Transform": {
+          "position": [
+            -160.9196319580078,
+            -2.190600872039795,
+            54.737632751464847
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.10000000149011612,
+            0.20000000298023225,
+            0.10000000149011612
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "pillar (9)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_pillar.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 5717,
+      "components": {
+        "IDComponent": {
+          "guid": "ca68ca7e76cc2d42b1a6398f8183e91e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_pillar.fbx_pillar8_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "9cac8b2b0e1fea4a94ddefd40f6017a1"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "b4ed873a7177274d9637e95dbea80535",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 5718,
+      "components": {
+        "IDComponent": {
+          "guid": "d7b4507603287e478bb501d7869f82b4"
+        },
+        "Transform": {
+          "position": [
+            -160.86700439453126,
+            29.75830841064453,
+            54.76439666748047
+          ],
+          "rotation": [
+            9.099629210140847e-7,
+            1.0,
+            -9.099629210140847e-7,
+            -8.280325210219264e-13
+          ],
+          "scale": [
+            3.0,
+            3.0,
+            3.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Rotating floor 2 (8)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "AudioComponent": {
+          "soundName": "../Resources\\Audio\\RotatingPlatform_Loop.wav",
+          "eventName": "",
+          "useRandomVariation": false,
+          "is3D": true,
+          "isLooping": true,
+          "isStreaming": false,
+          "volume": 0.5,
+          "followTransform": true,
+          "minDistance": 1.0,
+          "maxDistance": 100.0,
+          "playOnStart": false
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            -6.849999904632568,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.5,
+            0.5,
+            10.149999618530274
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "RotatingPlatform",
+              "enabled": true,
+              "fields": {}
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 5719,
+      "components": {
+        "IDComponent": {
+          "guid": "ed8f4bcbb89aa441a4a85bb216133dfc"
+        },
+        "Transform": {
+          "position": [
+            0.028280258178710939,
+            -1.5662027597427369,
+            0.0031299591064453127
+          ],
+          "rotation": [
+            -9.099628641706659e-7,
+            1.0,
+            -9.099628641706659e-7,
+            8.280325210219264e-13
+          ],
+          "scale": [
+            0.01600000075995922,
+            0.009999999776482582,
+            0.01600000075995922
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Level1RotatingHand (5)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_pillar_rotatingplatformV2.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d7b4507603287e478bb501d7869f82b4",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 5720,
+      "components": {
+        "IDComponent": {
+          "guid": "f1a847ee00fc8848b9f1b295d64e21bd"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_pillar_rotatingplatformV2.fbx_polySurface4_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "9cac8b2b0e1fea4a94ddefd40f6017a1"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "ed8f4bcbb89aa441a4a85bb216133dfc",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 5721,
+      "components": {
+        "IDComponent": {
+          "guid": "3b43a7726fc2534d86f29f17539c3f94"
+        },
+        "Transform": {
+          "position": [
+            0.028280258178710939,
+            -1.5662027597427369,
+            0.0031299591064453127
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.01600000075995922,
+            0.009999999776482582,
+            0.01600000075995922
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Level1RotatingHand (4)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_pillar_rotatingplatformV2.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d7b4507603287e478bb501d7869f82b4",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 5722,
+      "components": {
+        "IDComponent": {
+          "guid": "4ed93985e929444599caaab6bf7876f3"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_pillar_rotatingplatformV2.fbx_polySurface4_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "9cac8b2b0e1fea4a94ddefd40f6017a1"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3b43a7726fc2534d86f29f17539c3f94",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 5723,
+      "components": {
+        "IDComponent": {
+          "guid": "395c7704d502114fbcfab760a29b7a4d"
+        },
+        "Transform": {
+          "position": [
+            -160.96644592285157,
+            25.541000366210939,
+            54.736915588378909
+          ],
+          "rotation": [
+            0.9961947202682495,
+            -1.9255108618665419e-9,
+            -0.08715558797121048,
+            -4.3380207870313828e-8
+          ],
+          "scale": [
+            0.05000000074505806,
+            0.05000000074505806,
+            0.05000000074505806
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Rotating Base (10)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_Rotating_platform_base.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 5724,
+      "components": {
+        "IDComponent": {
+          "guid": "4f50c04e563128498fb1bb16907333a4"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Rotating_platform_base.fbx_Rotating_platform_base_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "9cac8b2b0e1fea4a94ddefd40f6017a1"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "395c7704d502114fbcfab760a29b7a4d",
+          "depth": 1
         },
         "GlobalTransform": {}
       }
