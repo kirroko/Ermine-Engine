@@ -241045,15 +241045,15 @@
             0.20000000298023225,
             0.20000000298023225
           ],
-          "healthbarWidth": 0.3400000035762787,
-          "healthbarHeight": 0.1850000023841858,
+          "healthbarWidth": 0.30000001192092896,
+          "healthbarHeight": 0.17000000178813934,
           "healthbarPosition": [
             0.019999999552965165,
             0.800000011920929,
             0.0
           ],
           "healthbarBgTexture": "./Resources/Textures/UI/Health_Bar_Backing.png",
-          "healthbarFillTexture": "./Resources/Textures/UI/Health_Bar_Fill.png",
+          "healthbarFillTexture": "./Resources/Textures/UI/Updated_Health_Bar_Fill.png",
           "healthbarFrameTexture": "./Resources/Textures/UI/Health_Bar_GearBar.png",
           "healthbarShineColor": [
             1.0,
