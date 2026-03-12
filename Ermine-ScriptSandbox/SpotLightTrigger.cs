@@ -36,6 +36,7 @@ public class SpotLightTrigger : MonoBehaviour
     void Update()
     {
         if (player == null) return;
+        if (Physics.Internal_GetLightValue((ulong)this.GetInstanceID()) == 0) return;
 
         bool inside = IsPointInsideSpot(player.transform.position);
 
