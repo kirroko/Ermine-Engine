@@ -72,6 +72,9 @@ namespace ErmineEngine
         [MethodImpl(MethodImplOptions.InternalCall)]
         internal static extern Rigidbody Internal_GetRigidbody(ulong id);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void Internal_TurnOffLight(ulong entityID);
+
         public static bool Raycast(Vector3 origin, Vector3 direction, out RaycastHit hitInfo, float maxDistance)
         {
             hitInfo = new RaycastHit();

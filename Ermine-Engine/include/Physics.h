@@ -277,6 +277,8 @@ namespace Ermine
 
 		bool HasPhysicComp(EntityID ID);
 
+		void TurnOffLight(EntityID ID);
+
 		void ForceUpdate();
 
 		int GetMotionType(EntityID ID);

@@ -1538,6 +1538,15 @@ namespace Ermine
 		return false;
 	}
 
+	void Physics::TurnOffLight(EntityID ID)
+	{
+		if (ECS::GetInstance().HasComponent<Light>(ID))
+		{
+			auto& lightobj = ECS::GetInstance().GetComponent<Light>(ID);
+			lightobj.intensity = 0;
+		}
+	}
+
 	void Physics::ForceUpdate()
 	{
 		UpdatePhysicList();

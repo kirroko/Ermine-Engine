@@ -2773,6 +2773,12 @@ namespace
 		auto physics = ECS::GetInstance().GetSystem<Physics>();
 		physics->ForceUpdate();
 	}
+	void icall_physics_turn_off_light(uint64_t entityID)
+	{
+		if (entityID == 0 || !ECS::GetInstance().IsEntityValid(entityID))
+			return;
+		ECS::GetInstance().GetSystem<Physics>()->TurnOffLight(entityID);
+	}
 
 #pragma endregion
 
@@ -4289,6 +4295,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Physics::CheckMotionType", (const void*)icall_Physics_CheckMotionType);
 	mono_add_internal_call("ErmineEngine.Physics::ForceUpdate", (const void*)icall_Physics_ForceUpdate);
 	mono_add_internal_call("ErmineEngine.Physics::HasPhysicComp", (const void*)icall_Physics_HasPhysicComp);
+	mono_add_internal_call("ErmineEngine.Physics::Internal_TurnOffLight",(const void*)icall_physics_turn_off_light);
 #pragma endregion
 
 #pragma region Cursor ICalls
