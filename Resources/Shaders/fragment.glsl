@@ -82,14 +82,21 @@ const int POINT_LIGHT = 0;
 const int DIRECTIONAL_LIGHT = 1;
 const int SPOT_LIGHT = 2;
 
+vec3 decodeTangentNormal()
+{
+    vec2 tangentXY = texture(materialNormalMap, TexCoord).rg * 2.0 - 1.0;
+    tangentXY *= material.normalStrength;
+    float tangentZ = sqrt(max(1.0 - dot(tangentXY, tangentXY), 0.0));
+    return normalize(vec3(tangentXY, tangentZ));
+}
+
 // Normal mapping function
 vec3 calculateNormal()
 {
     vec3 normal = normalize(Normal);
 
     if ((material.textureFlags & MAT_FLAG_NORMAL_MAP) != 0u) {
-        vec3 normalMap = texture(materialNormalMap, TexCoord).rgb * 2.0 - 1.0;
-        normalMap.xy *= material.normalStrength;
+        vec3 normalMap = decodeTangentNormal();
 
         vec3 T = normalize(Tangent);
         vec3 B = normalize(Bitangent);
