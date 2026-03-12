@@ -6,7 +6,7 @@
                 0.800000011920929,
                 0.800000011920929,
                 0.800000011920929,
-                1.0
+                0.0
             ]
         },
         "materialMetallic": {
@@ -66,47 +66,27 @@
         },
         "materialHasAlbedoMap": {
             "type": "bool",
-            "value": true
+            "value": false
         },
         "materialHasNormalMap": {
             "type": "bool",
-            "value": true
+            "value": false
         },
         "materialHasRoughnessMap": {
             "type": "bool",
-            "value": true
+            "value": false
         },
         "materialHasMetallicMap": {
             "type": "bool",
-            "value": true
+            "value": false
         },
         "materialHasAoMap": {
             "type": "bool",
-            "value": true
+            "value": false
         },
         "materialHasEmissiveMap": {
             "type": "bool",
             "value": false
-        },
-        "materialAlbedoMap": {
-            "type": "texture2d",
-            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_David_Cuffs_BC.png"
-        },
-        "materialNormalMap": {
-            "type": "texture2d",
-            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_David_Cuffs_NRM.png"
-        },
-        "materialRoughnessMap": {
-            "type": "texture2d",
-            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_David_Cuffs_Roughness.png"
-        },
-        "materialMetallicMap": {
-            "type": "texture2d",
-            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Metallic.png"
-        },
-        "materialAoMap": {
-            "type": "texture2d",
-            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_David_Cuffs_AO.png"
         }
     },
     "uvTransform": {

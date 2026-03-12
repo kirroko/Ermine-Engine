@@ -41,5 +41,6 @@
             0.0,
             0.0
         ]
-    }
+    },
+    "customFragmentShader": "../Resources/Shaders/volumetric_orb_fragment.glsl"
 }
