@@ -56,7 +56,7 @@ public class SpotLightTrigger : MonoBehaviour
         {
             playerInside = false;
             OnSpotExit();
-            timer = tickInterval;
+            timer = 0;
         }
 
         // Damage tick while inside
