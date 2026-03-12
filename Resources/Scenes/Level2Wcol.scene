@@ -99,6 +99,16 @@
               "name": "LightDamageLoop",
               "path": "../Resources/Audio/LightDamage_Loop.wav",
               "volume": 0.3499999940395355
+            },
+            {
+              "name": "InsertKey",
+              "path": "../Resources/Audio/Insert_Key.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "OpenGate",
+              "path": "../Resources/Audio/tanweraman-grave-yard-iron-gate-opening-392362.wav",
+              "volume": 0.6499999761581421
             }
           ],
           "ambience": [
