@@ -49,7 +49,7 @@
         },
         "materialNormalMap": {
             "type": "texture2d",
-            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_drain_AO.png"
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_drain_NRM.png"
         },
         "materialRoughnessMap": {
             "type": "texture2d",

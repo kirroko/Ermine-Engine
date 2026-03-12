@@ -20882,7 +20882,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79"
+          "guid": "2c66bd0f87881b43a4ab96bffe28977e"
         },
         "HierarchyComponent": {
           "parentGuid": "0ee4d01d435fe047989aacb2c8ba6978",
@@ -20921,7 +20921,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79"
+          "guid": "2c66bd0f87881b43a4ab96bffe28977e"
         },
         "HierarchyComponent": {
           "parentGuid": "0ee4d01d435fe047989aacb2c8ba6978",
@@ -195782,13 +195782,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.10000000149011612
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.10000000149011612
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -195798,13 +195798,13 @@
                   "t": 0,
                   "v": 8.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -195816,11 +195816,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
@@ -240745,12 +240745,12 @@
           "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\AFTER_DISABLING_SWITCH.png",
           "fullscreen": false,
           "position": [
-            0.7920464873313904,
-            0.8511207103729248,
+            0.8062645196914673,
+            0.7371966242790222,
             0.0
           ],
           "width": 1.0,
-          "height": 0.10199999809265137,
+          "height": 0.12200000137090683,
           "tintColor": [
             1.0,
             1.0,
@@ -240813,12 +240813,12 @@
           "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\AFTER_GATE_OPEN.png",
           "fullscreen": false,
           "position": [
-            0.7491759061813355,
-            0.830235481262207,
+            0.752967357635498,
+            0.7120920419692993,
             0.0
           ],
           "width": 1.0,
-          "height": 0.14499999582767487,
+          "height": 0.17499999701976777,
           "tintColor": [
             1.0,
             1.0,
@@ -240949,12 +240949,12 @@
           "imagePath": "G:\\Projects\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Hints\\LEVEL_2_SPAWN_UI.png",
           "fullscreen": false,
           "position": [
-            0.7876777052879334,
-            0.8260337710380554,
+            0.800000011920929,
+            0.7099999785423279,
             0.0
           ],
           "width": 1.0,
-          "height": 0.15000000596046449,
+          "height": 0.18000000715255738,
           "tintColor": [
             1.0,
             1.0,
@@ -241036,10 +241036,10 @@
             0.20000000298023225
           ],
           "healthbarWidth": 0.3400000035762787,
-          "healthbarHeight": 0.1850000023841858,
+          "healthbarHeight": 0.12999999523162843,
           "healthbarPosition": [
             0.019999999552965165,
-            0.800000011920929,
+            0.8100000023841858,
             0.0
           ],
           "healthbarBgTexture": "./Resources/Textures/UI/Health_Bar_Backing.png",
@@ -241332,7 +241332,7 @@
       "id": 5592,
       "components": {
         "IDComponent": {
-          "guid": "514bfd750945664ba73c96a6754bd978"
+          "guid": "c2633007c483a24e97be9d224c0e1882"
         },
         "Transform": {
           "position": [
@@ -241368,7 +241368,7 @@
       "id": 5593,
       "components": {
         "IDComponent": {
-          "guid": "a7ce5fbd3f65e9418f53fb86e87ad776"
+          "guid": "4f2a13305958424ba7c00c24b37254a6"
         },
         "Transform": {
           "position": [
@@ -241394,7 +241394,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "514bfd750945664ba73c96a6754bd978",
+          "parentGuid": "c2633007c483a24e97be9d224c0e1882",
           "depth": 2
         },
         "UIImageComponent": {
@@ -241436,7 +241436,7 @@
       "id": 5594,
       "components": {
         "IDComponent": {
-          "guid": "e4010c367f878e479a367955806e6a4a"
+          "guid": "4219207793b0b64297b86fec3fb9e1b6"
         },
         "Transform": {
           "position": [
@@ -241462,7 +241462,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "514bfd750945664ba73c96a6754bd978",
+          "parentGuid": "c2633007c483a24e97be9d224c0e1882",
           "depth": 2
         },
         "GlobalTransform": {},
@@ -241539,7 +241539,7 @@
       "id": 5595,
       "components": {
         "IDComponent": {
-          "guid": "51b8a3a951e47540b17d27f579739e13"
+          "guid": "38dd4394c28e88489525bc5e1c8063bb"
         },
         "Transform": {
           "position": [
@@ -241565,7 +241565,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "514bfd750945664ba73c96a6754bd978",
+          "parentGuid": "c2633007c483a24e97be9d224c0e1882",
           "depth": 2
         },
         "GlobalTransform": {},
@@ -241642,7 +241642,7 @@
       "id": 5596,
       "components": {
         "IDComponent": {
-          "guid": "822ed9b29a1dea4482b8bd1fbeb17354"
+          "guid": "8e09910d5aa95049a64ee6a7c40635c5"
         },
         "Transform": {
           "position": [
@@ -241668,7 +241668,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "514bfd750945664ba73c96a6754bd978",
+          "parentGuid": "c2633007c483a24e97be9d224c0e1882",
           "depth": 2
         },
         "GlobalTransform": {},
@@ -241745,7 +241745,7 @@
       "id": 5597,
       "components": {
         "IDComponent": {
-          "guid": "9a8cc0c412c37e429a439529a20dd67a"
+          "guid": "862801adac5bd54b8e61c96375c977d9"
         },
         "Transform": {
           "position": [
@@ -241771,14 +241771,14 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "514bfd750945664ba73c96a6754bd978",
+          "parentGuid": "c2633007c483a24e97be9d224c0e1882",
           "depth": 2
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.18000000715255738,
+            0.20000000298023225,
             0.8999999761581421,
             0.0
           ],
@@ -241824,7 +241824,7 @@
       "id": 5598,
       "components": {
         "IDComponent": {
-          "guid": "7908d6161b3cd143914b8f47213ef70a"
+          "guid": "e82f323573f5874cb77def30ef79404e"
         },
         "Transform": {
           "position": [
@@ -241850,7 +241850,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "514bfd750945664ba73c96a6754bd978",
+          "parentGuid": "c2633007c483a24e97be9d224c0e1882",
           "depth": 2
         },
         "UIImageComponent": {
@@ -241892,7 +241892,7 @@
       "id": 5599,
       "components": {
         "IDComponent": {
-          "guid": "23fb1ed7fa7a1a4bb23361f77ff91d26"
+          "guid": "55901a48f1489d41b4fc27e6a5cf059d"
         },
         "Transform": {
           "position": [
@@ -241928,7 +241928,7 @@
       "id": 5600,
       "components": {
         "IDComponent": {
-          "guid": "9a26237c055bcd4a88ee7164940abb13"
+          "guid": "ddd2044b6035f34d9448738b0121ac4a"
         },
         "Transform": {
           "position": [
@@ -241954,14 +241954,14 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "23fb1ed7fa7a1a4bb23361f77ff91d26",
+          "parentGuid": "55901a48f1489d41b4fc27e6a5cf059d",
           "depth": 2
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.18000000715255738,
+            0.20000000298023225,
             0.8999999761581421,
             0.0
           ],
@@ -242007,7 +242007,7 @@
       "id": 5601,
       "components": {
         "IDComponent": {
-          "guid": "089f6a6248cd9a4a9c12b9cba4f14150"
+          "guid": "a98f9ee8f24314419f84276dda06f65e"
         },
         "Transform": {
           "position": [
@@ -242033,18 +242033,18 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "23fb1ed7fa7a1a4bb23361f77ff91d26",
+          "parentGuid": "55901a48f1489d41b4fc27e6a5cf059d",
           "depth": 2
         },
         "GlobalTransform": {},
         "UISliderComponent": {
           "position": [
-            0.6800000071525574,
+            0.7099999785423279,
             0.6399999856948853,
             0.0
           ],
           "size": [
-            0.550000011920929,
+            0.41999998688697817,
             0.05000000074505806
           ],
           "trackColor": [
@@ -242085,7 +242085,7 @@
           ],
           "labelScale": 0.800000011920929,
           "labelOffset": [
-            -0.11999999731779099,
+            0.0,
             0.03999999910593033
           ],
           "labelImagePath": "",
@@ -242096,9 +242096,9 @@
             0.0,
             0.0
           ],
-          "valueScale": 0.800000011920929,
+          "valueScale": 0.5,
           "valueOffset": [
-            0.12999999523162843,
+            0.10000000149011612,
             0.019999999552965165
           ],
           "valueAsPercentage": true,
@@ -242110,7 +242110,7 @@
       "id": 5602,
       "components": {
         "IDComponent": {
-          "guid": "24c3b470de4178408c00ffec91c95b9f"
+          "guid": "2e4cb6b50e6d764bbf278793809e504e"
         },
         "Transform": {
           "position": [
@@ -242136,7 +242136,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "23fb1ed7fa7a1a4bb23361f77ff91d26",
+          "parentGuid": "55901a48f1489d41b4fc27e6a5cf059d",
           "depth": 2
         },
         "UIImageComponent": {
@@ -242178,7 +242178,7 @@
       "id": 5603,
       "components": {
         "IDComponent": {
-          "guid": "9cd2e4f0f467ca44aefd13f1829fa911"
+          "guid": "43fa0833d118594dbe04f7981980cc64"
         },
         "Transform": {
           "position": [
@@ -242214,7 +242214,7 @@
       "id": 5604,
       "components": {
         "IDComponent": {
-          "guid": "6225104a8ac05147be901c34d833ab2d"
+          "guid": "cce75f0e08daf94fb716d87edf5a0b84"
         },
         "Transform": {
           "position": [
@@ -242240,20 +242240,20 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "9cd2e4f0f467ca44aefd13f1829fa911",
+          "parentGuid": "43fa0833d118594dbe04f7981980cc64",
           "depth": 2
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.6527900099754334,
-            0.6815690994262695,
+            0.625,
+            0.7850000262260437,
             0.0
           ],
           "size": [
-            0.35099896788597109,
-            0.12329969555139542
+            0.23999999463558198,
+            0.09000000357627869
           ],
           "normalColor": [
             1.0,
@@ -242277,8 +242277,8 @@
           ],
           "textScale": 1.0,
           "backgroundAlpha": 1.0,
-          "normalImage": "Resources/Textures/UI/Audio_Unselected.png",
-          "hoverImage": "Resources/Textures/UI/Audio_Selected.png",
+          "normalImage": "Resources/Textures/UI/MainMenu/Audio_Unselected.png",
+          "hoverImage": "Resources/Textures/UI/MainMenu/Audio_Selected.png",
           "pressedImage": "",
           "action": 3,
           "actionData": "OpenSettingsAudio",
@@ -242293,7 +242293,7 @@
       "id": 5605,
       "components": {
         "IDComponent": {
-          "guid": "e63818c34edf2240b865a498e83f1913"
+          "guid": "be3e805cc73b2a4491edb2b7671a65fc"
         },
         "Transform": {
           "position": [
@@ -242319,20 +242319,20 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "9cd2e4f0f467ca44aefd13f1829fa911",
+          "parentGuid": "43fa0833d118594dbe04f7981980cc64",
           "depth": 2
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.6694111227989197,
-            0.5400503873825073,
+            0.6650000214576721,
+            0.5899999737739563,
             0.0
           ],
           "size": [
-            0.39403632283210757,
-            0.12119071930646897
+            0.38999998569488528,
+            0.10000000149011612
           ],
           "normalColor": [
             1.0,
@@ -242356,8 +242356,8 @@
           ],
           "textScale": 1.0,
           "backgroundAlpha": 1.0,
-          "normalImage": "Resources/Textures/UI/Contorls_Unselected.png",
-          "hoverImage": "Resources/Textures/UI/Contorls_Selected.png",
+          "normalImage": "Resources/Textures/UI/MainMenu/Controls_Unselected.png",
+          "hoverImage": "Resources/Textures/UI/MainMenu/Controls_Selected.png",
           "pressedImage": "",
           "action": 3,
           "actionData": "OpenSettingsControls",
@@ -242372,7 +242372,7 @@
       "id": 5606,
       "components": {
         "IDComponent": {
-          "guid": "3342eec2d8e7d34f95eda9ab3295e5c8"
+          "guid": "f36362961263514e8ad2249e112b258f"
         },
         "Transform": {
           "position": [
@@ -242398,7 +242398,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "9cd2e4f0f467ca44aefd13f1829fa911",
+          "parentGuid": "43fa0833d118594dbe04f7981980cc64",
           "depth": 2
         },
         "UIImageComponent": {
@@ -242440,7 +242440,7 @@
       "id": 5607,
       "components": {
         "IDComponent": {
-          "guid": "a7ce7598f568a84fb711c68e1eb275fb"
+          "guid": "8266e93131f68b4aa0e51fd94e69eb23"
         },
         "Transform": {
           "position": [
@@ -242466,14 +242466,14 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "9cd2e4f0f467ca44aefd13f1829fa911",
+          "parentGuid": "43fa0833d118594dbe04f7981980cc64",
           "depth": 2
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.18000000715255738,
+            0.20000000298023225,
             0.8999999761581421,
             0.0
           ],
@@ -242519,7 +242519,7 @@
       "id": 5608,
       "components": {
         "IDComponent": {
-          "guid": "2f71eabaec60d749bd2f42793e28e2b4"
+          "guid": "e902011028c0ec4090b09796f2809457"
         },
         "Transform": {
           "position": [
@@ -242545,19 +242545,19 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "9cd2e4f0f467ca44aefd13f1829fa911",
+          "parentGuid": "43fa0833d118594dbe04f7981980cc64",
           "depth": 2
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
-          "text": "",
+          "text": "Video",
           "position": [
-            0.6912394762039185,
-            0.3950453996658325,
+            0.6200000047683716,
+            0.38999998569488528,
             0.0
           ],
           "size": [
-            0.45126134157180788,
+            0.20000000298023225,
             0.11999999731779099
           ],
           "normalColor": [
@@ -242581,9 +242581,9 @@
             1.0
           ],
           "textScale": 1.0,
-          "backgroundAlpha": 1.0,
-          "normalImage": "Resources/Textures/UI/Brightness_Unselected.png",
-          "hoverImage": "Resources/Textures/UI/Brightness_Selected.png",
+          "backgroundAlpha": 0.0,
+          "normalImage": "",
+          "hoverImage": "",
           "pressedImage": "",
           "action": 3,
           "actionData": "OpenSettingsVideo",
@@ -242598,7 +242598,7 @@
       "id": 5609,
       "components": {
         "IDComponent": {
-          "guid": "5ea6441ed764ab4fbe912098f0d29563"
+          "guid": "61ab5c62b1f6354fa40baf7804b51619"
         },
         "Transform": {
           "position": [
@@ -242634,7 +242634,7 @@
       "id": 5610,
       "components": {
         "IDComponent": {
-          "guid": "bb7fe7c3d4bdf54e9089edc75b42cf5c"
+          "guid": "bb3f8d673a693d459074e0174461e650"
         },
         "Transform": {
           "position": [
@@ -242660,7 +242660,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "parentGuid": "61ab5c62b1f6354fa40baf7804b51619",
           "depth": 2
         },
         "UIImageComponent": {
@@ -242702,7 +242702,7 @@
       "id": 5611,
       "components": {
         "IDComponent": {
-          "guid": "37fb91191571184c80d5d65c899e547d"
+          "guid": "8efaa6dcacbf5e408a2c74dd4489d47d"
         },
         "Transform": {
           "position": [
@@ -242728,7 +242728,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "parentGuid": "61ab5c62b1f6354fa40baf7804b51619",
           "depth": 2
         },
         "GlobalTransform": {},
@@ -242781,7 +242781,7 @@
       "id": 5612,
       "components": {
         "IDComponent": {
-          "guid": "a9570a8f80d6db48a939f3ed370bb364"
+          "guid": "b865139bac331d4fbf468240c9cbdf0b"
         },
         "Transform": {
           "position": [
@@ -242807,7 +242807,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "parentGuid": "61ab5c62b1f6354fa40baf7804b51619",
           "depth": 2
         },
         "GlobalTransform": {},
@@ -242860,7 +242860,7 @@
       "id": 5613,
       "components": {
         "IDComponent": {
-          "guid": "ffa068db8edc234f9fe8bd7e6e865898"
+          "guid": "f19ef2462d90654286cf2a5789e7a391"
         },
         "Transform": {
           "position": [
@@ -242886,7 +242886,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "parentGuid": "61ab5c62b1f6354fa40baf7804b51619",
           "depth": 2
         },
         "GlobalTransform": {},
@@ -242939,7 +242939,7 @@
       "id": 5614,
       "components": {
         "IDComponent": {
-          "guid": "6b30dff602873d4f960c01d6e606a89f"
+          "guid": "e24ca5734acd974ca0130881922fce45"
         },
         "Transform": {
           "position": [
@@ -242965,7 +242965,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "parentGuid": "61ab5c62b1f6354fa40baf7804b51619",
           "depth": 2
         },
         "GlobalTransform": {},
@@ -243018,7 +243018,7 @@
       "id": 5615,
       "components": {
         "IDComponent": {
-          "guid": "0ef7cb6799927445b150355bf7294cf6"
+          "guid": "8fda3ea4b2ce454c9ba3ba5235b73831"
         },
         "Transform": {
           "position": [
@@ -243044,7 +243044,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "parentGuid": "61ab5c62b1f6354fa40baf7804b51619",
           "depth": 2
         },
         "GlobalTransform": {},
@@ -243097,7 +243097,7 @@
       "id": 5616,
       "components": {
         "IDComponent": {
-          "guid": "362c0db104e4c54a9399bb17df8b4680"
+          "guid": "6f207f688bef4348aa14072824e54200"
         },
         "Transform": {
           "position": [
@@ -243123,7 +243123,7 @@
           "selfActive": false
         },
         "HierarchyComponent": {
-          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "parentGuid": "61ab5c62b1f6354fa40baf7804b51619",
           "depth": 2
         },
         "UIImageComponent": {
@@ -243165,7 +243165,7 @@
       "id": 5617,
       "components": {
         "IDComponent": {
-          "guid": "cd1fdcc06b6b764eb3e7613ed7aec458"
+          "guid": "a32690e8ebd4eb48b7c174c59549d63e"
         },
         "Transform": {
           "position": [
@@ -243191,7 +243191,7 @@
           "selfActive": false
         },
         "HierarchyComponent": {
-          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "parentGuid": "61ab5c62b1f6354fa40baf7804b51619",
           "depth": 2
         },
         "UIImageComponent": {
@@ -243233,7 +243233,7 @@
       "id": 5618,
       "components": {
         "IDComponent": {
-          "guid": "2eee1bc85e65b64cb991a6c1d8f441ec"
+          "guid": "a8be0e3f6d786647b8b524166c53eb11"
         },
         "Transform": {
           "position": [
@@ -243259,7 +243259,7 @@
           "selfActive": false
         },
         "HierarchyComponent": {
-          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "parentGuid": "61ab5c62b1f6354fa40baf7804b51619",
           "depth": 2
         },
         "UIImageComponent": {
@@ -243301,7 +243301,7 @@
       "id": 5619,
       "components": {
         "IDComponent": {
-          "guid": "68820f8e370a71469d8f42ee3f2b2e1e"
+          "guid": "a7a8ef9fa7910a488bd03ba6639fd0b8"
         },
         "Transform": {
           "position": [
@@ -243327,7 +243327,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "parentGuid": "61ab5c62b1f6354fa40baf7804b51619",
           "depth": 2
         },
         "UIImageComponent": {
@@ -243369,7 +243369,7 @@
       "id": 5620,
       "components": {
         "IDComponent": {
-          "guid": "9eb34231cec0f0438aeab373ada52101"
+          "guid": "370b9b105551ed45b91b02ddb3a8b892"
         },
         "Transform": {
           "position": [
@@ -243440,7 +243440,7 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 1.0,
-          "renderOrder": 5
+          "renderOrder": 0
         }
       }
     },
@@ -243448,7 +243448,7 @@
       "id": 5621,
       "components": {
         "IDComponent": {
-          "guid": "830cfec9bb96a843beddc2e4a1a89cf7"
+          "guid": "6971bbe35e2e88499a96e547eebf7787"
         },
         "Transform": {
           "position": [
@@ -243481,12 +243481,12 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.3154433071613312,
-            0.663027286529541,
+            0.33000001311302187,
+            0.6600000262260437,
             0.0
           ],
           "size": [
-            0.3712916076183319,
+            0.44999998807907107,
             0.08500000089406967
           ],
           "normalColor": [
@@ -243519,7 +243519,7 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 1.0,
-          "renderOrder": 5
+          "renderOrder": 0
         }
       }
     },
@@ -243527,7 +243527,7 @@
       "id": 5622,
       "components": {
         "IDComponent": {
-          "guid": "2f534f130aabd84d9bb16951ad90fa07"
+          "guid": "0365dd503386264088b5460a75297719"
         },
         "Transform": {
           "position": [
@@ -243586,7 +243586,7 @@
             0.10000000149011612,
             0.0
           ],
-          "renderOrder": 5
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -243595,7 +243595,7 @@
       "id": 5623,
       "components": {
         "IDComponent": {
-          "guid": "9238f2085c554c499c590aa374d92a3f"
+          "guid": "be4b013d43a7fa4cb4a8d69c5cbd29a1"
         },
         "Transform": {
           "position": [
@@ -243661,250 +243661,12 @@
           "normalImage": "../Resources/Textures/UI/EXIT GAME_Unelected.png",
           "hoverImage": "../Resources/Textures/UI/EXIT GAME_Selected.png",
           "pressedImage": "../Resources/Textures/UI/EXIT GAME_Selected.png",
-          "action": 3,
-          "actionData": "ShowReturnConfirm",
-          "hoverSoundName": "",
-          "clickSoundName": "",
-          "soundVolume": 1.0,
-          "renderOrder": 5
-        }
-      }
-    },
-    {
-      "id": 5672,
-      "components": {
-        "IDComponent": {
-          "guid": "aa11bb22cc33dd44ee55ff6677889900"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "ReturnConfirmBG",
-          "tag": "Untagged",
-          "selfActive": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "88ec5427476bfe47a2a5ba4700a0549d",
-          "depth": 1
-        },
-        "GlobalTransform": {},
-        "UIButtonComponent": {
-          "text": "",
-          "position": [
-            0.5094839334487915,
-            0.5770055651664734,
-            0.0
-          ],
-          "size": [
-            0.6068617701530457,
-            0.531004011631012
-          ],
-          "normalColor": [
-            0.3,
-            0.3,
-            0.3
-          ],
-          "hoverColor": [
-            0.3,
-            0.3,
-            0.3
-          ],
-          "pressedColor": [
-            0.3,
-            0.3,
-            0.3
-          ],
-          "textColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "textScale": 1.0,
-          "backgroundAlpha": 1.0,
-          "normalImage": "./Resources/Textures/UI/ReturnMainMenu_BG.png",
-          "hoverImage": "./Resources/Textures/UI/ReturnMainMenu_BG.png",
-          "pressedImage": "./Resources/Textures/UI/ReturnMainMenu_BG.png",
-          "action": 0,
+          "action": 2,
           "actionData": "",
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 1.0,
-          "renderOrder": 10,
-          "disabled": true
-        }
-      }
-    },
-    {
-      "id": 5673,
-      "components": {
-        "IDComponent": {
-          "guid": "bb22cc33dd44ee55ff66778899001122"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "LeaveButton",
-          "tag": "Untagged",
-          "selfActive": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "88ec5427476bfe47a2a5ba4700a0549d",
-          "depth": 1
-        },
-        "GlobalTransform": {},
-        "UIButtonComponent": {
-          "text": "",
-          "position": [
-            0.3897000253200531,
-            0.4521191120147705,
-            0.0
-          ],
-          "size": [
-            0.2065085768699646,
-            0.1164177656173706
-          ],
-          "normalColor": [
-            0.30000001192092896,
-            0.30000001192092896,
-            0.30000001192092896
-          ],
-          "hoverColor": [
-            0.5,
-            0.5,
-            0.5
-          ],
-          "pressedColor": [
-            0.699999988079071,
-            0.699999988079071,
-            0.699999988079071
-          ],
-          "textColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "textScale": 1.0,
-          "backgroundAlpha": 1.0,
-          "normalImage": "./Resources/Textures/UI/Leave_Unselected.png",
-          "hoverImage": "./Resources/Textures/UI/Leave_Selected.png",
-          "pressedImage": "./Resources/Textures/UI/Leave_Selected.png",
-          "action": 1,
-          "actionData": "../Resources/Scenes/mainmenu_video_bg.scene",
-          "hoverSoundName": "",
-          "clickSoundName": "",
-          "soundVolume": 1.0,
-          "renderOrder": 11
-        }
-      }
-    },
-    {
-      "id": 5674,
-      "components": {
-        "IDComponent": {
-          "guid": "cc33dd44ee55ff6677889900112233aa"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "ResumeConfirmButton",
-          "tag": "Untagged",
-          "selfActive": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "88ec5427476bfe47a2a5ba4700a0549d",
-          "depth": 1
-        },
-        "GlobalTransform": {},
-        "UIButtonComponent": {
-          "text": "",
-          "position": [
-            0.6179999709129333,
-            0.4531281888484955,
-            0.0
-          ],
-          "size": [
-            0.1984359323978424,
-            0.10430878400802612
-          ],
-          "normalColor": [
-            0.30000001192092896,
-            0.30000001192092896,
-            0.30000001192092896
-          ],
-          "hoverColor": [
-            0.5,
-            0.5,
-            0.5
-          ],
-          "pressedColor": [
-            0.699999988079071,
-            0.699999988079071,
-            0.699999988079071
-          ],
-          "textColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "textScale": 1.0,
-          "backgroundAlpha": 1.0,
-          "normalImage": "./Resources/Textures/UI/NewResume_Unselected.png",
-          "hoverImage": "./Resources/Textures/UI/NewResume_Selected.png",
-          "pressedImage": "./Resources/Textures/UI/NewResume_Selected.png",
-          "action": 3,
-          "actionData": "HideReturnConfirm",
-          "hoverSoundName": "",
-          "clickSoundName": "",
-          "soundVolume": 1.0,
-          "renderOrder": 11
+          "renderOrder": 0
         }
       }
     },
@@ -243946,11 +243708,11 @@
           "fullscreen": false,
           "position": [
             0.5184307098388672,
-            0.07791835069656372,
+            0.11167362332344055,
             0.0
           ],
           "width": 1.0,
-          "height": 0.12561915814876557,
+          "height": 0.19312970340251923,
           "tintColor": [
             1.0,
             1.0,
@@ -244014,11 +243776,11 @@
           "fullscreen": false,
           "position": [
             0.509528636932373,
-            0.07476259022951126,
+            0.11062756925821305,
             0.0
           ],
           "width": 1.0,
-          "height": 0.11512359976768494,
+          "height": 0.1868535578250885,
           "tintColor": [
             1.0,
             1.0,
@@ -244082,11 +243844,11 @@
           "fullscreen": false,
           "position": [
             0.5213980674743652,
-            0.0779271274805069,
+            0.11062755435705185,
             0.0
           ],
           "width": 1.0,
-          "height": 0.12563681602478028,
+          "height": 0.19103765487670899,
           "tintColor": [
             1.0,
             1.0,
@@ -247606,13 +247368,13 @@
                   "t": 0,
                   "v": 2.0
                 },
-                "sceneName": {
-                  "t": 3,
-                  "v": "Level2toEnd.scene"
-                },
                 "eDuration": {
                   "t": 0,
                   "v": 3.0
+                },
+                "sceneName": {
+                  "t": 3,
+                  "v": "Level2toEnd.scene"
                 },
                 "dSpeed": {
                   "t": 0,
