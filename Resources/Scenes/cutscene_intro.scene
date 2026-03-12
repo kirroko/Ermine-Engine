@@ -84,7 +84,7 @@
               "fields": {
                 "nextSceneName": {
                   "t": 3,
-                  "v": "../Resources/Scenes/m4-test_copy_copy.scene"
+                  "v": "../Resources/Scenes/loading_level1.scene"
                 },
                 "VideoFileName": {
                   "t": 3,

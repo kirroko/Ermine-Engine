@@ -4172,6 +4172,9 @@ namespace Ermine
 		std::string clickSoundName = "";  // Sound to play on click
 		float soundVolume = 1.0f;         // Volume for button sounds (0.0 - 1.0)
 
+		// Button interaction
+		bool disabled = false;  // If true, button is visible but not clickable
+
 		// Button state (runtime - don't serialize)
 		bool isHovered = false;
 		bool isPressed = false;
@@ -4215,6 +4218,7 @@ namespace Ermine
 			out.AddMember("clickSoundName", clickSoundVal, alloc);
 			out.AddMember("soundVolume", soundVolume, alloc);
 			out.AddMember("renderOrder", renderOrder, alloc);
+			out.AddMember("disabled", disabled, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in)
@@ -4267,6 +4271,8 @@ namespace Ermine
 				soundVolume = in["soundVolume"].GetFloat();
 			if (in.HasMember("renderOrder") && in["renderOrder"].IsInt())
 				renderOrder = in["renderOrder"].GetInt();
+			if (in.HasMember("disabled") && in["disabled"].IsBool())
+				disabled = in["disabled"].GetBool();
 		}
 
 		XPROPERTY_DEF("UIButtonComponent", UIButtonComponent)

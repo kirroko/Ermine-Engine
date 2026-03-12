@@ -51,5 +51,10 @@ public class Credits : MonoBehaviour
         }
 
         imageComponent.position = pos;
+
+        if (finished)
+        {
+            SceneManager.LoadScene($"../Resources/Scenes/mainmenu_video_bg.scene");
+        }
     }
 }

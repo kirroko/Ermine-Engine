@@ -1,31 +1,18 @@
 {
   "entities": [
     {
-      "id": 1,
+      "id": 0,
       "components": {
         "IDComponent": {
-          "guid": "435ce9621f68e14596d68d9242173b49"
+          "guid": "e1f2a3b4c5d6e7f8a1b2c3d4e5f6a7b8"
         },
         "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            5.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
+          "position": [0.0, 0.0, 5.0],
+          "rotation": [0.0, 0.0, 0.0, 1.0],
+          "scale": [1.0, 1.0, 1.0]
         },
         "ObjectMetaData": {
-          "name": "CutsceneCamera",
+          "name": "LoadingCamera",
           "tag": "MainCamera",
           "selfActive": true
         },
@@ -44,10 +31,59 @@
       }
     },
     {
+      "id": 1,
+      "components": {
+        "IDComponent": {
+          "guid": "d50f519b22fb0a52b1a58ecf4d96c6eb"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            5.0,
+            0.0
+          ],
+          "rotation": [
+            0.8754260540008545,
+            0.4082179069519043,
+            -0.23456971347332,
+            0.10938165336847305
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "intensity": 1.0,
+          "type": "Point",
+          "castsShadows": true,
+          "castsRays": false,
+          "innerAngle": -1.0,
+          "outerAngle": -1.0,
+          "radius": 3.0
+        },
+        "ObjectMetaData": {
+          "name": "Main Light",
+          "tag": "Light",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
       "id": 2,
       "components": {
         "IDComponent": {
-          "guid": "3db3a3b89e7dc348b32afa32408882db"
+          "guid": "7b38f67d6a6628580f5d7ef0f7e9b7a8"
         },
         "Transform": {
           "position": [
@@ -68,85 +104,23 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "CutsceneController",
-          "tag": "Controller",
+          "name": "loading screen level 2",
+          "tag": "Untagged",
           "selfActive": true
         },
         "HierarchyComponent": {
           "depth": 0
         },
-        "GlobalTransform": {},
-        "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "CutsceneVideo",
-              "enabled": true,
-              "fields": {
-                "nextSceneName": {
-                  "t": 3,
-                  "v": "../Resources/Scenes/credits.scene"
-                },
-                "videoDurationSeconds": {
-                  "t": 0,
-                  "v": 7.0
-                },
-                "VideoFileName": {
-                  "t": 3,
-                  "v": "endingcutscene.mpeg"
-                },
-                "assumedFPS": {
-                  "t": 0,
-                  "v": 60.0
-                }
-              }
-            }
-          ]
-        }
-      }
-    },
-    {
-      "id": 3,
-      "components": {
-        "IDComponent": {
-          "guid": "c4ec27d63aef444997b35aad523324d6"
-        },
-        "Transform": {
-          "position": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.7320507764816285,
-            1.7320507764816285,
-            1.7320507764816285
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "BlackScreenPrefab",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "parentGuid": "3db3a3b89e7dc348b32afa32408882db",
-          "depth": 1
-        },
         "UIImageComponent": {
-          "imagePath": "Resources/Textures/black-screen_39.png",
-          "fullscreen": false,
+          "imagePath": "Resources/Textures/UI/LoadingScreen_Level2.png",
+          "fullscreen": true,
           "position": [
             0.5,
             0.5,
             0.0
           ],
           "width": 1.0,
-          "height": 4.519999980926514,
+          "height": 1.0,
           "tintColor": [
             1.0,
             1.0,
@@ -169,7 +143,63 @@
           ],
           "renderOrder": 0
         },
-        "GlobalTransform": {}
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": []
+        }
+      }
+    },
+    {
+      "id": 3,
+      "components": {
+        "IDComponent": {
+          "guid": "a54150f663f10c5ab8e2916c3e6d615f"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LoadingScreen",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "LoadingScreen",
+              "enabled": true,
+              "fields": {
+                "nextScenePath": {
+                  "t": 3,
+                  "v": "../Resources/Scenes/Level2Wcol.scene"
+                },
+                "displayDuration": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
+            }
+          ]
+        }
       }
     }
   ],

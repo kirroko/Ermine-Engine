@@ -84,7 +84,7 @@
               "fields": {
                 "nextSceneName": {
                   "t": 3,
-                  "v": "../Resources/Scenes/Level2Wcol.scene"
+                  "v": "../Resources/Scenes/loading_level2.scene"
                 },
                 "VideoFileName": {
                   "t": 3,

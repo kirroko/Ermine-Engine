@@ -12,6 +12,9 @@ public class PlayerController2 : MonoBehaviour
 
     public float moveSpeed = 5f;
     public float jumpspeed = 5f;
+    public float walkSpeed = 8f;
+    public float sprintSpeed = 14f;
+    private bool isSprinting = false;
 
     public float crouchLerpSpeed = 6f;
 
@@ -39,6 +42,7 @@ public class PlayerController2 : MonoBehaviour
 
     private bool flipSwitch1 = false;
     private bool flipSwitch2 = false;
+    private bool flipSwitch3 = false;
     private float interactTimer = 0f;
 
     private GameObject activeClueMessage = null;
@@ -85,6 +89,15 @@ public class PlayerController2 : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.S)) { move += -transform.forward; movementKeyPressed = true; }
         if (Input.GetKeyDown(KeyCode.A)) { move += transform.right; movementKeyPressed = true; }
         if (Input.GetKeyDown(KeyCode.D)) { move += -transform.right; movementKeyPressed = true; }
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            moveSpeed = sprintSpeed; // Sprint while holding
+            //Need to speed up walk animaiton
+        }
+        else
+        {
+            moveSpeed = walkSpeed;
+        }
 
         if (move.SqrMagnitude > 0f)
             move = move.normalized * moveSpeed * Time.deltaTime;
@@ -191,9 +204,9 @@ public class PlayerController2 : MonoBehaviour
                 //GameObject obj = GameObject.FromEntityID(id);
                 //Debug.Log("You are looking at: " + obj.name);
 
-                if (obj.name == "Switch1" && interactTimer >= 1f)
+                // Switch -> ElectricFence 1
+                if (obj.name == "Switch" && interactTimer >= 1f)
                 {
-                    // Play switch audio here Kai
                     GlobalAudio.PlaySFX("SwitchOn");
 
                     if (!flipSwitch1)
@@ -201,18 +214,22 @@ public class PlayerController2 : MonoBehaviour
                         obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
                         obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
                         flipSwitch1 = true;
+                        GameObject fence1 = GameObject.Find("ElectricFence 1");
+                        if (fence1 != null) fence1.SetActive(false);
                     }
                     else
                     {
                         obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
                         obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
                         flipSwitch1 = false;
+                        GameObject fence1 = GameObject.Find("ElectricFence 1");
+                        if (fence1 != null) fence1.SetActive(true);
                     }
                     interactTimer = 0f;
                 }
-                if (obj.name == "Switch2" && interactTimer >= 1f)
+                // Switch (1) -> ElectricFence 2
+                if (obj.name == "Switch (1)" && interactTimer >= 1f)
                 {
-                    // Play switch audio here Kai
                     GlobalAudio.PlaySFX("SwitchOn");
 
                     if (!flipSwitch2)
@@ -220,12 +237,91 @@ public class PlayerController2 : MonoBehaviour
                         obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
                         obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
                         flipSwitch2 = true;
+                        GameObject fence2 = GameObject.Find("ElectricFence 2");
+                        if (fence2 != null) fence2.SetActive(false);
                     }
                     else
                     {
                         obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
                         obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
                         flipSwitch2 = false;
+                        GameObject fence2 = GameObject.Find("ElectricFence 2");
+                        if (fence2 != null) fence2.SetActive(true);
+                    }
+                    interactTimer = 0f;
+                }
+                // Switch (2) -> ElectricFence 3 and 4
+                if (obj.name == "Switch (2)" && interactTimer >= 1f)
+                {
+                    GlobalAudio.PlaySFX("SwitchOn");
+
+                    if (!flipSwitch3)
+                    {
+                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
+                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
+                        flipSwitch3 = true;
+                        GameObject fence3 = GameObject.Find("ElectricFence 3");
+                        if (fence3 != null) fence3.SetActive(false);
+                        GameObject fence4 = GameObject.Find("ElectricFence 4");
+                        if (fence4 != null) fence4.SetActive(false);
+                    }
+                    else
+                    {
+                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
+                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
+                        flipSwitch3 = false;
+                        GameObject fence3 = GameObject.Find("ElectricFence 3");
+                        if (fence3 != null) fence3.SetActive(true);
+                        GameObject fence4 = GameObject.Find("ElectricFence 4");
+                        if (fence4 != null) fence4.SetActive(true);
+                    }
+                    interactTimer = 0f;
+                }
+
+                // m4-test-copy_copy.scene switches (legacy naming)
+                // Switch1 -> ElectricFence (1)
+                if (obj.name == "Switch1" && interactTimer >= 1f)
+                {
+                    GlobalAudio.PlaySFX("SwitchOn");
+
+                    if (!flipSwitch1)
+                    {
+                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
+                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
+                        flipSwitch1 = true;
+                        GameObject fence = GameObject.Find("ElectricFence (1)");
+                        if (fence != null) fence.SetActive(false);
+                    }
+                    else
+                    {
+                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
+                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
+                        flipSwitch1 = false;
+                        GameObject fence = GameObject.Find("ElectricFence (1)");
+                        if (fence != null) fence.SetActive(true);
+                    }
+                    interactTimer = 0f;
+                }
+                // Switch2 -> ElectricFence
+                if (obj.name == "Switch2" && interactTimer >= 1f)
+                {
+                    GlobalAudio.PlaySFX("SwitchOn");
+
+                    if (!flipSwitch2)
+                    {
+                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
+                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
+                        flipSwitch2 = true;
+                        GameObject fence = GameObject.Find("ElectricFence");
+                        if (fence != null) fence.SetActive(false);
+                    }
+                    else
+                    {
+                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
+                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
+                        flipSwitch2 = false;
+                        GameObject fence = GameObject.Find("ElectricFence");
+                        if (fence != null) fence.SetActive(true);
                     }
                     interactTimer = 0f;
                 }
@@ -256,7 +352,7 @@ public class PlayerController2 : MonoBehaviour
                 {
                     // Collect book
                     GlobalAudio.PlaySFX("BookPickUp");
-                    PlayVoiceWithSubtitle("Clue2", 10f);
+                    PlayVoiceWithSubtitle("Clue3", 10f);
                     GameObject msg = GameObject.Find("Clue2");
                     GameObject hint2 = GameObject.Find("Hint2");
                     GameObject hint3 = GameObject.Find("Hint3");
@@ -277,7 +373,7 @@ public class PlayerController2 : MonoBehaviour
                 {
                     // Collect book
                     GlobalAudio.PlaySFX("BookPickUp");
-                    PlayVoiceWithSubtitle("Clue3", 9f);
+                    PlayVoiceWithSubtitle("Clue2", 9f);
                     GameObject msg = GameObject.Find("Clue3");
 
                     if (msg != null)

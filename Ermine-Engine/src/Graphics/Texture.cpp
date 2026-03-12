@@ -40,6 +40,18 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #ifndef GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT
 #define GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT 0x84FF
 #endif
+#ifndef GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT
+#define GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT 0x8C4D
+#endif
+#ifndef GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT
+#define GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT 0x8C4E
+#endif
+#ifndef GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT
+#define GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT 0x8C4F
+#endif
+#ifndef GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM
+#define GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM 0x8E8D
+#endif
 
 using namespace Ermine::graphics;
 
@@ -81,6 +93,8 @@ bool Texture::LoadFromDDS(const std::string& ddsFilePath)
     switch (metadata.format) {
     case DXGI_FORMAT_R8G8B8A8_UNORM:
     case DXGI_FORMAT_B8G8R8A8_UNORM:
+    case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+    case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
         shouldFlip = true;  // Flip these specific uncompressed formats
         break;
     default:
@@ -151,6 +165,22 @@ bool Texture::LoadFromDDS(const std::string& ddsFilePath)
         break;
     case DXGI_FORMAT_BC7_UNORM:
         internalFormat = GL_COMPRESSED_RGBA_BPTC_UNORM;
+        isCompressed = true;
+        break;
+    case DXGI_FORMAT_BC1_UNORM_SRGB:
+        internalFormat = GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT;
+        isCompressed = true;
+        break;
+    case DXGI_FORMAT_BC2_UNORM_SRGB:
+        internalFormat = GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT;
+        isCompressed = true;
+        break;
+    case DXGI_FORMAT_BC3_UNORM_SRGB:
+        internalFormat = GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT;
+        isCompressed = true;
+        break;
+    case DXGI_FORMAT_BC7_UNORM_SRGB:
+        internalFormat = GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM;
         isCompressed = true;
         break;
     case DXGI_FORMAT_R8G8B8A8_UNORM:
