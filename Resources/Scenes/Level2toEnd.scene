@@ -92,7 +92,7 @@
                 },
                 "VideoFileName": {
                   "t": 3,
-                  "v": "ending_cutscene.mpeg"
+                  "v": "endingcutscene.mpeg"
                 },
                 "assumedFPS": {
                   "t": 0,
