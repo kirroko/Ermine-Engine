@@ -40817,15 +40817,15 @@
             0.20000000298023225,
             0.20000000298023225
           ],
-          "healthbarWidth": 0.3400000035762787,
-          "healthbarHeight": 0.1850000023841858,
+          "healthbarWidth": 0.30000001192092896,
+          "healthbarHeight": 0.17000000178813934,
           "healthbarPosition": [
             0.019999999552965165,
             0.800000011920929,
             0.0
           ],
           "healthbarBgTexture": "./Resources/Textures/UI/Health_Bar_Backing.png",
-          "healthbarFillTexture": "./Resources/Textures/UI/Health_Bar_Fill.png",
+          "healthbarFillTexture": "./Resources/Textures/UI/Updated_Health_Bar_Fill.png",
           "healthbarFrameTexture": "./Resources/Textures/UI/Health_Bar_GearBar.png",
           "healthbarShineColor": [
             1.0,
@@ -71718,7 +71718,7 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 1.0,
-          "renderOrder": 0
+          "renderOrder": 5
         }
       }
     },
@@ -71797,7 +71797,7 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 1.0,
-          "renderOrder": 0
+          "renderOrder": 5
         }
       }
     },
@@ -71864,7 +71864,7 @@
             0.10000000149011612,
             0.0
           ],
-          "renderOrder": 0
+          "renderOrder": 5
         },
         "GlobalTransform": {}
       }
@@ -71939,17 +71939,255 @@
           "normalImage": "../Resources/Textures/UI/EXIT GAME_Unelected.png",
           "hoverImage": "../Resources/Textures/UI/EXIT GAME_Selected.png",
           "pressedImage": "../Resources/Textures/UI/EXIT GAME_Selected.png",
-          "action": 2,
-          "actionData": "",
+          "action": 3,
+          "actionData": "ShowReturnConfirm",
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 1.0,
-          "renderOrder": 0
+          "renderOrder": 5
         }
       }
     },
     {
       "id": 1457,
+      "components": {
+        "IDComponent": {
+          "guid": "aa11bb22cc33dd44ee55ff6677889900"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "ReturnConfirmBG",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "UIButtonComponent": {
+          "text": "",
+          "position": [
+            0.5094839334487915,
+            0.5770055651664734,
+            0.0
+          ],
+          "size": [
+            0.6068617701530457,
+            0.531004011631012
+          ],
+          "normalColor": [
+            0.3,
+            0.3,
+            0.3
+          ],
+          "hoverColor": [
+            0.3,
+            0.3,
+            0.3
+          ],
+          "pressedColor": [
+            0.3,
+            0.3,
+            0.3
+          ],
+          "textColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "textScale": 1.0,
+          "backgroundAlpha": 1.0,
+          "normalImage": "./Resources/Textures/UI/ReturnMainMenu_BG.png",
+          "hoverImage": "./Resources/Textures/UI/ReturnMainMenu_BG.png",
+          "pressedImage": "./Resources/Textures/UI/ReturnMainMenu_BG.png",
+          "action": 0,
+          "actionData": "",
+          "hoverSoundName": "",
+          "clickSoundName": "",
+          "soundVolume": 1.0,
+          "renderOrder": 10,
+          "disabled": true
+        }
+      }
+    },
+    {
+      "id": 1458,
+      "components": {
+        "IDComponent": {
+          "guid": "bb22cc33dd44ee55ff66778899001122"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LeaveButton",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "UIButtonComponent": {
+          "text": "",
+          "position": [
+            0.3897000253200531,
+            0.4521191120147705,
+            0.0
+          ],
+          "size": [
+            0.2065085768699646,
+            0.1164177656173706
+          ],
+          "normalColor": [
+            0.30000001192092896,
+            0.30000001192092896,
+            0.30000001192092896
+          ],
+          "hoverColor": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "pressedColor": [
+            0.699999988079071,
+            0.699999988079071,
+            0.699999988079071
+          ],
+          "textColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "textScale": 1.0,
+          "backgroundAlpha": 1.0,
+          "normalImage": "./Resources/Textures/UI/Leave_Unselected.png",
+          "hoverImage": "./Resources/Textures/UI/Leave_Selected.png",
+          "pressedImage": "./Resources/Textures/UI/Leave_Selected.png",
+          "action": 1,
+          "actionData": "../Resources/Scenes/mainmenu_video_bg.scene",
+          "hoverSoundName": "",
+          "clickSoundName": "",
+          "soundVolume": 1.0,
+          "renderOrder": 11
+        }
+      }
+    },
+    {
+      "id": 1459,
+      "components": {
+        "IDComponent": {
+          "guid": "cc33dd44ee55ff6677889900112233aa"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "ResumeConfirmButton",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "UIButtonComponent": {
+          "text": "",
+          "position": [
+            0.6179999709129333,
+            0.4531281888484955,
+            0.0
+          ],
+          "size": [
+            0.1984359323978424,
+            0.10430878400802612
+          ],
+          "normalColor": [
+            0.30000001192092896,
+            0.30000001192092896,
+            0.30000001192092896
+          ],
+          "hoverColor": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "pressedColor": [
+            0.699999988079071,
+            0.699999988079071,
+            0.699999988079071
+          ],
+          "textColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "textScale": 1.0,
+          "backgroundAlpha": 1.0,
+          "normalImage": "./Resources/Textures/UI/NewResume_Unselected.png",
+          "hoverImage": "./Resources/Textures/UI/NewResume_Selected.png",
+          "pressedImage": "./Resources/Textures/UI/NewResume_Selected.png",
+          "action": 3,
+          "actionData": "HideReturnConfirm",
+          "hoverSoundName": "",
+          "clickSoundName": "",
+          "soundVolume": 1.0,
+          "renderOrder": 11
+        }
+      }
+    },
+    {
+      "id": 1460,
       "components": {
         "IDComponent": {
           "guid": "3b2bdf8c6946e14197badb9152d3c7bb"

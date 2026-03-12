@@ -19,6 +19,8 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Logger.h"
 #include "Texture.h"
 #include <cmath>
+#include <algorithm>
+#include <vector>
 
 #if defined(EE_EDITOR)
 #include "EditorGUI.h"
@@ -238,23 +240,29 @@ namespace Ermine
             firstRender = false;
         }
 
-        // Render UIImageComponent entities first (fullscreen images, cutscenes, backgrounds)
+        // Render UIImageComponent entities sorted by renderOrder
         auto& ecs = ECS::GetInstance();
         constexpr EntityID MAX_ENTITIES = 10000;
 
+        // Collect active image entities and sort by renderOrder
+        std::vector<EntityID> imageEntities;
         for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
         {
-            // Check if entity is valid and has UIImageComponent
             if (!ecs.IsEntityValid(entity))
                 continue;
-
             if (!ecs.HasComponent<UIImageComponent>(entity))
                 continue;
-
-            // ✅ FIX: Check if entity is active in hierarchy (including parents)
             if (!IsEntityActiveInHierarchy(entity))
                 continue;
+            imageEntities.push_back(entity);
+        }
+        std::sort(imageEntities.begin(), imageEntities.end(), [&ecs](EntityID a, EntityID b)
+        {
+            return ecs.GetComponent<UIImageComponent>(a).renderOrder < ecs.GetComponent<UIImageComponent>(b).renderOrder;
+        });
 
+        for (EntityID entity : imageEntities)
+        {
             const auto& imageComp = ecs.GetComponent<UIImageComponent>(entity);
 
             // Load texture if image path is specified
@@ -406,35 +414,48 @@ namespace Ermine
             }
         }
 
-        // Render UIButtonComponent entities
+        // Render UIButtonComponent entities sorted by renderOrder
+        std::vector<EntityID> buttonEntities;
         for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
         {
             if (!ecs.IsEntityValid(entity))
                 continue;
-
             if (!ecs.HasComponent<UIButtonComponent>(entity))
                 continue;
-
-            // ✅ FIX: Check hierarchy before rendering buttons
             if (!IsEntityActiveInHierarchy(entity))
                 continue;
+            buttonEntities.push_back(entity);
+        }
+        std::sort(buttonEntities.begin(), buttonEntities.end(), [&ecs](EntityID a, EntityID b)
+        {
+            return ecs.GetComponent<UIButtonComponent>(a).renderOrder < ecs.GetComponent<UIButtonComponent>(b).renderOrder;
+        });
 
+        for (EntityID entity : buttonEntities)
+        {
             const auto& button = ecs.GetComponent<UIButtonComponent>(entity);
             RenderButton(button);
         }
 
-        // Render UISliderComponent entities
+        // Render UISliderComponent entities sorted by renderOrder
+        std::vector<EntityID> sliderEntities;
         for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
         {
             if (!ecs.IsEntityValid(entity))
                 continue;
-
             if (!ecs.HasComponent<UISliderComponent>(entity))
                 continue;
-
             if (!IsEntityActiveInHierarchy(entity))
                 continue;
+            sliderEntities.push_back(entity);
+        }
+        std::sort(sliderEntities.begin(), sliderEntities.end(), [&ecs](EntityID a, EntityID b)
+        {
+            return ecs.GetComponent<UISliderComponent>(a).renderOrder < ecs.GetComponent<UISliderComponent>(b).renderOrder;
+        });
 
+        for (EntityID entity : sliderEntities)
+        {
             const auto& slider = ecs.GetComponent<UISliderComponent>(entity);
             RenderSlider(slider);
         }
