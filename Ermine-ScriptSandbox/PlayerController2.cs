@@ -12,6 +12,9 @@ public class PlayerController2 : MonoBehaviour
 
     public float moveSpeed = 5f;
     public float jumpspeed = 5f;
+    public float walkSpeed = 8f;
+    public float sprintSpeed = 14f;
+    private bool isSprinting = false;
 
     public float crouchLerpSpeed = 6f;
 
@@ -85,6 +88,15 @@ public class PlayerController2 : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.S)) { move += -transform.forward; movementKeyPressed = true; }
         if (Input.GetKeyDown(KeyCode.A)) { move += transform.right; movementKeyPressed = true; }
         if (Input.GetKeyDown(KeyCode.D)) { move += -transform.right; movementKeyPressed = true; }
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            moveSpeed = sprintSpeed; // Sprint while holding
+            //Need to speed up walk animaiton
+        }
+        else
+        {
+            moveSpeed = walkSpeed;
+        }
 
         if (move.SqrMagnitude > 0f)
             move = move.normalized * moveSpeed * Time.deltaTime;
