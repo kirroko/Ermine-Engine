@@ -3,7 +3,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "f17005cb91c26345b010765f2621b849"
+          "guid": "123191140fec544a9c118b6b5e9cb958"
         },
         "Transform": {
           "position": [
@@ -26,7 +26,7 @@
         "ObjectMetaData": {
           "name": "PauseMenu",
           "tag": "Untagged",
-          "selfActive": true
+          "selfActive": false
         },
         "HierarchyComponent": {
           "depth": 0
@@ -37,7 +37,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "05677cdad9b1934496526d4824f90cec"
+          "guid": "514bfd750945664ba73c96a6754bd978"
         },
         "Transform": {
           "position": [
@@ -63,7 +63,7 @@
           "selfActive": false
         },
         "HierarchyComponent": {
-          "parentGuid": "f17005cb91c26345b010765f2621b849",
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -72,7 +72,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "2dda553b53cae74b96f78a42a20d1cdb"
+          "guid": "a7ce5fbd3f65e9418f53fb86e87ad776"
         },
         "Transform": {
           "position": [
@@ -98,8 +98,8 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "05677cdad9b1934496526d4824f90cec",
-          "depth": 1
+          "parentGuid": "514bfd750945664ba73c96a6754bd978",
+          "depth": 2
         },
         "UIImageComponent": {
           "imagePath": "./Resources/Textures/UI/Book_Audio_Menu_BG.png",
@@ -130,7 +130,8 @@
             0.6100000143051148,
             0.75,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -138,7 +139,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "6ff9ae13cc8a164d99da00faa33a1a66"
+          "guid": "e4010c367f878e479a367955806e6a4a"
         },
         "Transform": {
           "position": [
@@ -164,8 +165,8 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "05677cdad9b1934496526d4824f90cec",
-          "depth": 1
+          "parentGuid": "514bfd750945664ba73c96a6754bd978",
+          "depth": 2
         },
         "GlobalTransform": {},
         "UISliderComponent": {
@@ -232,14 +233,15 @@
             0.05999999865889549,
             0.019999999552965165
           ],
-          "valueAsPercentage": true
+          "valueAsPercentage": true,
+          "renderOrder": 0
         }
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "70e99628a89bef48a6b5047bc3ec6a98"
+          "guid": "51b8a3a951e47540b17d27f579739e13"
         },
         "Transform": {
           "position": [
@@ -265,8 +267,8 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "05677cdad9b1934496526d4824f90cec",
-          "depth": 1
+          "parentGuid": "514bfd750945664ba73c96a6754bd978",
+          "depth": 2
         },
         "GlobalTransform": {},
         "UISliderComponent": {
@@ -333,14 +335,15 @@
             0.05999999865889549,
             0.019999999552965165
           ],
-          "valueAsPercentage": true
+          "valueAsPercentage": true,
+          "renderOrder": 0
         }
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "86055bed05e86a49bd4be2583d1a2f24"
+          "guid": "822ed9b29a1dea4482b8bd1fbeb17354"
         },
         "Transform": {
           "position": [
@@ -366,8 +369,8 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "05677cdad9b1934496526d4824f90cec",
-          "depth": 1
+          "parentGuid": "514bfd750945664ba73c96a6754bd978",
+          "depth": 2
         },
         "GlobalTransform": {},
         "UISliderComponent": {
@@ -434,14 +437,15 @@
             0.05999999865889549,
             0.019999999552965165
           ],
-          "valueAsPercentage": true
+          "valueAsPercentage": true,
+          "renderOrder": 0
         }
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "121cfbdf4e7c774394ab745bc3d32d60"
+          "guid": "9a8cc0c412c37e429a439529a20dd67a"
         },
         "Transform": {
           "position": [
@@ -467,14 +471,14 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "05677cdad9b1934496526d4824f90cec",
-          "depth": 1
+          "parentGuid": "514bfd750945664ba73c96a6754bd978",
+          "depth": 2
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.20000000298023225,
+            0.18000000715255738,
             0.8999999761581421,
             0.0
           ],
@@ -511,14 +515,15 @@
           "actionData": "BackToSettingsPage",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "2d26747b1f69ee44a063aa0a384fed07"
+          "guid": "7908d6161b3cd143914b8f47213ef70a"
         },
         "Transform": {
           "position": [
@@ -544,8 +549,8 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "05677cdad9b1934496526d4824f90cec",
-          "depth": 1
+          "parentGuid": "514bfd750945664ba73c96a6754bd978",
+          "depth": 2
         },
         "UIImageComponent": {
           "imagePath": "Resources/Textures/UI/Audio_Unselected.png",
@@ -576,7 +581,8 @@
             0.5,
             0.10000000149011612,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -584,7 +590,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "d1f7319f82aeed45bc8393a4b62d71e9"
+          "guid": "23fb1ed7fa7a1a4bb23361f77ff91d26"
         },
         "Transform": {
           "position": [
@@ -610,7 +616,7 @@
           "selfActive": false
         },
         "HierarchyComponent": {
-          "parentGuid": "f17005cb91c26345b010765f2621b849",
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -619,7 +625,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "57e0b3ad408e6c4bbca310532f513e55"
+          "guid": "9a26237c055bcd4a88ee7164940abb13"
         },
         "Transform": {
           "position": [
@@ -645,14 +651,14 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "d1f7319f82aeed45bc8393a4b62d71e9",
-          "depth": 1
+          "parentGuid": "23fb1ed7fa7a1a4bb23361f77ff91d26",
+          "depth": 2
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.20000000298023225,
+            0.18000000715255738,
             0.8999999761581421,
             0.0
           ],
@@ -689,14 +695,15 @@
           "actionData": "BackToSettingsPage",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "923b08d1918f2249aed5ab13d50c248c"
+          "guid": "089f6a6248cd9a4a9c12b9cba4f14150"
         },
         "Transform": {
           "position": [
@@ -722,18 +729,18 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "d1f7319f82aeed45bc8393a4b62d71e9",
-          "depth": 1
+          "parentGuid": "23fb1ed7fa7a1a4bb23361f77ff91d26",
+          "depth": 2
         },
         "GlobalTransform": {},
         "UISliderComponent": {
           "position": [
-            0.7099999785423279,
+            0.6800000071525574,
             0.6399999856948853,
             0.0
           ],
           "size": [
-            0.41999998688697817,
+            0.550000011920929,
             0.05000000074505806
           ],
           "trackColor": [
@@ -774,7 +781,7 @@
           ],
           "labelScale": 0.800000011920929,
           "labelOffset": [
-            0.0,
+            -0.11999999731779099,
             0.03999999910593033
           ],
           "labelImagePath": "",
@@ -785,19 +792,20 @@
             0.0,
             0.0
           ],
-          "valueScale": 0.5,
+          "valueScale": 0.800000011920929,
           "valueOffset": [
-            0.10000000149011612,
+            0.12999999523162843,
             0.019999999552965165
           ],
-          "valueAsPercentage": true
+          "valueAsPercentage": true,
+          "renderOrder": 0
         }
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "3934fcf385b8694797522f198909dfb1"
+          "guid": "24c3b470de4178408c00ffec91c95b9f"
         },
         "Transform": {
           "position": [
@@ -823,8 +831,8 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "d1f7319f82aeed45bc8393a4b62d71e9",
-          "depth": 1
+          "parentGuid": "23fb1ed7fa7a1a4bb23361f77ff91d26",
+          "depth": 2
         },
         "UIImageComponent": {
           "imagePath": ".\\Resources/Textures/UI/Book_Audio_Menu_BG.png",
@@ -855,7 +863,8 @@
             0.5,
             0.10000000149011612,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -863,7 +872,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "d888ee19dbc00e40989c0ee148b436d1"
+          "guid": "9cd2e4f0f467ca44aefd13f1829fa911"
         },
         "Transform": {
           "position": [
@@ -889,7 +898,7 @@
           "selfActive": false
         },
         "HierarchyComponent": {
-          "parentGuid": "f17005cb91c26345b010765f2621b849",
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -898,7 +907,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "cd80ec9140191c49946ebc93d236b05b"
+          "guid": "6225104a8ac05147be901c34d833ab2d"
         },
         "Transform": {
           "position": [
@@ -924,20 +933,20 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "d888ee19dbc00e40989c0ee148b436d1",
-          "depth": 1
+          "parentGuid": "9cd2e4f0f467ca44aefd13f1829fa911",
+          "depth": 2
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.625,
-            0.7850000262260437,
+            0.6527900099754334,
+            0.6815690994262695,
             0.0
           ],
           "size": [
-            0.23999999463558198,
-            0.09000000357627869
+            0.35099896788597109,
+            0.12329969555139542
           ],
           "normalColor": [
             1.0,
@@ -961,21 +970,22 @@
           ],
           "textScale": 1.0,
           "backgroundAlpha": 1.0,
-          "normalImage": "Resources/Textures/UI/MainMenu/Audio_Unselected.png",
-          "hoverImage": "Resources/Textures/UI/MainMenu/Audio_Selected.png",
+          "normalImage": "Resources/Textures/UI/Audio_Unselected.png",
+          "hoverImage": "Resources/Textures/UI/Audio_Selected.png",
           "pressedImage": "",
           "action": 3,
           "actionData": "OpenSettingsAudio",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 0.0
+          "soundVolume": 0.0,
+          "renderOrder": 0
         }
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "568c613c1bab9c40875136af486d08fa"
+          "guid": "e63818c34edf2240b865a498e83f1913"
         },
         "Transform": {
           "position": [
@@ -1001,20 +1011,20 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "d888ee19dbc00e40989c0ee148b436d1",
-          "depth": 1
+          "parentGuid": "9cd2e4f0f467ca44aefd13f1829fa911",
+          "depth": 2
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.6650000214576721,
-            0.5899999737739563,
+            0.6694111227989197,
+            0.5400503873825073,
             0.0
           ],
           "size": [
-            0.38999998569488528,
-            0.10000000149011612
+            0.39403632283210757,
+            0.12119071930646897
           ],
           "normalColor": [
             1.0,
@@ -1038,21 +1048,22 @@
           ],
           "textScale": 1.0,
           "backgroundAlpha": 1.0,
-          "normalImage": "Resources/Textures/UI/MainMenu/Controls_Unselected.png",
-          "hoverImage": "Resources/Textures/UI/MainMenu/Controls_Selected.png",
+          "normalImage": "Resources/Textures/UI/Contorls_Unselected.png",
+          "hoverImage": "Resources/Textures/UI/Contorls_Selected.png",
           "pressedImage": "",
           "action": 3,
           "actionData": "OpenSettingsControls",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 0.0
+          "soundVolume": 0.0,
+          "renderOrder": 0
         }
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "8e93c72b74d11d4ca81bdc4f961ded42"
+          "guid": "3342eec2d8e7d34f95eda9ab3295e5c8"
         },
         "Transform": {
           "position": [
@@ -1078,8 +1089,8 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "d888ee19dbc00e40989c0ee148b436d1",
-          "depth": 1
+          "parentGuid": "9cd2e4f0f467ca44aefd13f1829fa911",
+          "depth": 2
         },
         "UIImageComponent": {
           "imagePath": ".\\Resources/Textures/UI/Book_Audio_Menu_BG.png",
@@ -1110,7 +1121,8 @@
             0.5,
             0.10000000149011612,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -1118,7 +1130,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "db5895945e973148bc6a796d4835be07"
+          "guid": "a7ce7598f568a84fb711c68e1eb275fb"
         },
         "Transform": {
           "position": [
@@ -1144,14 +1156,14 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "d888ee19dbc00e40989c0ee148b436d1",
-          "depth": 1
+          "parentGuid": "9cd2e4f0f467ca44aefd13f1829fa911",
+          "depth": 2
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.20000000298023225,
+            0.18000000715255738,
             0.8999999761581421,
             0.0
           ],
@@ -1188,14 +1200,15 @@
           "actionData": "CloseSettingsPage",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "02186ab53463cd4fbd02776b98037874"
+          "guid": "2f71eabaec60d749bd2f42793e28e2b4"
         },
         "Transform": {
           "position": [
@@ -1221,19 +1234,19 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "d888ee19dbc00e40989c0ee148b436d1",
-          "depth": 1
+          "parentGuid": "9cd2e4f0f467ca44aefd13f1829fa911",
+          "depth": 2
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
-          "text": "Video",
+          "text": "",
           "position": [
-            0.6200000047683716,
-            0.38999998569488528,
+            0.6912394762039185,
+            0.3950453996658325,
             0.0
           ],
           "size": [
-            0.20000000298023225,
+            0.45126134157180788,
             0.11999999731779099
           ],
           "normalColor": [
@@ -1257,22 +1270,23 @@
             1.0
           ],
           "textScale": 1.0,
-          "backgroundAlpha": 0.0,
-          "normalImage": "",
-          "hoverImage": "",
+          "backgroundAlpha": 1.0,
+          "normalImage": "Resources/Textures/UI/Brightness_Unselected.png",
+          "hoverImage": "Resources/Textures/UI/Brightness_Selected.png",
           "pressedImage": "",
           "action": 3,
           "actionData": "OpenSettingsVideo",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "9b553b1b4033bc44aee28d0cc7b4c6ac"
+          "guid": "5ea6441ed764ab4fbe912098f0d29563"
         },
         "Transform": {
           "position": [
@@ -1298,7 +1312,7 @@
           "selfActive": false
         },
         "HierarchyComponent": {
-          "parentGuid": "f17005cb91c26345b010765f2621b849",
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
           "depth": 1
         },
         "GlobalTransform": {}
@@ -1307,7 +1321,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "526b0dbe413fcd41a45b0478a36195d6"
+          "guid": "bb7fe7c3d4bdf54e9089edc75b42cf5c"
         },
         "Transform": {
           "position": [
@@ -1333,8 +1347,8 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "9b553b1b4033bc44aee28d0cc7b4c6ac",
-          "depth": 1
+          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "depth": 2
         },
         "UIImageComponent": {
           "imagePath": "Resources/Textures/UI/Controls_Menu_BG.png",
@@ -1365,7 +1379,8 @@
             0.5,
             0.10000000149011612,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -1373,7 +1388,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "634efb1bf847764eb8eacc7e6703658a"
+          "guid": "37fb91191571184c80d5d65c899e547d"
         },
         "Transform": {
           "position": [
@@ -1399,8 +1414,8 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "9b553b1b4033bc44aee28d0cc7b4c6ac",
-          "depth": 1
+          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "depth": 2
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
@@ -1443,14 +1458,15 @@
           "actionData": "ShowTeleportInfo",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "b0fccc02891af545be1fdb25b524ac7c"
+          "guid": "a9570a8f80d6db48a939f3ed370bb364"
         },
         "Transform": {
           "position": [
@@ -1476,8 +1492,8 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "9b553b1b4033bc44aee28d0cc7b4c6ac",
-          "depth": 1
+          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "depth": 2
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
@@ -1520,14 +1536,15 @@
           "actionData": "ShowShootingInfo",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "82f472c6f31a9049805b8609538f66f5"
+          "guid": "ffa068db8edc234f9fe8bd7e6e865898"
         },
         "Transform": {
           "position": [
@@ -1553,8 +1570,8 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "9b553b1b4033bc44aee28d0cc7b4c6ac",
-          "depth": 1
+          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "depth": 2
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
@@ -1597,14 +1614,15 @@
           "actionData": "ShowLightDInfo",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "a46b98feb556bf4ab3fd51f767ee7f0e"
+          "guid": "6b30dff602873d4f960c01d6e606a89f"
         },
         "Transform": {
           "position": [
@@ -1630,8 +1648,8 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "9b553b1b4033bc44aee28d0cc7b4c6ac",
-          "depth": 1
+          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "depth": 2
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
@@ -1674,14 +1692,15 @@
           "actionData": "ShowReturnInfo",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "4d9851f707f89643ad3774eb549a9654"
+          "guid": "0ef7cb6799927445b150355bf7294cf6"
         },
         "Transform": {
           "position": [
@@ -1707,8 +1726,8 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "9b553b1b4033bc44aee28d0cc7b4c6ac",
-          "depth": 1
+          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "depth": 2
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
@@ -1751,14 +1770,15 @@
           "actionData": "BackToSettingsPage",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 0
         }
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "62d14e0a5b9b14408fa5a7725ec792ae"
+          "guid": "362c0db104e4c54a9399bb17df8b4680"
         },
         "Transform": {
           "position": [
@@ -1784,8 +1804,8 @@
           "selfActive": false
         },
         "HierarchyComponent": {
-          "parentGuid": "9b553b1b4033bc44aee28d0cc7b4c6ac",
-          "depth": 1
+          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "depth": 2
         },
         "UIImageComponent": {
           "imagePath": "Resources/Textures/UI/Description_Teleport.png",
@@ -1816,7 +1836,8 @@
             0.5,
             0.10000000149011612,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -1824,7 +1845,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "a64b3f43c3cafb49b7b02ddd6e70c5b1"
+          "guid": "cd1fdcc06b6b764eb3e7613ed7aec458"
         },
         "Transform": {
           "position": [
@@ -1850,8 +1871,8 @@
           "selfActive": false
         },
         "HierarchyComponent": {
-          "parentGuid": "9b553b1b4033bc44aee28d0cc7b4c6ac",
-          "depth": 1
+          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "depth": 2
         },
         "UIImageComponent": {
           "imagePath": "Resources/Textures/UI/Description_Shooting.png",
@@ -1882,7 +1903,8 @@
             0.5,
             0.10000000149011612,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -1890,7 +1912,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "45cbceb33453014f9b7070ed5b2a5500"
+          "guid": "2eee1bc85e65b64cb991a6c1d8f441ec"
         },
         "Transform": {
           "position": [
@@ -1916,8 +1938,8 @@
           "selfActive": false
         },
         "HierarchyComponent": {
-          "parentGuid": "9b553b1b4033bc44aee28d0cc7b4c6ac",
-          "depth": 1
+          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "depth": 2
         },
         "UIImageComponent": {
           "imagePath": "Resources/Textures/UI/Description_LightDisrupter.png",
@@ -1948,7 +1970,8 @@
             0.5,
             0.10000000149011612,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -1956,7 +1979,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "5db224fefb710d4ca1a63bf390cef941"
+          "guid": "68820f8e370a71469d8f42ee3f2b2e1e"
         },
         "Transform": {
           "position": [
@@ -1982,8 +2005,8 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "9b553b1b4033bc44aee28d0cc7b4c6ac",
-          "depth": 1
+          "parentGuid": "5ea6441ed764ab4fbe912098f0d29563",
+          "depth": 2
         },
         "UIImageComponent": {
           "imagePath": "Resources/Textures/UI/Description_Return.png",
@@ -2014,7 +2037,8 @@
             0.5,
             0.10000000149011612,
             0.0
-          ]
+          ],
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -2022,7 +2046,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "c27c086b2f63a140a3b41c7568eeac62"
+          "guid": "9eb34231cec0f0438aeab373ada52101"
         },
         "Transform": {
           "position": [
@@ -2048,7 +2072,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "f17005cb91c26345b010765f2621b849",
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
           "depth": 1
         },
         "GlobalTransform": {},
@@ -2092,14 +2116,15 @@
           "actionData": "OpenSettingsPage",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 5
         }
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "6ebde770c207424981a2188ee2dcd8f5"
+          "guid": "830cfec9bb96a843beddc2e4a1a89cf7"
         },
         "Transform": {
           "position": [
@@ -2125,19 +2150,19 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "f17005cb91c26345b010765f2621b849",
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
           "depth": 1
         },
         "GlobalTransform": {},
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.33000001311302187,
-            0.6600000262260437,
+            0.3154433071613312,
+            0.663027286529541,
             0.0
           ],
           "size": [
-            0.44999998807907107,
+            0.3712916076183319,
             0.08500000089406967
           ],
           "normalColor": [
@@ -2169,14 +2194,15 @@
           "actionData": "Resume",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 5
         }
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "e92a59793a1fc849a7f43a468c6808e1"
+          "guid": "2f534f130aabd84d9bb16951ad90fa07"
         },
         "Transform": {
           "position": [
@@ -2202,7 +2228,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "f17005cb91c26345b010765f2621b849",
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
           "depth": 1
         },
         "UIImageComponent": {
@@ -2234,7 +2260,8 @@
             0.5,
             0.10000000149011612,
             0.0
-          ]
+          ],
+          "renderOrder": 5
         },
         "GlobalTransform": {}
       }
@@ -2242,7 +2269,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "6cabeb453c17d64089cf7719fc07ae31"
+          "guid": "9238f2085c554c499c590aa374d92a3f"
         },
         "Transform": {
           "position": [
@@ -2268,7 +2295,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "f17005cb91c26345b010765f2621b849",
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
           "depth": 1
         },
         "GlobalTransform": {},
@@ -2308,11 +2335,247 @@
           "normalImage": "../Resources/Textures/UI/EXIT GAME_Unelected.png",
           "hoverImage": "../Resources/Textures/UI/EXIT GAME_Selected.png",
           "pressedImage": "../Resources/Textures/UI/EXIT GAME_Selected.png",
-          "action": 2,
+          "action": 3,
+          "actionData": "ShowReturnConfirm",
+          "hoverSoundName": "",
+          "clickSoundName": "",
+          "soundVolume": 1.0,
+          "renderOrder": 5
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "aa11bb22cc33dd44ee55ff6677889900"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "ReturnConfirmBG",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "UIButtonComponent": {
+          "text": "",
+          "position": [
+            0.5094839334487915,
+            0.5770055651664734,
+            0.0
+          ],
+          "size": [
+            0.6068617701530457,
+            0.531004011631012
+          ],
+          "normalColor": [
+            0.3,
+            0.3,
+            0.3
+          ],
+          "hoverColor": [
+            0.3,
+            0.3,
+            0.3
+          ],
+          "pressedColor": [
+            0.3,
+            0.3,
+            0.3
+          ],
+          "textColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "textScale": 1.0,
+          "backgroundAlpha": 1.0,
+          "normalImage": "./Resources/Textures/UI/ReturnMainMenu_BG.png",
+          "hoverImage": "./Resources/Textures/UI/ReturnMainMenu_BG.png",
+          "pressedImage": "./Resources/Textures/UI/ReturnMainMenu_BG.png",
+          "action": 0,
           "actionData": "",
           "hoverSoundName": "",
           "clickSoundName": "",
-          "soundVolume": 1.0
+          "soundVolume": 1.0,
+          "renderOrder": 10,
+          "disabled": true
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "bb22cc33dd44ee55ff66778899001122"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LeaveButton",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "UIButtonComponent": {
+          "text": "",
+          "position": [
+            0.3897000253200531,
+            0.4521191120147705,
+            0.0
+          ],
+          "size": [
+            0.2065085768699646,
+            0.1164177656173706
+          ],
+          "normalColor": [
+            0.30000001192092896,
+            0.30000001192092896,
+            0.30000001192092896
+          ],
+          "hoverColor": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "pressedColor": [
+            0.699999988079071,
+            0.699999988079071,
+            0.699999988079071
+          ],
+          "textColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "textScale": 1.0,
+          "backgroundAlpha": 1.0,
+          "normalImage": "./Resources/Textures/UI/Leave_Unselected.png",
+          "hoverImage": "./Resources/Textures/UI/Leave_Selected.png",
+          "pressedImage": "./Resources/Textures/UI/Leave_Selected.png",
+          "action": 1,
+          "actionData": "../Resources/Scenes/mainmenu_video_bg.scene",
+          "hoverSoundName": "",
+          "clickSoundName": "",
+          "soundVolume": 1.0,
+          "renderOrder": 11
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "cc33dd44ee55ff6677889900112233aa"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "ResumeConfirmButton",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "UIButtonComponent": {
+          "text": "",
+          "position": [
+            0.6179999709129333,
+            0.4531281888484955,
+            0.0
+          ],
+          "size": [
+            0.1984359323978424,
+            0.10430878400802612
+          ],
+          "normalColor": [
+            0.30000001192092896,
+            0.30000001192092896,
+            0.30000001192092896
+          ],
+          "hoverColor": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "pressedColor": [
+            0.699999988079071,
+            0.699999988079071,
+            0.699999988079071
+          ],
+          "textColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "textScale": 1.0,
+          "backgroundAlpha": 1.0,
+          "normalImage": "./Resources/Textures/UI/NewResume_Unselected.png",
+          "hoverImage": "./Resources/Textures/UI/NewResume_Selected.png",
+          "pressedImage": "./Resources/Textures/UI/NewResume_Selected.png",
+          "action": 3,
+          "actionData": "HideReturnConfirm",
+          "hoverSoundName": "",
+          "clickSoundName": "",
+          "soundVolume": 1.0,
+          "renderOrder": 11
         }
       }
     }

@@ -159,6 +159,14 @@ namespace Ermine
 
             auto& button = ecs.GetComponent<UIButtonComponent>(entity);
 
+            // Skip disabled buttons (visible but not clickable)
+            if (button.disabled)
+            {
+                button.isHovered = false;
+                button.isPressed = false;
+                continue;
+            }
+
             // Calculate button bounds in normalized space
             float halfW = (button.size.x * 0.5f) / m_aspectRatio;
             float halfH = button.size.y * 0.5f;
@@ -323,6 +331,11 @@ namespace Ermine
         // CRITICAL: Process pending scene load AFTER iteration completes
         if (m_HasPendingSceneLoad)
         {
+            // Unpause before loading new scene
+            s_isGamePaused = false;
+            editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
+            Window::SetCursorLockState(Window::CursorLockState::None);
+
             EE_CORE_INFO("Executing deferred scene load: {}", m_PendingSceneToLoad);
             try
             {
@@ -545,6 +558,32 @@ namespace Ermine
                 SetEntityActiveByName("ResumeButton", true);
                 SetEntityActiveByName("Exit_Game", true);
                 SetEntityActiveByName("PauseBackground", true);
+            }
+            // Exit Game -> Show Return to Main Menu confirmation (overlay on top of pause menu)
+            else if (button.actionData == "ShowReturnConfirm")
+            {
+                // Disable pause menu buttons (still visible, just not clickable)
+                SetButtonDisabledByName("ResumeButton", true);
+                SetButtonDisabledByName("Exit_Game", true);
+                SetButtonDisabledByName("Settings_Button", true);
+
+                // Show confirmation panel on top
+                SetEntityActiveByName("ReturnConfirmBG", true);
+                SetEntityActiveByName("LeaveButton", true);
+                SetEntityActiveByName("ResumeConfirmButton", true);
+            }
+            // Return Confirm -> Resume (go back to pause menu)
+            else if (button.actionData == "HideReturnConfirm")
+            {
+                // Hide confirmation panel
+                SetEntityActiveByName("ReturnConfirmBG", false);
+                SetEntityActiveByName("LeaveButton", false);
+                SetEntityActiveByName("ResumeConfirmButton", false);
+
+                // Re-enable pause menu buttons
+                SetButtonDisabledByName("ResumeButton", false);
+                SetButtonDisabledByName("Exit_Game", false);
+                SetButtonDisabledByName("Settings_Button", false);
             }
             // Settings Page -> Audio (existing SettingsMenu with sliders)
             else if (button.actionData == "OpenSettingsAudio")
@@ -784,6 +823,29 @@ namespace Ermine
         outX = std::max(0.0f, std::min(1.0f, outX));
         outY = std::max(0.0f, std::min(1.0f, outY));
 #endif
+    }
+
+    void UIButtonSystem::SetButtonDisabledByName(const std::string& name, bool disabled)
+    {
+        auto& ecs = ECS::GetInstance();
+
+        for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+        {
+            if (!ecs.IsEntityValid(e)) continue;
+            if (!ecs.HasComponent<ObjectMetaData>(e)) continue;
+            if (!ecs.HasComponent<UIButtonComponent>(e)) continue;
+
+            auto& meta = ecs.GetComponent<ObjectMetaData>(e);
+            if (meta.name == name)
+            {
+                auto& btn = ecs.GetComponent<UIButtonComponent>(e);
+                btn.disabled = disabled;
+                EE_CORE_INFO("Set button '{}' (ID: {}) disabled = {}", name, e, disabled);
+                return;
+            }
+        }
+
+        EE_CORE_WARN("Button '{}' not found!", name);
     }
 
     void UIButtonSystem::SetEntityActiveByName(const std::string& name, bool active)
