@@ -15,7 +15,7 @@
           "maxParticles": 1,
           "emissionShape": 0,
           "localPositionOffset": [0.0, 0.0, 0.0],
-          "overallScale": 4.0,
+          "overallScale": 2.0,
           "spawnBoxExtents": [0.0, 0.0, 0.0],
           "spawnRadius": 0.0,
           "spawnRadiusInner": 0.0,
