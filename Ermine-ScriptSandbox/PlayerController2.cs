@@ -363,17 +363,57 @@ public class PlayerController2 : MonoBehaviour
                     interactTimer = 0f;
                 }
 
-                if (obj.name == "ComputerDoorUnlock" && interactTimer > 1f)
+                if (obj.name == "ComputerDoorUnlock1" && interactTimer > 1f)
                 {
-                    // Collect key
-                    //GlobalAudio.PlaySFX("BookPickUp");
-                    UnlockDoor.I.Evaluate();
-                    
-                    //Add feedback
+                    // Check if already unlocked
+                    if (UnlockDoor.I.IsComputer1Unlocked())
+                    {
+                        Debug.Log("Computer 1 is already unlocked!");
+                        // Optional: Play a sound or show a message
+                    }
+                    else if (UnlockDoor.I.GetKeyCount() <= 0)
+                    {
+                        Debug.Log("Need a key to unlock this computer!");
+                        // Optional: Play a sound or show a message indicating no keys
+                    }
+                    else
+                    {
+                        // Unlock computer 1
+                        GlobalAudio.PlaySFX("BookPickUp");
+                        UnlockDoor.I.UnlockComputer1();
+
+                        // Optional: Add visual feedback here (change color, play animation, etc.)
+                        Debug.Log("Computer 1 activated!");
+                    }
 
                     interactTimer = 0f;
                 }
 
+                if (obj.name == "ComputerDoorUnlock2" && interactTimer > 1f)
+                {
+                    // Check if already unlocked
+                    if (UnlockDoor.I.IsComputer2Unlocked())
+                    {
+                        Debug.Log("Computer 2 is already unlocked!");
+                        // Optional: Play a sound or show a message
+                    }
+                    else if (UnlockDoor.I.GetKeyCount() <= 0)
+                    {
+                        Debug.Log("Need a key to unlock this computer!");
+                        // Optional: Play a sound or show a message indicating no keys
+                    }
+                    else
+                    {
+                        // Unlock computer 2
+                        GlobalAudio.PlaySFX("BookPickUp");
+                        UnlockDoor.I.UnlockComputer2();
+
+                        // Optional: Add visual feedback here (change color, play animation, etc.)
+                        Debug.Log("Computer 2 activated!");
+                    }
+
+                    interactTimer = 0f;
+                }
             }
             /*else
             {
@@ -452,7 +492,7 @@ public class PlayerController2 : MonoBehaviour
 
     void OnCollisionEnter(Collision col)
     {
-        if (col.gameObject.name.Contains("floor"))
+        if (col.gameObject.name.Contains("floor") || col.gameObject.name.Contains("Rotating"))
         {
             isGrounded = true;
             isKeyJump = false;
@@ -460,14 +500,14 @@ public class PlayerController2 : MonoBehaviour
     }
     void OnCollisionStay(Collision col)
     {
-        if (col.gameObject.name.Contains("floor"))
+        if (col.gameObject.name.Contains("floor") || col.gameObject.name.Contains("Rotating"))
         {
             isGrounded = true;
         }
     }
     void OnCollisionExit(Collision col)
     {
-        if (col.gameObject.name.Contains("floor"))
+        if (col.gameObject.name.Contains("floor") || col.gameObject.name.Contains("Rotating"))
         {
             isGrounded = false;
         }

@@ -47,11 +47,16 @@ public class Attack : MonoBehaviour
     public float lightForwardOffset = 0.5f;
     public Vector3 lightRotationOffset = new Vector3(0f, 0f, 0f); // radians
 
+    bool playSFX = false;
+
     // replace to this
     // Name of the entity with UIHealthbarComponent (must match your scene)
     //public string playerHealthBarName = "Healthbar";
     //private GameObject playerHealthBar;
 
+    public string healthBarName = "Healthbar";
+    private GameObject healthBar;
+    private float health = 0f;
     private void TryStun()
     {
         if (isStunned)
@@ -140,6 +145,12 @@ public class Attack : MonoBehaviour
 
         // Find healthbar by name (replace to this)
         //playerHealthBar = GameObject.Find(playerHealthBarName);
+
+        healthBar = GameObject.Find(healthBarName);
+        if (healthBar != null)
+        {
+            health = GameplayHUD.GetHealth(healthBar);
+        }
 
         ShowEnemyLight();
     }
@@ -264,8 +275,9 @@ public class Attack : MonoBehaviour
 
         if (distToPlayer > disengageDistance || loseSightTimer <= 0f)
         {
-            StateMachine.RequestPreviousState(entityID);
+            playSFX = false;
             tickTimer = tickInterval;
+            StateMachine.RequestPreviousState(entityID);
             return;
         }
 
@@ -274,6 +286,7 @@ public class Attack : MonoBehaviour
             if (anim != null)
                 anim.SetBool("IsMoving", true);
 
+            playSFX = false;
             tickTimer = tickInterval; // don’t damage while out of range
 
             repathTimer -= Time.deltaTime;
@@ -297,27 +310,33 @@ public class Attack : MonoBehaviour
         tickTimer -= Time.deltaTime;
         if (tickTimer <= 0f)
         {
-            //DealDamageToPlayer(damagePerTick);
+            DealDamageToPlayer(damagePerTick);
             tickTimer = tickInterval;
         }
     }
 
-    //private void DealDamageToPlayer(float dmg)
-    //{
-    //    float health = GameplayHUD.GetHealth(GameplayHUD.GetHealthBar());
-    //    health = Math.Max(0, health - dmg);
+    private void DealDamageToPlayer(float dmg)
+    {
+        // replace to this
+        //if (playerHealthBar == null) return;
 
-    //    GameObject bar = GameplayHUD.GetHealthBar();
-    //    GameplayHUD.SetHealth(bar, health);
+        //float health = GameplayHUD.GetHealth(playerHealthBar);
+        //health = Math.Max(0, health - dmg);
 
-    //    // replace to this
-    //    //if (playerHealthBar == null) return;
+        //GameplayHUD.SetHealth(playerHealthBar, health);
 
-    //    //float health = GameplayHUD.GetHealth(playerHealthBar);
-    //    //health = Math.Max(0, health - dmg);
+        if (healthBar == null) return;
 
-    //    //GameplayHUD.SetHealth(playerHealthBar, health);
-    //}
+        health = GameplayHUD.GetHealth(healthBar);
+        health = Math.Max(0f, health - dmg);
+        GameplayHUD.SetHealth(healthBar, health);
+
+        if (!playSFX)
+        {
+            GlobalAudio.PlaySFX("LightDamageLoop");
+            playSFX = true;
+        }
+    }
 
     void OnCollisionEnter(Collision col)
     {
