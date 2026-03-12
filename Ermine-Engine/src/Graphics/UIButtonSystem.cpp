@@ -331,6 +331,11 @@ namespace Ermine
         // CRITICAL: Process pending scene load AFTER iteration completes
         if (m_HasPendingSceneLoad)
         {
+            // Unpause before loading new scene
+            s_isGamePaused = false;
+            editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
+            Window::SetCursorLockState(Window::CursorLockState::None);
+
             EE_CORE_INFO("Executing deferred scene load: {}", m_PendingSceneToLoad);
             try
             {
