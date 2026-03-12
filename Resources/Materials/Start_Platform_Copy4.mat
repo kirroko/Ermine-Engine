@@ -3,9 +3,9 @@
         "materialAlbedo": {
             "type": "vec4",
             "value": [
-                0.800000011920929,
-                0.800000011920929,
-                0.800000011920929,
+                1.0,
+                1.0,
+                1.0,
                 1.0
             ]
         },
@@ -15,11 +15,7 @@
         },
         "materialRoughness": {
             "type": "float",
-            "value": 0.30000001192092898
-        },
-        "materialAo": {
-            "type": "float",
-            "value": 1.0
+            "value": 0.5
         },
         "materialEmissive": {
             "type": "vec3",
@@ -31,42 +27,15 @@
         },
         "materialEmissiveIntensity": {
             "type": "float",
-            "value": 0.0
-        },
-        "materialNormalStrength": {
-            "type": "float",
             "value": 1.0
-        },
-        "materialShadingModel": {
-            "type": "int",
-            "value": 0
         },
         "materialCastsShadows": {
             "type": "bool",
             "value": true
         },
-        "materialFillAmount": {
-            "type": "float",
-            "value": 1.0
-        },
-        "materialFillDirection": {
-            "type": "vec3",
-            "value": [
-                0.0,
-                1.0,
-                0.0
-            ]
-        },
-        "materialFillUVAxis": {
-            "type": "vec2",
-            "value": [
-                0.0,
-                1.0
-            ]
-        },
         "materialHasAlbedoMap": {
             "type": "bool",
-            "value": false
+            "value": true
         },
         "materialHasNormalMap": {
             "type": "bool",
@@ -84,9 +53,9 @@
             "type": "bool",
             "value": false
         },
-        "materialHasEmissiveMap": {
-            "type": "bool",
-            "value": false
+        "materialAlbedoMap": {
+            "type": "texture2d",
+            "value": "C:\\DigiPen\\Y3\\GAM\\Ermine-Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_BC.png"
         }
     },
     "uvTransform": {
