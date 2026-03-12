@@ -55,6 +55,7 @@ public class EndElevator : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
+        if (collision.gameObject.name != "Player") return;
         Debug.Log("Player entered the elevator");
         playerIn = true;
     }
