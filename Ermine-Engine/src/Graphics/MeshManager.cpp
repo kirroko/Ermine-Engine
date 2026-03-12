@@ -34,6 +34,16 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine::graphics {
 
+    namespace {
+        bool IsPersistentPrimitiveMeshID(const std::string& meshID)
+        {
+            return meshID.rfind("Cube_", 0) == 0 ||
+                   meshID.rfind("Sphere_", 0) == 0 ||
+                   meshID.rfind("Quad_", 0) == 0 ||
+                   meshID.rfind("Cone_", 0) == 0;
+        }
+    }
+
     MeshManager::MeshManager()
     {
         // Default initialization - member variables are already initialized to 0
@@ -590,8 +600,40 @@ namespace Ermine::graphics {
             m_StagedIndices.size());
     }
 
-    void MeshManager::Clear()
+    void MeshManager::Clear(bool preservePrimitiveMeshes)
     {
+        if (preservePrimitiveMeshes) {
+            std::vector<MeshSubset> preservedMeshes;
+            preservedMeshes.reserve(m_LoadedMeshes.size());
+
+            std::unordered_map<std::string, MeshHandle> preservedCache;
+            preservedCache.reserve(m_MeshCache.size());
+
+            for (const auto& subset : m_LoadedMeshes) {
+                if (!IsPersistentPrimitiveMeshID(subset.meshID)) {
+                    continue;
+                }
+
+                MeshHandle handle;
+                handle.index = static_cast<uint32_t>(preservedMeshes.size());
+                preservedMeshes.push_back(subset);
+                preservedCache[subset.meshID] = handle;
+            }
+
+            m_LoadedMeshes = std::move(preservedMeshes);
+            m_MeshCache = std::move(preservedCache);
+
+            // Keep staged vertex/index data intact so preserved mesh offsets
+            // remain valid without forcing a re-upload on scene/play reload.
+            m_IndirectBuffer.commandCount = 0;
+            m_IndirectBuffer.bufferSize = 0;
+            m_IndirectBuffer.MarkClean();
+
+            EE_CORE_INFO("MeshManager: Cleared scene state, preserved {} primitive meshes",
+                         m_LoadedMeshes.size());
+            return;
+        }
+
         // Clear all CPU-side data
         m_LoadedMeshes.clear();
         m_MeshCache.clear();

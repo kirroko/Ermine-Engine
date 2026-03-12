@@ -7,6 +7,8 @@ public class OrbTeleport : MonoBehaviour
     private Transform origin;
     private Transform cam;
     private Animator anim;
+    private GameObject orbProjectile;
+    private Sphere orbSphere;
 
     private float health = 0f;
     public float damage = 10f;
@@ -84,8 +86,26 @@ public class OrbTeleport : MonoBehaviour
         PostEffects.SetVignetteMapTexture("../Resources/Textures/White_Vignette_Alpha.png");
         PostEffects.VignetteMapRGBModifier = new Vector3(1f, 1f, 1f);
 
+        EnsureOrbProjectile();
+
         // Initialize: Shoot is ready (lit up), others are not
         SetSkillsForReadyToShoot();
+    }
+
+    void EnsureOrbProjectile()
+    {
+        if (orbProjectile != null && orbSphere != null)
+            return;
+
+        orbProjectile = Prefab.Instantiate("../Resources/Prefabs/Sphere.prefab");
+        if (orbProjectile == null)
+            return;
+
+        orbSphere = orbProjectile.GetComponent<Sphere>();
+        if (orbSphere == null)
+            return;
+
+        orbSphere.Deactivate();
     }
 
     // Helper: Set skills to "ready to shoot" state (no orb out)
@@ -124,7 +144,7 @@ public class OrbTeleport : MonoBehaviour
         timeSinceLastDamage += Time.deltaTime;
 
         // Check if orb disappeared on its own (hit something, traveled too far, etc.)
-        if (orbShot && GameObject.Find("Sphere") == null)
+        if (orbShot && (orbProjectile == null || !orbProjectile.activeSelf))
         {
             Debug.Log("OrbTeleport: Orb vanished, resetting state");
             orbShot = false;
@@ -181,8 +201,8 @@ public class OrbTeleport : MonoBehaviour
 
     void ShootOrb()
     {
-        // Only one orb at a time
-        if (GameObject.Find("Sphere") != null) return;
+        EnsureOrbProjectile();
+        if (orbProjectile == null || orbSphere == null || orbProjectile.activeSelf) return;
 
         // Deal damage to player
         TakeDamage(damage);
@@ -194,22 +214,13 @@ public class OrbTeleport : MonoBehaviour
         // Update UI: Orb is out, teleport and return are now ready
         SetSkillsForOrbOut();
 
-        // Instantiate orb projectile
-        var projectile = Prefab.Instantiate("../Resources/Prefabs/Sphere.prefab");
-
-        if (projectile != null)
-        {
-            projectile.transform.position = origin.transform.position + cam.forward * forwardOffset + cam.right * rightOffset + Vector3.up * upOffset;
-            projectile.transform.rotation = transform.rotation;
-            projectile.GetComponent<Sphere>().direction = -cam.forward;
-        }
+        Vector3 spawnPosition = origin.transform.position + cam.forward * forwardOffset + cam.right * rightOffset + Vector3.up * upOffset;
+        orbSphere.Launch(spawnPosition, transform.rotation, -cam.forward);
     }
 
     void TeleportToOrb()
     {
-        // Find the orb
-        GameObject sphere = GameObject.Find("Sphere");
-        if (sphere == null)
+        if (orbProjectile == null || orbSphere == null || !orbProjectile.activeSelf)
         {
             orbShot = false;
             SetSkillsForReadyToShoot();
@@ -219,9 +230,9 @@ public class OrbTeleport : MonoBehaviour
         GlobalAudio.PlaySFX("Teleport");
 
         // Snap explosion to ground for better visual accuracy
-        Vector3 explosionPos = sphere.transform.position;
+        Vector3 explosionPos = orbProjectile.transform.position;
         RaycastHit hit;
-        if (Physics.Raycast(sphere.transform.position, Vector3.down, out hit, 5.0f))
+        if (Physics.Raycast(orbProjectile.transform.position, Vector3.down, out hit, 5.0f))
         {
             explosionPos = hit.point + Vector3.up * 0.1f; // Slightly above ground
         }
@@ -234,7 +245,7 @@ public class OrbTeleport : MonoBehaviour
         }
 
         teleportDashStart = gameObject.transform.position;
-        teleportDashTarget = sphere.transform.position;
+        teleportDashTarget = orbProjectile.transform.position;
         teleportDashElapsed = 0f;
         isTeleportDashing = true;
 
@@ -264,10 +275,9 @@ public class OrbTeleport : MonoBehaviour
         PostEffects.RadialBlurCenter = new Vector2(0.5f, 0.5f);
         PostEffects.RadialBlurStrength = teleportDashRadialBlurBaseStrength;
 
-        // Remove orb
-        Debug.Log("OrbTeleport: Destroying orb after teleport: " + sphere.GetInstanceID());
-        Physics.RemovePhysic((ulong)sphere.GetInstanceID());
-        GameObject.Destroy(sphere);
+        // Park orb for reuse instead of destroying and recreating it.
+        Debug.Log("OrbTeleport: Deactivating orb after teleport: " + orbProjectile.GetInstanceID());
+        orbSphere.Deactivate();
 
         // Back to ready to shoot
         SetSkillsForReadyToShoot();
@@ -275,19 +285,16 @@ public class OrbTeleport : MonoBehaviour
 
     void RecallOrb()
     {
-        // Find the orb
-        GameObject sphere = GameObject.Find("Sphere");
-        if (sphere != null)
+        if (orbProjectile != null && orbSphere != null && orbProjectile.activeSelf)
         {
             GlobalAudio.PlaySFX("Teleport"); // Or a custom recall sound
 
             // Play recall animation
             anim.SetTrigger("recall");
 
-            // Remove orb
-            Physics.RemovePhysic((ulong)sphere.GetInstanceID());
+            // Park orb for reuse instead of destroying and recreating it.
             HealDamage(recallHealAmt);
-            GameObject.Destroy(sphere);
+            orbSphere.Deactivate();
 
             // Back to ready to shoot
             SetSkillsForReadyToShoot();

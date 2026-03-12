@@ -703,7 +703,7 @@ void LoadSceneFromFile(Ermine::ECS& ecs, const std::filesystem::path& path) {
     // Clear MeshManager for new scene
     auto renderer = ecs.GetSystem<Ermine::graphics::Renderer>();
     if (renderer) {
-        renderer->m_MeshManager.Clear();
+        renderer->m_MeshManager.Clear(true);
     }
 
     Ermine::AssetManager::GetInstance().ClearModelCache();

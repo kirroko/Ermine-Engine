@@ -970,7 +970,7 @@ void Renderer::CreateGBuffer(const int& width, const int& height)
  */
 void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 {
-	PostProcessBuffer pPBuffer, bEBuffer, bBBuffer1, bBBuffer2, AABuffer, MBBuffer, MBMaskBuffer, prevPresentedBuffer;
+	PostProcessBuffer pPBuffer, bEBuffer, bBBuffer1, bBBuffer2, AABuffer, MBBuffer, MBMaskBuffer;
 
 
 	// If an  buffer already exists, delete its OpenGL resources before creating a new one.
@@ -995,12 +995,6 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 		{
 			glDeleteTextures(1, &m_NoiseTexture);
 			m_NoiseTexture = 0;
-		}
-		if (m_PreviousPresentedBuffer)
-		{
-			glDeleteFramebuffers(1, &m_PreviousPresentedBuffer->FBO);
-			glDeleteTextures(1, &m_PreviousPresentedBuffer->ColorTexture);
-			m_PreviousPresentedBuffer.reset();
 		}
 	}
 
@@ -1124,25 +1118,6 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 		EE_CORE_ERROR("ERROR: Motion blur mask framebuffer not complete! Status: {0}", maskStatus);
 	}
 
-	// Create previous-presented buffer at full resolution for one-frame reuse after rebuilds
-	glGenFramebuffers(1, &prevPresentedBuffer.FBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, prevPresentedBuffer.FBO);
-	glGenTextures(1, &prevPresentedBuffer.ColorTexture);
-	glBindTexture(GL_TEXTURE_2D, prevPresentedBuffer.ColorTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, prevPresentedBuffer.ColorTexture, 0);
-	GLenum prevDrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
-	glDrawBuffers(1, prevDrawBuffers);
-	GLenum prevStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (prevStatus != GL_FRAMEBUFFER_COMPLETE)
-	{
-		EE_CORE_ERROR("ERROR: Previous presented framebuffer not complete! Status: {0}", prevStatus);
-	}
-
 	//
 
 	// Making sure dimensions are non-zero
@@ -1214,11 +1189,6 @@ void Renderer::CreatePostProcessBuffer(const int& width, const int& height)
 	MBMaskBuffer.width = width;
 	MBMaskBuffer.height = height;
 	m_MotionBlurMaskBuffer = std::make_shared<PostProcessBuffer>(MBMaskBuffer);
-	prevPresentedBuffer.width = width;
-	prevPresentedBuffer.height = height;
-	m_PreviousPresentedBuffer = std::make_shared<PostProcessBuffer>(prevPresentedBuffer);
-	m_HasPreviousPresentedFrame = false;
-
 	// Generate film grain noise texture (256x256, single channel)
 	{
 		constexpr int NOISE_SIZE = 256;
@@ -2783,8 +2753,6 @@ void Renderer::RebuildDrawData()
 
 	// Clear full rebuild flag (will be set again if major change detected)
 	m_DrawDataNeedsFullRebuild = false;
-	m_PresentPreviousFrameOnce = true;
-
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_COMMAND_BARRIER_BIT);
 }
 
@@ -3903,48 +3871,19 @@ void Renderer::RenderPostProcessPass(const Mtx44& view, const Mtx44& projection)
 
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	const bool reusePreviousFrame = m_PresentPreviousFrameOnce && m_HasPreviousPresentedFrame && m_PreviousPresentedBuffer;
 	m_AAShader->Bind();
 	glActiveTexture(GL_TEXTURE0);
-	if (reusePreviousFrame)
-	{
-		glBindTexture(GL_TEXTURE_2D, m_PreviousPresentedBuffer->ColorTexture);
-		m_PresentPreviousFrameOnce = false;
-	}
-	else
-	{
-		// Motion blur output disabled; always use anti-aliasing buffer
-		glBindTexture(GL_TEXTURE_2D, m_AntiAliasingBuffer->ColorTexture);
-	}
+	// Motion blur output disabled; always use anti-aliasing buffer
+	glBindTexture(GL_TEXTURE_2D, m_AntiAliasingBuffer->ColorTexture);
 	m_AAShader->SetUniform1i("u_LightingTexture", 0);
 
 	// Set FXAA parameters
-	m_AAShader->SetUniform1i("u_FXAA", reusePreviousFrame ? 0 : (m_FXAAEnabled ? 1 : 0));
+	m_AAShader->SetUniform1i("u_FXAA", m_FXAAEnabled ? 1 : 0);
 	m_AAShader->SetUniform1f("u_FXAASpanMax", m_FXAASpanMax);
 	m_AAShader->SetUniform1f("u_FXAAReduceMin", m_FXAAReduceMin);
 	m_AAShader->SetUniform1f("u_FXAAReduceMul", m_FXAAReduceMul);
 
 	Draw(m_QuadMesh.vertex_array, m_QuadMesh.index_buffer);
-
-	if (!reusePreviousFrame && m_PreviousPresentedBuffer)
-	{
-#if defined(EE_EDITOR)
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_OffscreenBuffer ? m_OffscreenBuffer->FBO : 0);
-#else
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-#endif
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_PreviousPresentedBuffer->FBO);
-		glBlitFramebuffer(
-			0, 0, m_PreviousPresentedBuffer->width, m_PreviousPresentedBuffer->height,
-			0, 0, m_PreviousPresentedBuffer->width, m_PreviousPresentedBuffer->height,
-			GL_COLOR_BUFFER_BIT, GL_NEAREST);
-		m_HasPreviousPresentedFrame = true;
-#if defined(EE_EDITOR)
-		glBindFramebuffer(GL_FRAMEBUFFER, m_OffscreenBuffer ? m_OffscreenBuffer->FBO : 0);
-#else
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#endif
-	}
 
 	glEnable(GL_DEPTH_TEST);
 }
@@ -4252,21 +4191,6 @@ void Renderer::CleanupPostProcessBuffer()
 		m_PostProcessBuffer.reset();
 	}
 
-	if (m_PreviousPresentedBuffer)
-	{
-		if (m_PreviousPresentedBuffer->FBO != 0)
-		{
-			glDeleteFramebuffers(1, &m_PreviousPresentedBuffer->FBO);
-			m_PreviousPresentedBuffer->FBO = 0;
-		}
-		if (m_PreviousPresentedBuffer->ColorTexture != 0)
-		{
-			glDeleteTextures(1, &m_PreviousPresentedBuffer->ColorTexture);
-			m_PreviousPresentedBuffer->ColorTexture = 0;
-		}
-		m_PreviousPresentedBuffer.reset();
-	}
-
 	// Clean up bloom extract buffer
 	if (m_BloomExtractBuffer)
 	{
@@ -4459,6 +4383,13 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 
 	for (EntityID e : m_LightSystem->m_Entities)
 	{
+		if (ecs.HasComponent<ObjectMetaData>(e))
+		{
+			const auto& meta = ecs.GetComponent<ObjectMetaData>(e);
+			if (!meta.selfActive)
+				continue;
+		}
+
 		auto& light = ecs.GetComponent<Light>(e);
 		const glm::mat4 lightWorld = GetEntityWorldMatrix(e);
 
@@ -4504,6 +4435,13 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 	for (const SortedLightCandidate& candidate : visibleLights)
 	{
 		EntityID e = candidate.entity;
+		if (ecs.HasComponent<ObjectMetaData>(e))
+		{
+			const auto& meta = ecs.GetComponent<ObjectMetaData>(e);
+			if (!meta.selfActive)
+				continue;
+		}
+
 		auto& light = ecs.GetComponent<Light>(e);
 		const glm::mat4 lightWorld = GetEntityWorldMatrix(e);
 		const bool effectiveCastsShadows = light.castsShadows && light.type != LightType::POINT;
