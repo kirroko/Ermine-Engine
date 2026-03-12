@@ -22,6 +22,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "EditorGUI.h"
 #include "ScriptSystem.h"
 #include "AudioSystem.h"
+#include "UIButtonSystem.h"
 #include "VideoManager.h"
 #include "../../../Ermine-ResourcePipeline/xresource_pipeline_v2-main/dependencies/xstrtool/source/xstrtool.h"
 #include "NavMesh.h"
@@ -115,6 +116,8 @@ namespace
             EE_CORE_INFO("Scene transition: Cleaning up all script instances before entity destruction");
             scriptSystem->CleanupAllScripts();
         }
+
+        Ermine::UIButtonSystem::ResetRuntimeState();
 
         if (auto videoSystem = ecs.GetSystem<Ermine::VideoManager>()) {
             EE_CORE_INFO("Scene transition: Cleaning up all loaded videos");
@@ -279,11 +282,8 @@ void SceneManager::NewScene()
 {
     auto& ecs = Ermine::ECS::GetInstance();
     
-    // STEP 1: Clean up scripts before clearing entities
-    if (auto scriptSystem = ecs.GetSystem<Ermine::scripting::ScriptSystem>()) {
-        EE_CORE_INFO("NewScene: Cleaning up all script instances before entity destruction");
-        scriptSystem->CleanupAllScripts();
-    }
+    // STEP 1: Clean up scene-scoped runtime systems before clearing entities.
+    CleanupSceneRuntimeSystems(ecs);
     
     // STEP 2: Clear physics
     if (auto physics = ecs.GetSystem<Ermine::Physics>()) {
@@ -363,6 +363,8 @@ void SceneManager::ClearScene()
     // Create an empty Scene object and sync with ECS
     auto emptyScene = std::make_shared<Ermine::Scene>("Empty Scene");
     emptyScene->EnsureSyncedWithECS(/*force=*/true);
+    SetActiveScene(emptyScene);
+    Ermine::editor::EditorGUI::SetActiveScene(emptyScene);
 
     ecs.GetSystem<Ermine::Physics>()->UpdatePhysicList();
     m_CurrentScenePath.reset();
@@ -411,20 +413,19 @@ void SceneManager::OpenScene(const std::string& path)
     // Sync the Scene object with the loaded ECS entities
     newScene->EnsureSyncedWithECS(/*force=*/true);
 
-    // Set as active scene in SceneManager
-    if (path != "../Temp/Temp.scene")
-    {
-        SetActiveScene(newScene);
-        m_CurrentScenePath = path;
-        // Notify EditorGUI to update hierarchy panel and inspector
-        Ermine::editor::EditorGUI::SetActiveScene(newScene);
+    // Always update the active editor scene so runtime restore/temp loads
+    // do not leave the editor pointing at the previously opened scene.
+    SetActiveScene(newScene);
+    Ermine::editor::EditorGUI::SetActiveScene(newScene);
 
-        if (m_ActiveScene)
-        {
-            auto baseName = xstrtool::PathBaseName(xstrtool::PathWithoutExtension(path));
-            m_ActiveScene->SetName(baseName);
-            m_ActiveScene->EnsureSyncedWithECS(/*force=*/true);
-        }
+    if (path != "../Temp/Temp.scene")
+        m_CurrentScenePath = path;
+
+    if (m_ActiveScene)
+    {
+        auto baseName = xstrtool::PathBaseName(xstrtool::PathWithoutExtension(path));
+        m_ActiveScene->SetName(baseName);
+        m_ActiveScene->EnsureSyncedWithECS(/*force=*/true);
     }
         
     m_Dirty = false;
@@ -460,19 +461,36 @@ void SceneManager::SaveTemp()
     //SyncHierarchyGuidsFromRuntime(Ermine::ECS::GetInstance());
     SaveSceneToFile(Ermine::ECS::GetInstance(), path, true);
     m_Dirty = false;
+    m_TempSceneRestorePath = save;
 
 	m_CurrentScenePath = save;
 }
 
 void SceneManager::LoadTemp()
 {
-    auto save = m_CurrentScenePath;
+    auto restorePath = m_TempSceneRestorePath;
 
     ClearScene();
     OpenScene("../Temp/Temp.scene");
     RemoveTemp();
 
-    m_CurrentScenePath = save;
+    if (restorePath)
+    {
+        m_CurrentScenePath = restorePath;
+
+        if (m_ActiveScene)
+        {
+            auto baseName = xstrtool::PathBaseName(xstrtool::PathWithoutExtension(*restorePath));
+            m_ActiveScene->SetName(baseName);
+            m_ActiveScene->EnsureSyncedWithECS(/*force=*/true);
+        }
+    }
+    else
+    {
+        m_CurrentScenePath.reset();
+    }
+
+    m_TempSceneRestorePath.reset();
 }
 
 void SceneManager::RemoveTemp()

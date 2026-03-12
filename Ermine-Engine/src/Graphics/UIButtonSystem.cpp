@@ -22,6 +22,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AudioSystem.h"
 #include "GLFW/glfw3.h"
 #include "EditorGUI.h"
+#include "VideoManager.h"
 #include "Window.h"
 #include "Renderer.h"
 
@@ -32,6 +33,31 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 namespace Ermine
 {
+    void UIButtonSystem::PauseTrackedVideoForGamePause()
+    {
+        auto videoSystem = ECS::GetInstance().GetSystem<VideoManager>();
+        if (!videoSystem)
+            return;
+
+        if (!s_resumeVideoAfterPause)
+            s_resumeVideoAfterPause = videoSystem->IsVideoPlaying();
+
+        if (videoSystem->IsVideoPlaying())
+            videoSystem->Pause();
+    }
+
+    void UIButtonSystem::ResumeTrackedVideoAfterGamePause()
+    {
+        if (!s_resumeVideoAfterPause)
+            return;
+
+        auto videoSystem = ECS::GetInstance().GetSystem<VideoManager>();
+        if (videoSystem)
+            videoSystem->Play();
+
+        s_resumeVideoAfterPause = false;
+    }
+
     void UIButtonSystem::Init(int screenWidth, int screenHeight)
     {
         m_screenWidth = screenWidth;
@@ -437,6 +463,11 @@ namespace Ermine
                 meta.selfActive = !meta.selfActive;
                 s_isGamePaused = meta.selfActive;
 
+                if (s_isGamePaused)
+                    PauseTrackedVideoForGamePause();
+                else
+                    ResumeTrackedVideoAfterGamePause();
+
                 // ✅ CRITICAL FIX: Use the same pause mechanism as alt-tab (EditorGUI::s_state)
                 // This ensures audio and ALL systems respect the pause, not just game logic
                 editor::EditorGUI::s_state = s_isGamePaused
@@ -457,6 +488,13 @@ namespace Ermine
     bool UIButtonSystem::IsGamePaused()
     {
         return s_isGamePaused;
+    }
+
+    void UIButtonSystem::ResetRuntimeState()
+    {
+        s_isGamePaused = false;
+        s_resumeVideoAfterPause = false;
+        EE_CORE_INFO("UIButtonSystem: Reset runtime pause state");
     }
 
     void UIButtonSystem::ExecuteButtonAction(const UIButtonComponent& button)
@@ -721,6 +759,7 @@ namespace Ermine
             {
                 meta.selfActive = true;
                 s_isGamePaused = true;
+                PauseTrackedVideoForGamePause();
                 EE_CORE_INFO("Pause menu shown (alt-tab)");
                 Window::SetCursorLockState(Window::CursorLockState::None);
                 return;
@@ -729,6 +768,7 @@ namespace Ermine
 
         // No pause menu found - just pause gameplay
         s_isGamePaused = true;
+        PauseTrackedVideoForGamePause();
         EE_CORE_INFO("No pause menu in scene - gameplay paused only");
     }
 
@@ -759,6 +799,7 @@ namespace Ermine
             {
                 editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
                 s_isGamePaused = false;
+                ResumeTrackedVideoAfterGamePause();
                 EE_CORE_INFO("Auto-resumed (no pause menu in scene)");
             }
 #else
@@ -766,6 +807,7 @@ namespace Ermine
             {
                 editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;
                 s_isGamePaused = false;
+                ResumeTrackedVideoAfterGamePause();
                 EE_CORE_INFO("Auto-resumed (no pause menu in scene)");
             }
 #endif

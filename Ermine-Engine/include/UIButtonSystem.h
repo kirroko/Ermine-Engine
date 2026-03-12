@@ -37,6 +37,7 @@ namespace Ermine
         }
 
         static bool IsGamePaused();  // ADD THIS
+        static void ResetRuntimeState();
 
         static void ShowPauseMenuOnAltTab();
         static void TryAutoResumeOnAltTab();
@@ -67,6 +68,9 @@ namespace Ermine
         void ApplySliderValue(const UISliderComponent& slider, EntityID globalAudioEntity);
 
         static inline bool s_isGamePaused = false;  // ADD THIS
+        static inline bool s_resumeVideoAfterPause = false;
+        static void PauseTrackedVideoForGamePause();
+        static void ResumeTrackedVideoAfterGamePause();
         bool IsEntityActiveInHierarchy(EntityID entity);
         bool IsEntityChildOf(EntityID entity, EntityID potentialParent);  // Check if entity is child of another
         void TogglePauseMenu();  // ADD THIS
