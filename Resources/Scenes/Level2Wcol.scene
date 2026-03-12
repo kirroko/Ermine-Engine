@@ -195792,13 +195792,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.10000000149011612
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.10000000149011612
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -195808,13 +195808,13 @@
                   "t": 0,
                   "v": 8.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -195826,11 +195826,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
@@ -196526,7 +196526,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f7ec9772da9b1d4c866410998ebdc986"
+          "guid": "5c9003a9fc5fba4d8d5c71ddbeea1a2e"
         },
         "HierarchyComponent": {
           "parentGuid": "781450e840d3d34ab72800a6be1e29de",
@@ -196565,7 +196565,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f7ec9772da9b1d4c866410998ebdc986"
+          "guid": "5c9003a9fc5fba4d8d5c71ddbeea1a2e"
         },
         "HierarchyComponent": {
           "parentGuid": "781450e840d3d34ab72800a6be1e29de",
@@ -247616,13 +247616,13 @@
                   "t": 0,
                   "v": 2.0
                 },
-                "sceneName": {
-                  "t": 3,
-                  "v": "Level2toEnd.scene"
-                },
                 "eDuration": {
                   "t": 0,
                   "v": 3.0
+                },
+                "sceneName": {
+                  "t": 3,
+                  "v": "Level2toEnd.scene"
                 },
                 "dSpeed": {
                   "t": 0,
@@ -256978,6 +256978,598 @@
         "HierarchyComponent": {
           "parentGuid": "2de01ad78e56134baf7b48a1e1bc9b38",
           "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 5909,
+      "components": {
+        "IDComponent": {
+          "guid": "0d20f706ae39f94782919ee3c7c3d795"
+        },
+        "Transform": {
+          "position": [
+            121.0,
+            35.244781494140628,
+            135.12269592285157
+          ],
+          "rotation": [
+            0.0,
+            -0.722327470779419,
+            0.0,
+            0.6915512084960938
+          ],
+          "scale": [
+            1.613938331604004,
+            1.6381131410598755,
+            0.9999766945838928
+          ]
+        },
+        "GPUParticleEmitter": {
+          "active": true,
+          "maxParticles": 1024,
+          "emissionShape": 2,
+          "localPositionOffset": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "overallScale": 1.0,
+          "spawnBoxExtents": [
+            5.039999961853027,
+            4.289999961853027,
+            0.07500000298023224
+          ],
+          "spawnRadius": 150.0,
+          "spawnRadiusInner": 50.0,
+          "spawnRate": 20.0,
+          "burstCountMin": 20,
+          "burstCountMax": 40,
+          "burstInterval": 1.5,
+          "burstOnStart": true,
+          "directionMode": 0,
+          "direction": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "coneAngle": 25.0,
+          "coneInnerAngle": 0.0,
+          "speedMin": 0.5,
+          "speedMax": 3.0,
+          "gravity": [
+            0.0,
+            0.5,
+            0.0
+          ],
+          "drag": 0.0,
+          "turbulenceStrength": 0.0,
+          "turbulenceScale": 1.0,
+          "boundsMode": 1,
+          "boundsShape": 0,
+          "boundsBoxExtents": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "boundsRadius": 2.0,
+          "boundsRadiusInner": 0.0,
+          "renderMode": 2,
+          "smokeOpacity": 0.6000000238418579,
+          "smokeSoftness": 0.5,
+          "smokeNoiseScale": 0.15000000596046449,
+          "smokeDistortScale": 0.25,
+          "smokeDistortStrength": 0.3499999940395355,
+          "smokePuffScale": 0.3499999940395355,
+          "smokePuffStrength": 0.6000000238418579,
+          "smokeStretch": 0.5,
+          "smokeUpBias": 0.20000000298023225,
+          "smokeDepthFade": 6.0,
+          "electricIntensity": 5.0,
+          "electricFrequency": 15.0,
+          "electricBoltThickness": 0.07999999821186066,
+          "electricBoltVariation": 1.5,
+          "electricGlow": 2.0,
+          "electricBoltCount": 1,
+          "colorStart": [
+            0.30000001192092898,
+            0.6000000238418579,
+            1.0
+          ],
+          "colorEnd": [
+            0.10000000149011612,
+            0.20000000298023225,
+            0.5
+          ],
+          "alphaStart": 1.0,
+          "alphaEnd": 0.0,
+          "sizeStartMin": 0.5,
+          "sizeStartMax": 1.0,
+          "sizeEndMin": 0.15000000596046449,
+          "sizeEndMax": 2.0,
+          "lifetimeMin": 0.30000001192092898,
+          "lifetimeMax": 0.6000000238418579,
+          "sparkleShape": 0
+        },
+        "ObjectMetaData": {
+          "name": "ElectricFence 1",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            10.079999923706055,
+            8.579999923706055,
+            0.15000000596046449
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 5910,
+      "components": {
+        "IDComponent": {
+          "guid": "a3c50c165303ac48aa8bc7591f1ea542"
+        },
+        "Transform": {
+          "position": [
+            -0.1256554126739502,
+            46.562171936035159,
+            250.87762451171876
+          ],
+          "rotation": [
+            0.0,
+            0.7101256251335144,
+            0.0,
+            0.7040749788284302
+          ],
+          "scale": [
+            1.3057663440704346,
+            1.5880300998687745,
+            0.9999807476997376
+          ]
+        },
+        "GPUParticleEmitter": {
+          "active": true,
+          "maxParticles": 1024,
+          "emissionShape": 2,
+          "localPositionOffset": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "overallScale": 1.0,
+          "spawnBoxExtents": [
+            5.039999961853027,
+            4.289999961853027,
+            0.07500000298023224
+          ],
+          "spawnRadius": 150.0,
+          "spawnRadiusInner": 50.0,
+          "spawnRate": 20.0,
+          "burstCountMin": 20,
+          "burstCountMax": 40,
+          "burstInterval": 1.5,
+          "burstOnStart": true,
+          "directionMode": 0,
+          "direction": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "coneAngle": 25.0,
+          "coneInnerAngle": 0.0,
+          "speedMin": 0.5,
+          "speedMax": 3.0,
+          "gravity": [
+            0.0,
+            0.5,
+            0.0
+          ],
+          "drag": 0.0,
+          "turbulenceStrength": 0.0,
+          "turbulenceScale": 1.0,
+          "boundsMode": 1,
+          "boundsShape": 0,
+          "boundsBoxExtents": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "boundsRadius": 2.0,
+          "boundsRadiusInner": 0.0,
+          "renderMode": 2,
+          "smokeOpacity": 0.6000000238418579,
+          "smokeSoftness": 0.5,
+          "smokeNoiseScale": 0.15000000596046449,
+          "smokeDistortScale": 0.25,
+          "smokeDistortStrength": 0.3499999940395355,
+          "smokePuffScale": 0.3499999940395355,
+          "smokePuffStrength": 0.6000000238418579,
+          "smokeStretch": 0.5,
+          "smokeUpBias": 0.20000000298023225,
+          "smokeDepthFade": 6.0,
+          "electricIntensity": 5.0,
+          "electricFrequency": 15.0,
+          "electricBoltThickness": 0.07999999821186066,
+          "electricBoltVariation": 1.5,
+          "electricGlow": 2.0,
+          "electricBoltCount": 1,
+          "colorStart": [
+            0.30000001192092898,
+            0.6000000238418579,
+            1.0
+          ],
+          "colorEnd": [
+            0.10000000149011612,
+            0.20000000298023225,
+            0.5
+          ],
+          "alphaStart": 1.0,
+          "alphaEnd": 0.0,
+          "sizeStartMin": 0.5,
+          "sizeStartMax": 1.0,
+          "sizeEndMin": 0.15000000596046449,
+          "sizeEndMax": 2.0,
+          "lifetimeMin": 0.30000001192092898,
+          "lifetimeMax": 0.6000000238418579,
+          "sparkleShape": 0
+        },
+        "ObjectMetaData": {
+          "name": "ElectricFence 2",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            10.079999923706055,
+            8.579999923706055,
+            0.15000000596046449
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 5911,
+      "components": {
+        "IDComponent": {
+          "guid": "e5850988850ed041a37d455af197573f"
+        },
+        "Transform": {
+          "position": [
+            -7.4286699295043949,
+            75.0,
+            341.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.7040784358978272,
+            1.0,
+            1.0
+          ]
+        },
+        "GPUParticleEmitter": {
+          "active": true,
+          "maxParticles": 1024,
+          "emissionShape": 2,
+          "localPositionOffset": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "overallScale": 1.0,
+          "spawnBoxExtents": [
+            5.039999961853027,
+            4.289999961853027,
+            0.07500000298023224
+          ],
+          "spawnRadius": 150.0,
+          "spawnRadiusInner": 50.0,
+          "spawnRate": 20.0,
+          "burstCountMin": 20,
+          "burstCountMax": 40,
+          "burstInterval": 1.5,
+          "burstOnStart": true,
+          "directionMode": 0,
+          "direction": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "coneAngle": 25.0,
+          "coneInnerAngle": 0.0,
+          "speedMin": 0.5,
+          "speedMax": 3.0,
+          "gravity": [
+            0.0,
+            0.5,
+            0.0
+          ],
+          "drag": 0.0,
+          "turbulenceStrength": 0.0,
+          "turbulenceScale": 1.0,
+          "boundsMode": 1,
+          "boundsShape": 0,
+          "boundsBoxExtents": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "boundsRadius": 2.0,
+          "boundsRadiusInner": 0.0,
+          "renderMode": 2,
+          "smokeOpacity": 0.6000000238418579,
+          "smokeSoftness": 0.5,
+          "smokeNoiseScale": 0.15000000596046449,
+          "smokeDistortScale": 0.25,
+          "smokeDistortStrength": 0.3499999940395355,
+          "smokePuffScale": 0.3499999940395355,
+          "smokePuffStrength": 0.6000000238418579,
+          "smokeStretch": 0.5,
+          "smokeUpBias": 0.20000000298023225,
+          "smokeDepthFade": 6.0,
+          "electricIntensity": 5.0,
+          "electricFrequency": 15.0,
+          "electricBoltThickness": 0.07999999821186066,
+          "electricBoltVariation": 1.5,
+          "electricGlow": 2.0,
+          "electricBoltCount": 1,
+          "colorStart": [
+            0.30000001192092898,
+            0.6000000238418579,
+            1.0
+          ],
+          "colorEnd": [
+            0.10000000149011612,
+            0.20000000298023225,
+            0.5
+          ],
+          "alphaStart": 1.0,
+          "alphaEnd": 0.0,
+          "sizeStartMin": 0.5,
+          "sizeStartMax": 1.0,
+          "sizeEndMin": 0.15000000596046449,
+          "sizeEndMax": 2.0,
+          "lifetimeMin": 0.30000001192092898,
+          "lifetimeMax": 0.6000000238418579,
+          "sparkleShape": 0
+        },
+        "ObjectMetaData": {
+          "name": "ElectricFence 3",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            10.079999923706055,
+            8.579999923706055,
+            0.15000000596046449
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 5912,
+      "components": {
+        "IDComponent": {
+          "guid": "4a360e9f2bb5f24395711028405ddee7"
+        },
+        "Transform": {
+          "position": [
+            -7.2140913009643559,
+            46.92945861816406,
+            340.5758361816406
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.8931832313537598,
+            1.8800443410873414,
+            1.0
+          ]
+        },
+        "GPUParticleEmitter": {
+          "active": true,
+          "maxParticles": 1024,
+          "emissionShape": 2,
+          "localPositionOffset": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "overallScale": 1.0,
+          "spawnBoxExtents": [
+            5.039999961853027,
+            4.289999961853027,
+            0.07500000298023224
+          ],
+          "spawnRadius": 150.0,
+          "spawnRadiusInner": 50.0,
+          "spawnRate": 20.0,
+          "burstCountMin": 20,
+          "burstCountMax": 40,
+          "burstInterval": 1.5,
+          "burstOnStart": true,
+          "directionMode": 0,
+          "direction": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "coneAngle": 25.0,
+          "coneInnerAngle": 0.0,
+          "speedMin": 0.5,
+          "speedMax": 3.0,
+          "gravity": [
+            0.0,
+            0.5,
+            0.0
+          ],
+          "drag": 0.0,
+          "turbulenceStrength": 0.0,
+          "turbulenceScale": 1.0,
+          "boundsMode": 1,
+          "boundsShape": 0,
+          "boundsBoxExtents": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "boundsRadius": 2.0,
+          "boundsRadiusInner": 0.0,
+          "renderMode": 2,
+          "smokeOpacity": 0.6000000238418579,
+          "smokeSoftness": 0.5,
+          "smokeNoiseScale": 0.15000000596046449,
+          "smokeDistortScale": 0.25,
+          "smokeDistortStrength": 0.3499999940395355,
+          "smokePuffScale": 0.3499999940395355,
+          "smokePuffStrength": 0.6000000238418579,
+          "smokeStretch": 0.5,
+          "smokeUpBias": 0.20000000298023225,
+          "smokeDepthFade": 6.0,
+          "electricIntensity": 5.0,
+          "electricFrequency": 15.0,
+          "electricBoltThickness": 0.07999999821186066,
+          "electricBoltVariation": 1.5,
+          "electricGlow": 2.0,
+          "electricBoltCount": 1,
+          "colorStart": [
+            0.30000001192092898,
+            0.6000000238418579,
+            1.0
+          ],
+          "colorEnd": [
+            0.10000000149011612,
+            0.20000000298023225,
+            0.5
+          ],
+          "alphaStart": 1.0,
+          "alphaEnd": 0.0,
+          "sizeStartMin": 0.5,
+          "sizeStartMax": 1.0,
+          "sizeEndMin": 0.15000000596046449,
+          "sizeEndMax": 2.0,
+          "lifetimeMin": 0.30000001192092898,
+          "lifetimeMax": 0.6000000238418579,
+          "sparkleShape": 0
+        },
+        "ObjectMetaData": {
+          "name": "ElectricFence 4",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            10.079999923706055,
+            8.579999923706055,
+            0.15000000596046449
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
         },
         "GlobalTransform": {}
       }
