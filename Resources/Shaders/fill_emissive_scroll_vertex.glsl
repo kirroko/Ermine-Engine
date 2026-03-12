@@ -3,7 +3,7 @@
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec2 aTexCoord;
-layout(location = 3) in vec3 aTangent;
+layout(location = 3) in vec4 aTangent;
 layout(location = 4) in ivec4 aBoneIDs;
 layout(location = 5) in vec4 aBoneWeights;
 
@@ -34,7 +34,7 @@ struct MaterialData {
 
     int shadingModel;
     uint textureFlags;
-    int castsShadows;
+    int castsShadows; // Kept for CPU/GPU layout parity
     float fillAmount;
 
     vec2 uvScale;
@@ -87,7 +87,7 @@ void main()
 
     vec4 skinnedPos = vec4(aPos, 1.0);
     vec3 skinnedNormal = aNormal;
-    vec3 skinnedTangent = aTangent;
+    vec3 skinnedTangent = aTangent.xyz;
 
     if (useSkinning) {
         uint boneOffset = drawInfo.boneTransformOffset;
@@ -99,25 +99,25 @@ void main()
             mat4 b = boneTransforms[boneOffset + aBoneIDs[0]];
             skinnedPosition += b * vec4(aPos, 1.0) * aBoneWeights[0];
             skinnedNormalVec += mat3(b) * aNormal * aBoneWeights[0];
-            skinnedTangentVec += mat3(b) * aTangent * aBoneWeights[0];
+            skinnedTangentVec += mat3(b) * aTangent.xyz * aBoneWeights[0];
         }
         if (aBoneWeights[1] > 0.0) {
             mat4 b = boneTransforms[boneOffset + aBoneIDs[1]];
             skinnedPosition += b * vec4(aPos, 1.0) * aBoneWeights[1];
             skinnedNormalVec += mat3(b) * aNormal * aBoneWeights[1];
-            skinnedTangentVec += mat3(b) * aTangent * aBoneWeights[1];
+            skinnedTangentVec += mat3(b) * aTangent.xyz * aBoneWeights[1];
         }
         if (aBoneWeights[2] > 0.0) {
             mat4 b = boneTransforms[boneOffset + aBoneIDs[2]];
             skinnedPosition += b * vec4(aPos, 1.0) * aBoneWeights[2];
             skinnedNormalVec += mat3(b) * aNormal * aBoneWeights[2];
-            skinnedTangentVec += mat3(b) * aTangent * aBoneWeights[2];
+            skinnedTangentVec += mat3(b) * aTangent.xyz * aBoneWeights[2];
         }
         if (aBoneWeights[3] > 0.0) {
             mat4 b = boneTransforms[boneOffset + aBoneIDs[3]];
             skinnedPosition += b * vec4(aPos, 1.0) * aBoneWeights[3];
             skinnedNormalVec += mat3(b) * aNormal * aBoneWeights[3];
-            skinnedTangentVec += mat3(b) * aTangent * aBoneWeights[3];
+            skinnedTangentVec += mat3(b) * aTangent.xyz * aBoneWeights[3];
         }
 
         skinnedPos = skinnedPosition;

@@ -19,6 +19,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Renderer.h"
 #include "ECS.h"
 #include "MeshTypes.h"
+#include "TangentSpace.h"
 
 using namespace Ermine::graphics;
 
@@ -104,8 +105,9 @@ bool Model::LoadMeshFile(const std::string& path)
     // Read version
     uint32_t version;
     file.read((char*)&version, sizeof(version));
-    if (version != 1) {
-        EE_CORE_WARN("Unexpected .mesh version: " + std::to_string(version));
+    if (version != 2) {
+        EE_CORE_ERROR("Unsupported .mesh version: " + std::to_string(version) + ". Reimport the mesh cache.");
+        return false;
     }
 
     // Read vertex count
@@ -117,7 +119,7 @@ bool Model::LoadMeshFile(const std::string& path)
         float position[3];
         float normal[3];
         float texCoord[2];
-        float tangent[3];
+        float tangent[4];
     };
 
     // Read all vertices from file
@@ -134,7 +136,7 @@ bool Model::LoadMeshFile(const std::string& path)
         memcpy(dst.position, src.position, sizeof(float) * 3);
         memcpy(dst.normal, src.normal, sizeof(float) * 3);
         memcpy(dst.texCoords, src.texCoord, sizeof(float) * 2);
-        memcpy(dst.tangent, src.tangent, sizeof(float) * 3);
+        memcpy(dst.tangent, src.tangent, sizeof(float) * 4);
 
         // Initialize bone data to zero (not used for static meshes)
         for (int j = 0; j < MAX_BONE_INFLUENCE; ++j) {
@@ -169,7 +171,7 @@ bool Model::LoadMeshFile(const std::string& path)
     vao->LinkAttribute(0, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, position));
     vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, normal));
     vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, texCoords));
-    vao->LinkAttribute(3, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, tangent));
+    vao->LinkAttribute(3, 4, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, tangent));
 
     vao->Unbind();
     vbo->Unbind();
@@ -199,7 +201,7 @@ bool Model::LoadMeshFile(const std::string& path)
             mv.position = glm::vec3(v.position[0], v.position[1], v.position[2]);
             mv.normal = glm::vec3(v.normal[0], v.normal[1], v.normal[2]);
             mv.texCoord = glm::vec2(v.texCoords[0], v.texCoords[1]);
-            mv.tangent = glm::vec3(v.tangent[0], v.tangent[1], v.tangent[2]);
+            mv.tangent = glm::vec4(v.tangent[0], v.tangent[1], v.tangent[2], v.tangent[3]);
             meshVerts.push_back(mv);
         }
 
@@ -243,8 +245,9 @@ bool Model::LoadSkinFile(const std::string& path)
     // Read version
     uint32_t version;
     file.read((char*)&version, sizeof(version));
-    if (version != 1) {
-        EE_CORE_WARN("Unexpected .skin version: " + std::to_string(version));
+    if (version != 2) {
+        EE_CORE_ERROR("Unsupported .skin version: " + std::to_string(version) + ". Reimport the skinned mesh cache.");
+        return false;
     }
 
     // Read vertex count
@@ -256,7 +259,7 @@ bool Model::LoadSkinFile(const std::string& path)
         float position[3];
         float normal[3];
         float texCoord[2];
-        float tangent[3];
+        float tangent[4];
         int boneIndices[4];
         float boneWeights[4];
     };
@@ -275,6 +278,7 @@ bool Model::LoadSkinFile(const std::string& path)
         memcpy(dst.position, src.position, sizeof(float) * 3);
         memcpy(dst.normal, src.normal, sizeof(float) * 3);
         memcpy(dst.texCoords, src.texCoord, sizeof(float) * 2);
+        memcpy(dst.tangent, src.tangent, sizeof(float) * 4);
         memcpy(dst.IDs, src.boneIndices, sizeof(int) * MAX_BONE_INFLUENCE);
         memcpy(dst.Weights, src.boneWeights, sizeof(float) * MAX_BONE_INFLUENCE);
     }
@@ -348,7 +352,7 @@ bool Model::LoadSkinFile(const std::string& path)
     vao->LinkAttribute(0, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, position));
     vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, normal));
     vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, texCoords));
-    vao->LinkAttribute(3, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, tangent)); // ✅ Added tangent
+    vao->LinkAttribute(3, 4, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, tangent)); // Tangent xyz + handedness
 
     // Bone IDs (integer attribute)
     glEnableVertexAttribArray(4);
@@ -386,7 +390,7 @@ bool Model::LoadSkinFile(const std::string& path)
             sv.position = glm::vec3(v.position[0], v.position[1], v.position[2]);
             sv.normal = glm::vec3(v.normal[0], v.normal[1], v.normal[2]);
             sv.texCoord = glm::vec2(v.texCoords[0], v.texCoords[1]);
-            sv.tangent = glm::vec3(v.tangent[0], v.tangent[1], v.tangent[2]);
+            sv.tangent = glm::vec4(v.tangent[0], v.tangent[1], v.tangent[2], v.tangent[3]);
             sv.boneIDs = glm::ivec4(v.IDs[0], v.IDs[1], v.IDs[2], v.IDs[3]);
             sv.boneWeights = glm::vec4(v.Weights[0], v.Weights[1], v.Weights[2], v.Weights[3]);
             skinnedVertices.push_back(sv);
@@ -555,15 +559,15 @@ MeshData Model::ProcessMesh(aiMesh* mesh)
         // Tangents (calculated by Assimp via aiProcess_CalcTangentSpace)
         if (mesh->HasTangentsAndBitangents())
         {
-            vertex.tangent[0] = mesh->mTangents[i].x;
-            vertex.tangent[1] = mesh->mTangents[i].y;
-            vertex.tangent[2] = mesh->mTangents[i].z;
+            const glm::vec4 tangentData = Ermine::BuildTangentData(
+                glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z),
+                glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z),
+                glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z));
+            Ermine::StoreTangent(vertex.tangent, tangentData);
         }
         else
         {
-            vertex.tangent[0] = 0.0f;
-            vertex.tangent[1] = 0.0f;
-            vertex.tangent[2] = 0.0f;
+            Ermine::StoreTangent(vertex.tangent, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
         }
     }
 
@@ -642,7 +646,7 @@ MeshData Model::ProcessMesh(aiMesh* mesh)
     vao->LinkAttribute(0, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, position));
     vao->LinkAttribute(1, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, normal));
     vao->LinkAttribute(2, 2, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, texCoords));
-    vao->LinkAttribute(3, 3, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, tangent));
+    vao->LinkAttribute(3, 4, GL_FLOAT, sizeof(VertexData), (void*)offsetof(VertexData, tangent));
 
     // Bone IDs (integer)
     glEnableVertexAttribArray(4);
@@ -687,7 +691,7 @@ MeshData Model::ProcessMesh(aiMesh* mesh)
                 sv.position = glm::vec3(v.position[0], v.position[1], v.position[2]);
                 sv.normal = glm::vec3(v.normal[0], v.normal[1], v.normal[2]);
                 sv.texCoord = glm::vec2(v.texCoords[0], v.texCoords[1]);
-                sv.tangent = glm::vec3(v.tangent[0], v.tangent[1], v.tangent[2]);
+                sv.tangent = glm::vec4(v.tangent[0], v.tangent[1], v.tangent[2], v.tangent[3]);
                 sv.boneIDs = glm::ivec4(v.IDs[0], v.IDs[1], v.IDs[2], v.IDs[3]);
                 sv.boneWeights = glm::vec4(v.Weights[0], v.Weights[1], v.Weights[2], v.Weights[3]);
                 skinnedVertices.push_back(sv);
@@ -702,7 +706,7 @@ MeshData Model::ProcessMesh(aiMesh* mesh)
                 mv.position = glm::vec3(v.position[0], v.position[1], v.position[2]);
                 mv.normal = glm::vec3(v.normal[0], v.normal[1], v.normal[2]);
                 mv.texCoord = glm::vec2(v.texCoords[0], v.texCoords[1]);
-                mv.tangent = glm::vec3(v.tangent[0], v.tangent[1], v.tangent[2]);
+                mv.tangent = glm::vec4(v.tangent[0], v.tangent[1], v.tangent[2], v.tangent[3]);
                 meshVertices.push_back(mv);
             }
             renderer->m_MeshManager.RegisterMesh(meshVertices, indices, meshID);

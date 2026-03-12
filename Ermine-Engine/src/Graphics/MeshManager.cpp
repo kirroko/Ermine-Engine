@@ -342,7 +342,7 @@ namespace Ermine::graphics {
 
         // Tangent attribute (location 3)
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                              (void*)offsetof(Vertex, tangent));
 
         EE_CORE_INFO("MeshManager: Configured Standard VAO (locations 0-3)");
@@ -390,7 +390,7 @@ namespace Ermine::graphics {
 
         // Tangent attribute (location 3) - offset 48
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
                              (void*)offsetof(SkinnedVertex, tangent));
 
         // BoneIDs attribute (location 4) - offset 64 (ivec4)
@@ -653,7 +653,7 @@ namespace Ermine::graphics {
 
         // Tangent attribute (location 3)
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                              (void*)offsetof(Vertex, tangent));
 
         EE_CORE_INFO("MeshManager: Configured Standard Shadow VAO (locations 0-3)");
@@ -689,7 +689,7 @@ namespace Ermine::graphics {
 
         // Tangent attribute (location 3)
         glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
+        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex),
                              (void*)offsetof(SkinnedVertex, tangent));
 
         // BoneIDs attribute (location 4)
