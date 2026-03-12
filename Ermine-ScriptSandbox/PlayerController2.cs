@@ -452,7 +452,7 @@ public class PlayerController2 : MonoBehaviour
 
     void OnCollisionEnter(Collision col)
     {
-        if (col.gameObject.name.Contains("floor"))
+        if (col.gameObject.name.Contains("floor") || col.gameObject.name.Contains("Rotating"))
         {
             isGrounded = true;
             isKeyJump = false;
@@ -460,14 +460,14 @@ public class PlayerController2 : MonoBehaviour
     }
     void OnCollisionStay(Collision col)
     {
-        if (col.gameObject.name.Contains("floor"))
+        if (col.gameObject.name.Contains("floor") || col.gameObject.name.Contains("Rotating"))
         {
             isGrounded = true;
         }
     }
     void OnCollisionExit(Collision col)
     {
-        if (col.gameObject.name.Contains("floor"))
+        if (col.gameObject.name.Contains("floor") || col.gameObject.name.Contains("Rotating"))
         {
             isGrounded = false;
         }
