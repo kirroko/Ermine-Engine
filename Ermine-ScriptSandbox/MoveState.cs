@@ -51,7 +51,7 @@ public class Move : MonoBehaviour
     private GameObject rayDebug;
 
     private Animator anim;
-    public float stunRecoverDelay = 5.0f;
+    public float stunRecoverDelay = 8.0f;
     private float recoverTimer = 0.0f;
 
     private void CachePlayerIfNeeded()
@@ -247,7 +247,7 @@ public class Move : MonoBehaviour
         string n = hitGO.name;
         if (n == playerName) return false;
         if (n == "Sphere") return false;
-        if (n == "RayDebug") return false;
+        if (n.StartsWith("SpawnPoint_")) return false;
 
         return true;
     }

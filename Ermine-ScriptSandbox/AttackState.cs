@@ -11,7 +11,7 @@ public class Attack : MonoBehaviour
 
     // LOS
     public float viewDistance = 18.0f;
-    public float rayHeight = 0.8f;
+    public float rayHeight = 5.5f;
     public float rayForwardOffset = 2.0f; // push ray out of own collider
     public float loseSightGraceTime = 0.25f; // prevents flicker behind corners
     public float closeDetectDistance = 2.0f;
@@ -38,8 +38,14 @@ public class Attack : MonoBehaviour
     private float armTimer = 0.0f;
 
     private Animator anim;
-    public float stunRecoverDelay = 5.0f;
+    public float stunRecoverDelay = 8.0f;
     private float recoverTimer = 0.0f;
+
+    private GameObject enemyLight;
+
+    public float lightHeight = 5.0f;
+    public float lightForwardOffset = 0.5f;
+    public Vector3 lightRotationOffset = new Vector3(0f, 0f, 0f); // radians
 
     // replace to this
     // Name of the entity with UIHealthbarComponent (must match your scene)
@@ -61,6 +67,61 @@ public class Attack : MonoBehaviour
         }
 
         NavAgent.SetDestination(entityID, transform.position);
+
+        HideEnemyLight();
+        GlobalAudio.PlaySFX("LightDisable");
+    }
+
+    private string GetEnemyLightName()
+    {
+        return "enemyLight_" + entityID;
+    }
+
+    private void EnsureEnemyLight()
+    {
+        enemyLight = GameObject.Find(GetEnemyLightName());
+
+        if (enemyLight == null)
+        {
+            enemyLight = Prefab.Instantiate("../Resources/Prefabs/LightCone10.prefab");
+            if (enemyLight != null)
+                enemyLight.name = GetEnemyLightName();
+        }
+    }
+
+    private void ShowEnemyLight()
+    {
+        EnsureEnemyLight();
+
+        if (enemyLight == null)
+            return;
+
+        Physics.Internal_SetLightValue((ulong)enemyLight.GetInstanceID(), 6.481f);
+        Vector3 lightPos = transform.position
+                         + new Vector3(0f, lightHeight, 0f)
+                         + transform.forward * lightForwardOffset;
+
+        enemyLight.transform.position = lightPos;
+
+        Quaternion rot = transform.rotation;
+        rot = rot * Quaternion.Euler(
+            lightRotationOffset.x,
+            lightRotationOffset.y,
+            lightRotationOffset.z
+        );
+
+        enemyLight.transform.rotation = rot;
+        enemyLight.SetActive(true);
+    }
+
+    private void HideEnemyLight()
+    {
+        EnsureEnemyLight();
+        if (enemyLight != null)
+        {
+            Physics.Internal_SetLightValue((ulong)enemyLight.GetInstanceID(), 0.0f);
+            GlobalAudio.StopSFX("LightDamageLoop");
+        }
     }
 
     private void CachePlayerIfNeeded()
@@ -79,6 +140,8 @@ public class Attack : MonoBehaviour
 
         // Find healthbar by name (replace to this)
         //playerHealthBar = GameObject.Find(playerHealthBarName);
+
+        ShowEnemyLight();
     }
 
     private bool HasLineOfSightToPlayer()
@@ -107,6 +170,17 @@ public class Attack : MonoBehaviour
         RaycastHit hit;
         bool didHit = Physics.Raycast(origin, dir, out hit, dist);
         if (!didHit) return false;
+
+        var hitGO = hit.transform.gameObject;
+
+        // Ignore self-hit
+        ulong hitID = (ulong)hitGO.GetInstanceID();
+        if (hitID == entityID) return false;
+
+        string n = hitGO.name;
+        if (n == GetEnemyLightName()) return false;
+        if (n == "Sphere") return false;
+        if (n.StartsWith("SpawnPoint_")) return false;
 
         return hit.transform != null &&
                hit.transform.gameObject != null &&
@@ -141,6 +215,7 @@ public class Attack : MonoBehaviour
 
         if (isStunned)
         {
+            HideEnemyLight();
             if (anim != null)
             {
                 anim.SetBool("IsMoving", false);
@@ -161,6 +236,7 @@ public class Attack : MonoBehaviour
 
         if (recoverTimer > 0.0f)
         {
+            HideEnemyLight();
             recoverTimer -= Time.deltaTime;
 
             if (anim != null)
@@ -169,6 +245,11 @@ public class Attack : MonoBehaviour
             NavAgent.SetDestination(entityID, transform.position);
             return;
         }
+
+        if (isStunned || recoverTimer > 0.0f)
+            HideEnemyLight();
+        else
+            ShowEnemyLight();
 
         CachePlayerIfNeeded();
         if (playerGO == null) return;
@@ -206,6 +287,7 @@ public class Attack : MonoBehaviour
 
         // IN attack range, stop moving and deal damage
         FacePlayer();
+        ShowEnemyLight();
 
         if (anim != null)
             anim.SetBool("IsMoving", false);
@@ -215,27 +297,27 @@ public class Attack : MonoBehaviour
         tickTimer -= Time.deltaTime;
         if (tickTimer <= 0f)
         {
-            DealDamageToPlayer(damagePerTick);
+            //DealDamageToPlayer(damagePerTick);
             tickTimer = tickInterval;
         }
     }
 
-    private void DealDamageToPlayer(float dmg)
-    {
-        float health = GameplayHUD.GetHealth(GameplayHUD.GetHealthBar());
-        health = Math.Max(0, health - dmg);
+    //private void DealDamageToPlayer(float dmg)
+    //{
+    //    float health = GameplayHUD.GetHealth(GameplayHUD.GetHealthBar());
+    //    health = Math.Max(0, health - dmg);
 
-        GameObject bar = GameplayHUD.GetHealthBar();
-        GameplayHUD.SetHealth(bar, health);
+    //    GameObject bar = GameplayHUD.GetHealthBar();
+    //    GameplayHUD.SetHealth(bar, health);
 
-        // replace to this
-        //if (playerHealthBar == null) return;
+    //    // replace to this
+    //    //if (playerHealthBar == null) return;
 
-        //float health = GameplayHUD.GetHealth(playerHealthBar);
-        //health = Math.Max(0, health - dmg);
+    //    //float health = GameplayHUD.GetHealth(playerHealthBar);
+    //    //health = Math.Max(0, health - dmg);
 
-        //GameplayHUD.SetHealth(playerHealthBar, health);
-    }
+    //    //GameplayHUD.SetHealth(playerHealthBar, health);
+    //}
 
     void OnCollisionEnter(Collision col)
     {
