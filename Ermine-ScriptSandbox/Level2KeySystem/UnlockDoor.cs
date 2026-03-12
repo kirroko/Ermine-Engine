@@ -123,6 +123,7 @@ public class UnlockDoor : MonoBehaviour
         }
 
         doorUnlocked = true;
+        GlobalAudio.PlaySFX("OpenGate");
     }
 
     // Called when player interacts with ComputerDoorUnlock1
@@ -147,6 +148,7 @@ public class UnlockDoor : MonoBehaviour
         computer1Unlocked = true;
         Debug.Log("Computer 1 unlocked! Keys remaining: " + numOfKeys);
 
+        GlobalAudio.PlaySFX("InsertKey");
         // Check if door should open
         CheckDoorUnlock();
     }
@@ -173,6 +175,7 @@ public class UnlockDoor : MonoBehaviour
         computer2Unlocked = true;
         Debug.Log("Computer 2 unlocked! Keys remaining: " + numOfKeys);
 
+        GlobalAudio.PlaySFX("InsertKey");
         // Check if door should open
         CheckDoorUnlock();
     }
