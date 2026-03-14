@@ -3,10 +3,10 @@
         "materialAlbedo": {
             "type": "vec4",
             "value": [
-                0.5020747184753418,
-                1.0,
-                0.9070263504981995,
-                1.0
+                0.800000011920929,
+                0.800000011920929,
+                0.800000011920929,
+                0.17599999904632569
             ]
         },
         "materialMetallic": {
@@ -24,14 +24,14 @@
         "materialEmissive": {
             "type": "vec3",
             "value": [
-                0.10196078568696976,
-                1.0,
-                0.8313725590705872
+                0.0,
+                0.0,
+                0.0
             ]
         },
         "materialEmissiveIntensity": {
             "type": "float",
-            "value": 1.3279999494552613
+            "value": 0.6299999952316284
         },
         "materialNormalStrength": {
             "type": "float",
@@ -47,7 +47,7 @@
         },
         "materialFillAmount": {
             "type": "float",
-            "value": 0.2849999964237213
+            "value": 1.0
         },
         "materialFillDirection": {
             "type": "vec3",
@@ -61,7 +61,7 @@
             "type": "vec2",
             "value": [
                 0.0,
-                -1.0
+                1.0
             ]
         },
         "materialHasAlbedoMap": {
@@ -70,11 +70,11 @@
         },
         "materialHasNormalMap": {
             "type": "bool",
-            "value": false
+            "value": true
         },
         "materialHasRoughnessMap": {
             "type": "bool",
-            "value": false
+            "value": true
         },
         "materialHasMetallicMap": {
             "type": "bool",
@@ -90,12 +90,20 @@
         },
         "materialAlbedoMap": {
             "type": "texture2d",
-            "value": "Resources\\Textures\\Noise\\Marble 10_Alpha.png"
+            "value": "../Resources\\Textures\\Particles\\Circular 8_Alpha.png"
+        },
+        "materialNormalMap": {
+            "type": "texture2d",
+            "value": "../Resources\\Textures\\Noise\\Cracks 10_Alpha.png"
+        },
+        "materialRoughnessMap": {
+            "type": "texture2d",
+            "value": "../Resources\\Textures\\Noise\\Voronoi 15_Alpha.png"
         }
     },
     "uvTransform": {
         "scale": [
-            2.0,
+            1.0,
             1.0
         ],
         "offset": [
@@ -103,5 +111,5 @@
             0.0
         ]
     },
-    "customFragmentShader": "../Resources/Shaders/fill_emissive_scroll_fragment.glsl"
+    "customFragmentShader": "../Resources/Shaders/volumetric_orb_fragment.glsl"
 }
