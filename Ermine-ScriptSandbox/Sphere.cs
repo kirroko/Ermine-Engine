@@ -1,4 +1,5 @@
 ﻿using ErmineEngine;
+using System;
 
 public class Sphere : MonoBehaviour
 {
@@ -29,7 +30,10 @@ public class Sphere : MonoBehaviour
     {
         if (Physics.CheckMotionType((ulong)col.gameObject.GetInstanceID()) == 0
             && !col.gameObject.name.Contains("Bars")
-            && !col.gameObject.name.Contains("gate")) //static obj
+            && !col.gameObject.name.Contains("gate")
+            && !col.gameObject.name.Contains("BARS")
+            && !col.gameObject.name.Contains("Fence")
+            ) //static obj
         {
             Debug.Log("Sphere: Hit static object " + col.gameObject.name + " (" + col.gameObject.GetInstanceID() + ")");
             Debug.Log(Physics.CheckMotionType((ulong)col.gameObject.GetInstanceID()));
