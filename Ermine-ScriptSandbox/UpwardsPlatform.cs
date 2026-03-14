@@ -10,7 +10,7 @@ public class UpwardsPlatform : MonoBehaviour
     private Transform target;
 
     private float progress = 0f;
-    public float speed = 0.5f;
+    public float speed = 0.05f;
 
     void Start()
     {

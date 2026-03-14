@@ -108,6 +108,7 @@
     <Compile Include="Test2.cs" />
     <Compile Include="Test3.cs" />
     <Compile Include="TimedDestroy.cs" />
+    <Compile Include="UpwardsPlatform.cs" />
     <Compile Include="VerticalPlatform.cs" />
     <Compile Include="VoidDeath.cs" />
   </ItemGroup>
