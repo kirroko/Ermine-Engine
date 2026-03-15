@@ -254317,7 +254317,7 @@
           "sparkleShape": 0
         },
         "ObjectMetaData": {
-          "name": "ElectricFence 1",
+          "name": "ElectricFenc 1",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -254465,7 +254465,7 @@
           "sparkleShape": 0
         },
         "ObjectMetaData": {
-          "name": "ElectricFence 2",
+          "name": "ElectricFenc 2",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -254613,7 +254613,7 @@
           "sparkleShape": 0
         },
         "ObjectMetaData": {
-          "name": "ElectricFence 3",
+          "name": "ElectricFenc 3",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -254761,7 +254761,7 @@
           "sparkleShape": 0
         },
         "ObjectMetaData": {
-          "name": "ElectricFence 4",
+          "name": "ElectricFenc 4",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -257775,7 +257775,7 @@
           "sparkleShape": 0
         },
         "ObjectMetaData": {
-          "name": "ElectricFence 5",
+          "name": "ElectricFenc 5",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -267771,7 +267771,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "UpwardsPlatformObject",
+          "name": "UpwardsPlatformObject_ floor",
           "tag": "Untagged",
           "selfActive": true
         },
