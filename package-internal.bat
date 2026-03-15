@@ -71,7 +71,7 @@ rmdir /S /Q %DIST_SUBDIR% 2>nul
 mkdir %DIST_SUBDIR%
 
 REM Build the solution
-call "%MSBUILD_EXE%" Ermine.sln /p:Configuration=%BUILD_CONFIG% /p:Platform=x64 /v:m
+call "%MSBUILD_EXE%" Ermine.sln /p:Configuration=%BUILD_CONFIG% /p:Platform=x64 /v:quiet /nologo >nul
 if errorlevel 1 (
 	echo Build failed for configuration: %BUILD_CONFIG%
 	exit /b 1
@@ -99,8 +99,14 @@ if exist "validation.sh" (
 	echo WARNING: validation.sh not found.
 )
 
-echo Running validation for %BUILD_CONFIG%...
-call %BASH_EXE% %DIST_SUBDIR%\validation.sh 2>&1 || exit /b 1
+REM Run validation script, script uses jq to parse JSON files
+echo Running validation script...
+pushd "%~dp0"
+call %BASH_EXE% "%~dp0%DIST_SUBDIR%\validation.sh" 2>&1
+set "RC=%ERRORLEVEL%"
+popd
+
+exit /b %RC%
 
 REM Create version file
 echo Version: %VERSION% > %DIST_SUBDIR%\VERSION.txt
