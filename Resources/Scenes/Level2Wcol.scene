@@ -241430,10 +241430,10 @@
           "is3D": true,
           "isLooping": true,
           "isStreaming": false,
-          "volume": 0.5,
+          "volume": 1.0,
           "followTransform": true,
-          "minDistance": 1.0,
-          "maxDistance": 100.0,
+          "minDistance": 50.0,
+          "maxDistance": 800.0,
           "playOnStart": false
         },
         "PhysicComponent": {
@@ -241685,10 +241685,10 @@
           "is3D": true,
           "isLooping": true,
           "isStreaming": false,
-          "volume": 0.5,
+          "volume": 1.0,
           "followTransform": true,
-          "minDistance": 1.0,
-          "maxDistance": 100.0,
+          "minDistance": 50.0,
+          "maxDistance": 800.0,
           "playOnStart": false
         },
         "PhysicComponent": {
@@ -241927,10 +241927,10 @@
           "is3D": true,
           "isLooping": true,
           "isStreaming": false,
-          "volume": 0.5,
+          "volume": 1.0,
           "followTransform": true,
-          "minDistance": 1.0,
-          "maxDistance": 100.0,
+          "minDistance": 50.0,
+          "maxDistance": 800.0,
           "playOnStart": false
         },
         "PhysicComponent": {
@@ -242169,10 +242169,10 @@
           "is3D": true,
           "isLooping": true,
           "isStreaming": false,
-          "volume": 0.5,
+          "volume": 1.0,
           "followTransform": true,
-          "minDistance": 1.0,
-          "maxDistance": 100.0,
+          "minDistance": 50.0,
+          "maxDistance": 800.0,
           "playOnStart": false
         },
         "PhysicComponent": {
@@ -242411,10 +242411,10 @@
           "is3D": true,
           "isLooping": true,
           "isStreaming": false,
-          "volume": 0.5,
+          "volume": 1.0,
           "followTransform": true,
-          "minDistance": 1.0,
-          "maxDistance": 100.0,
+          "minDistance": 50.0,
+          "maxDistance": 800.0,
           "playOnStart": false
         },
         "PhysicComponent": {
@@ -242653,10 +242653,10 @@
           "is3D": true,
           "isLooping": true,
           "isStreaming": false,
-          "volume": 0.5,
+          "volume": 1.0,
           "followTransform": true,
-          "minDistance": 1.0,
-          "maxDistance": 100.0,
+          "minDistance": 50.0,
+          "maxDistance": 800.0,
           "playOnStart": false
         },
         "PhysicComponent": {
@@ -242895,10 +242895,10 @@
           "is3D": true,
           "isLooping": true,
           "isStreaming": false,
-          "volume": 0.5,
+          "volume": 1.0,
           "followTransform": true,
-          "minDistance": 1.0,
-          "maxDistance": 100.0,
+          "minDistance": 50.0,
+          "maxDistance": 800.0,
           "playOnStart": false
         },
         "PhysicComponent": {
@@ -243137,10 +243137,10 @@
           "is3D": true,
           "isLooping": true,
           "isStreaming": false,
-          "volume": 0.5,
+          "volume": 1.0,
           "followTransform": true,
-          "minDistance": 1.0,
-          "maxDistance": 100.0,
+          "minDistance": 50.0,
+          "maxDistance": 800.0,
           "playOnStart": false
         },
         "PhysicComponent": {
@@ -243497,10 +243497,10 @@
           "is3D": true,
           "isLooping": true,
           "isStreaming": false,
-          "volume": 0.5,
+          "volume": 1.0,
           "followTransform": true,
-          "minDistance": 1.0,
-          "maxDistance": 100.0,
+          "minDistance": 50.0,
+          "maxDistance": 800.0,
           "playOnStart": false
         },
         "PhysicComponent": {

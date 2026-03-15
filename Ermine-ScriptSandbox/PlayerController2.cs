@@ -57,8 +57,17 @@ public class PlayerController2 : MonoBehaviour
 
     void Start()
     {
-        cam = GameObject.Find("Main Camera").GetComponent<Transform>();
-        anim = GameObject.Find("PlayerAnim").GetComponent<Animator>();
+        GameObject camObj = GameObject.Find("Main Camera");
+        if (camObj != null)
+            cam = camObj.GetComponent<Transform>();
+        else
+            Console.WriteLine("Warning: Main Camera not found!");
+
+        GameObject animObj = GameObject.Find("PlayerAnim");
+        if (animObj != null)
+            anim = animObj.GetComponent<Animator>();
+        if (anim == null)
+            Console.WriteLine("Warning: Animator not found on PlayerAnim.");
         //HandleCameraLerp();
         audioComp = GetComponent<AudioComponent>();
         if (audioComp == null)
@@ -74,8 +83,8 @@ public class PlayerController2 : MonoBehaviour
         HandleCameraLerp();
         HandleFootstepAudio();
         HandleInteract();
-        HandleAnimUpdate();
         UpdateAudioListener();
+        HandleAnimUpdate();
         HandleClueMessageTimer();
         HandleSubtitleTimer();
     }
@@ -123,6 +132,8 @@ public class PlayerController2 : MonoBehaviour
 
     private void HandleLook()
     {
+        if (cam == null) return;
+
         lookInput = Input.mousePositionDelta;
 
         float mouseX = -lookInput.x * mouseHorSens * Time.deltaTime;
@@ -141,6 +152,8 @@ public class PlayerController2 : MonoBehaviour
 
     private void HandleCameraLerp()
     {
+        if (cam == null) return;
+
         float targetY = isCrouching ? camCrouchY : camDefaultY*100f;
         Vector3 camPos = cam.position;
         camPos.y = Mathf.Lerp(camPos.y, targetY, Time.deltaTime * crouchLerpSpeed);
@@ -149,6 +162,8 @@ public class PlayerController2 : MonoBehaviour
 
     private void UpdateAudioListener()
     {
+        if (cam == null) return;
+
         // Update listener position to camera/player position
         Vector3 listenerPos = new Vector3(
             transform.position.x,
@@ -182,6 +197,8 @@ public class PlayerController2 : MonoBehaviour
 
     private void HandleInteract()
     {
+        if (cam == null) return;
+
         interactTimer += Time.deltaTime;
 
         if (Input.GetKeyDown(KeyCode.E))
@@ -520,6 +537,8 @@ public class PlayerController2 : MonoBehaviour
 
     void HandleAnimUpdate()
     {
+        if (anim == null) return;
+
         anim.SetBool("IsGrounded", isGrounded);
         anim.SetBool("IsMoving", movementKeyPressed);
     }
