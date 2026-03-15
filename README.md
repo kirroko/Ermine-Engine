@@ -226,5 +226,5 @@ It ships with a real‑time editor, PBR renderer, integrated physics, audio, scr
 
 ## License
 
-© 2025 DigiPen Institute of Technology.  
+© 2026 DigiPen Institute of Technology.  
 Reproduction or distribution of this project or its components without prior written consent is prohibited.
