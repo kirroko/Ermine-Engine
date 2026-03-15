@@ -67,10 +67,12 @@ echo Building configuration: %BUILD_CONFIG%
 echo --------------------------------------------------------
 
 REM Clean previous build
-rmdir /S /Q %DIST_SUBDIR% 2>nul
-mkdir %DIST_SUBDIR%
+echo Cleaning previous build artifacts for configuration: %BUILD_CONFIG%
+if exist "%DIST_SUBDIR%" rmdir /S /Q "%DIST_SUBDIR%"
+mkdir "%DIST_SUBDIR%"
 
 REM Build the solution
+echo Building solution with MSBuild for configuration: %BUILD_CONFIG%
 call "%MSBUILD_EXE%" Ermine.sln /p:Configuration=%BUILD_CONFIG% /p:Platform=x64 /v:quiet /nologo >nul
 if errorlevel 1 (
 	echo Build failed for configuration: %BUILD_CONFIG%
@@ -78,6 +80,7 @@ if errorlevel 1 (
 )
 
 REM Copy project folders
+echo Copying build artifacts for configuration: %BUILD_CONFIG%
 if /I not "%BUILD_CONFIG:Editor=%"=="%BUILD_CONFIG%" (
 	xcopy /Y /E /I Build\bin\%BUILD_CONFIG%-windows-x86_64\Ermine-Editor %DIST_SUBDIR%\Ermine-Editor\ >nul
 ) else if /I not "%BUILD_CONFIG:Game=%"=="%BUILD_CONFIG%" (
@@ -102,11 +105,13 @@ if exist "validation.sh" (
 REM Run validation script, script uses jq to parse JSON files
 echo Running validation script...
 pushd "%~dp0"
-call %BASH_EXE% "%~dp0%DIST_SUBDIR%\validation.sh" 2>&1
+call %BASH_EXE% "%~dp0%DIST_SUBDIR%\validation.sh"
 set "RC=%ERRORLEVEL%"
 popd
-
-exit /b %RC%
+if errorlevel 1 (
+	echo Validation failed for configuration: %BUILD_CONFIG%
+	exit /b 1
+)
 
 REM Create version file
 echo Version: %VERSION% > %DIST_SUBDIR%\VERSION.txt

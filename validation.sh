@@ -23,9 +23,10 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-PROJECT_ROOT="${PROJECT_ROOT:-.}"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$SCRIPT_DIR"
 RESOURCES_DIR="${PROJECT_ROOT}/Resources"
-RESOURCES_VALIDATION_DIR="../../../Resources"
+RESOURCES_VALIDATION_DIR="$PROJECT_ROOT/Resources"
 
 # Compare source assets against build assets
 SOURCE_RESOURCES_DIR="${SOURCE_RESOURCES_DIR:-$RESOURCES_VALIDATION_DIR}"
@@ -119,21 +120,17 @@ validate_build_file_presence() {
     log_info "Source: $SOURCE_RESOURCES_DIR"
     log_info "Build:  $BUILD_RESOURCES_DIR"
 
-    if [ ! -d "$SOURCE_RESOURCES_DIR" ]; then
+    if [ ! -d "$SOURCE_RESOURCES_DIR" ] || [ ! -d "$BUILD_RESOURCES_DIR" ]; then
         ((TOTAL_CHECKS++))
-        log_error "Source resources directory not found: $SOURCE_RESOURCES_DIR"
-        return 1
-    fi
-
-    if [ ! -d "$BUILD_RESOURCES_DIR" ]; then
-        ((TOTAL_CHECKS++))
-        log_error "Build resources directory not found: $BUILD_RESOURCES_DIR"
+        log_error "One or both resource directories missing."
         return 1
     fi
 
     local source_count=0
     local missing_count=0
+    local orphaned_in_build=0
 
+    log_info "Checking for missing files in build directory..."
     while IFS= read -r -d '' src_file; do
         ((TOTAL_CHECKS++))
         ((source_count++))
@@ -142,19 +139,37 @@ validate_build_file_presence() {
         local build_file="$BUILD_RESOURCES_DIR/$rel_path"
 
         if [ -f "$build_file" ]; then
-            log_success "Build file exists: $rel_path"
+            src_size=$(stat -c%s "$src_file")
+            build_size=$(stat -c%s "$build_file")
+            if [ "$src_size" -eq "$build_size" ]; then
+                log_success "Build file exists: $rel_path"
+            else
+                log_warning "Build file size mismatch for $rel_path (Src: $src_size bytes, Build: $build_size bytes)"
+            fi
         else
             log_error "Missing in build: $rel_path"
             ((missing_count++))
         fi
     done < <(find "$SOURCE_RESOURCES_DIR" -type f -print0)
 
+    log_info "Checking for orphaned files in build directory..."
+    while IFS= read -r -d '' bld_file; do
+        local rel_path="${bld_file#$BUILD_RESOURCES_DIR/}"
+        local source_file="$SOURCE_RESOURCES_DIR/$rel_path"
+
+        if [ ! -f "$source_file" ]; then
+            ((TOTAL_CHECKS++))
+            log_warning "Orphaned build file (not in source): $rel_path"
+            ((orphaned_in_build++))
+        fi
+    done < <(find "$BUILD_RESOURCES_DIR" -type f -print0)
+
     if [ "$source_count" -eq 0 ]; then
         ((TOTAL_CHECKS++))
         log_warning "No source files found to validate in $SOURCE_RESOURCES_DIR"
     fi
 
-    if [ "$missing_count" -gt 0 ]; then
+    if [ "$missing_count" -gt 0 ] || [ "$orphaned_in_build" -gt 0 ]; then
         return 1
     fi
 
