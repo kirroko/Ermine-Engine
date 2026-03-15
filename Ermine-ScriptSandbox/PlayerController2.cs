@@ -214,7 +214,7 @@ public class PlayerController2 : MonoBehaviour
                         obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
                         obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
                         flipSwitch1 = true;
-                        GameObject fence1 = GameObject.Find("ElectricFence 1");
+                        GameObject fence1 = GameObject.Find("ElectricFenc 1");
                         if (fence1 != null) fence1.SetActive(false);
                     }
                     else
@@ -222,7 +222,7 @@ public class PlayerController2 : MonoBehaviour
                         obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
                         obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
                         flipSwitch1 = false;
-                        GameObject fence1 = GameObject.Find("ElectricFence 1");
+                        GameObject fence1 = GameObject.Find("ElectricFenc 1");
                         if (fence1 != null) fence1.SetActive(true);
                     }
                     interactTimer = 0f;
@@ -237,7 +237,7 @@ public class PlayerController2 : MonoBehaviour
                         obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
                         obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
                         flipSwitch2 = true;
-                        GameObject fence2 = GameObject.Find("ElectricFence 2");
+                        GameObject fence2 = GameObject.Find("ElectricFenc 2");
                         if (fence2 != null) fence2.SetActive(false);
                     }
                     else
@@ -245,7 +245,7 @@ public class PlayerController2 : MonoBehaviour
                         obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
                         obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
                         flipSwitch2 = false;
-                        GameObject fence2 = GameObject.Find("ElectricFence 2");
+                        GameObject fence2 = GameObject.Find("ElectricFenc 2");
                         if (fence2 != null) fence2.SetActive(true);
                     }
                     interactTimer = 0f;
@@ -260,9 +260,9 @@ public class PlayerController2 : MonoBehaviour
                         obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
                         obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
                         flipSwitch3 = true;
-                        GameObject fence3 = GameObject.Find("ElectricFence 3");
+                        GameObject fence3 = GameObject.Find("ElectricFenc 3");
                         if (fence3 != null) fence3.SetActive(false);
-                        GameObject fence4 = GameObject.Find("ElectricFence 4");
+                        GameObject fence4 = GameObject.Find("ElectricFenc 4");
                         if (fence4 != null) fence4.SetActive(false);
                     }
                     else
@@ -270,9 +270,9 @@ public class PlayerController2 : MonoBehaviour
                         obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
                         obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
                         flipSwitch3 = false;
-                        GameObject fence3 = GameObject.Find("ElectricFence 3");
+                        GameObject fence3 = GameObject.Find("ElectricFenc 3");
                         if (fence3 != null) fence3.SetActive(true);
-                        GameObject fence4 = GameObject.Find("ElectricFence 4");
+                        GameObject fence4 = GameObject.Find("ElectricFenc 4");
                         if (fence4 != null) fence4.SetActive(true);
                     }
                     interactTimer = 0f;
@@ -289,7 +289,7 @@ public class PlayerController2 : MonoBehaviour
                         obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
                         obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
                         flipSwitch1 = true;
-                        GameObject fence = GameObject.Find("ElectricFence (1)");
+                        GameObject fence = GameObject.Find("ElectricFenc 1");
                         if (fence != null) fence.SetActive(false);
                     }
                     else
@@ -297,7 +297,7 @@ public class PlayerController2 : MonoBehaviour
                         obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
                         obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
                         flipSwitch1 = false;
-                        GameObject fence = GameObject.Find("ElectricFence (1)");
+                        GameObject fence = GameObject.Find("ElectricFenc 1");
                         if (fence != null) fence.SetActive(true);
                     }
                     interactTimer = 0f;
@@ -312,7 +312,7 @@ public class PlayerController2 : MonoBehaviour
                         obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
                         obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
                         flipSwitch2 = true;
-                        GameObject fence = GameObject.Find("ElectricFence");
+                        GameObject fence = GameObject.Find("ElectricFenc");
                         if (fence != null) fence.SetActive(false);
                     }
                     else
@@ -320,7 +320,7 @@ public class PlayerController2 : MonoBehaviour
                         obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
                         obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
                         flipSwitch2 = false;
-                        GameObject fence = GameObject.Find("ElectricFence");
+                        GameObject fence = GameObject.Find("ElectricFenc");
                         if (fence != null) fence.SetActive(true);
                     }
                     interactTimer = 0f;
