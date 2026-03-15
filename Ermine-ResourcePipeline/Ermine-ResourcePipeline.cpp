@@ -578,8 +578,15 @@ private:
         ScratchImage mipChain;
         hr = GenerateMipMaps(standardized.GetImages(), standardized.GetImageCount(),
             metadata, TEX_FILTER_DEFAULT, 0, mipChain);
-        if (FAILED(hr))
+        if (FAILED(hr)) {
+            std::cout << "      Warning: mip generation failed (HRESULT: 0x"
+                << std::hex << hr << std::dec << "), saving single-mip DDS" << std::endl;
             mipChain = std::move(standardized);
+        }
+        else {
+            std::cout << "      Generated " << mipChain.GetMetadata().mipLevels
+                << " mip levels" << std::endl;
+        }
 
         std::string filename = std::filesystem::path(inputPath).filename().string();
         DXGI_FORMAT targetFormat = DetermineOptimalFormat(filename);

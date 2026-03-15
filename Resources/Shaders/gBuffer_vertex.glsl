@@ -99,11 +99,10 @@ flat out uint vTextureFlags;
 flat out ivec4 vTextureIndices;     // albedo, normal, roughness, metallic
 flat out ivec2 vTextureIndices2;    // ao, emissive
 flat out float vFillAmount;
+flat out vec4 vUVTransform;       // xy = uvScale, zw = uvOffset
 out float vFillCoord;
 
 // ========== OPTIMIZATION OUTPUTS ==========
-// Pre-compute per-vertex instead of per-fragment
-out vec2 vTransformedUV;  // UV with scale/offset already applied
 out vec4 vCurrClipPos; // Current clip-space position for per-fragment velocity
 out vec4 vPrevClipPos; // Previous clip-space position for per-fragment velocity
 
@@ -225,6 +224,7 @@ void main()
     vTextureIndices = ivec4(material.albedoMapIndex, material.normalMapIndex, material.roughnessMapIndex, material.metallicMapIndex);
     vTextureIndices2 = ivec2(material.aoMapIndex, material.emissiveMapIndex);
     vFillAmount = clamp(material.fillAmount, 0.0, 1.0);
+    vUVTransform = vec4(material.uvScale, material.uvOffset);
 
     // Project mesh UVs onto the configured UV fill axis.
     const float EPS = 1e-6;
@@ -245,10 +245,6 @@ void main()
     } else {
         vFillCoord = clamp((p - minP) / range, 0.0, 1.0);
     }
-
-    // ========== PRE-COMPUTE OPTIMIZATIONS ==========
-    // Apply UV transform once per vertex instead of per fragment
-    vTransformedUV = fma(TexCoord, material.uvScale, material.uvOffset);
 
     // ========== VELOCITY BUFFER INPUTS (RT4) ==========
     // Pass clip-space positions so velocity is derived per-fragment in gBuffer fragment shader.

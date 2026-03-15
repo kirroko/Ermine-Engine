@@ -1070,6 +1070,9 @@ namespace Ermine
 
 		const JPH::BodyLockInterface& bli = mPhysicsSystem.GetBodyLockInterface();
 
+		constexpr int cMax = 512;
+		constexpr int kMaxDebugTrianglesPerShape = 5000;
+
 		for (JPH::BodyID id : bodies)
 		{
 			JPH::BodyLockRead lock(bli, id);
@@ -1092,6 +1095,48 @@ namespace Ermine
 
 			for (const JPH::TransformedShape& ts : collector.mHits)
 			{
+				// Optional: skip giant static meshes completely
+				if (body.GetMotionType() == JPH::EMotionType::Static)
+				{
+					const JPH::AABox bounds = ts.GetWorldSpaceBounds();
+					JPH::Vec3 extent = bounds.GetExtent();
+
+					// Very large object, draw only AABB
+					if (extent.GetX() > 20.0f || extent.GetY() > 20.0f || extent.GetZ() > 20.0f)
+					{
+						JPH::RVec3 mn = bounds.mMin;
+						JPH::RVec3 mx = bounds.mMax;
+
+						JPH::RVec3 p000(mn.GetX(), mn.GetY(), mn.GetZ());
+						JPH::RVec3 p001(mn.GetX(), mn.GetY(), mx.GetZ());
+						JPH::RVec3 p010(mn.GetX(), mx.GetY(), mn.GetZ());
+						JPH::RVec3 p011(mn.GetX(), mx.GetY(), mx.GetZ());
+						JPH::RVec3 p100(mx.GetX(), mn.GetY(), mn.GetZ());
+						JPH::RVec3 p101(mx.GetX(), mn.GetY(), mx.GetZ());
+						JPH::RVec3 p110(mx.GetX(), mx.GetY(), mn.GetZ());
+						JPH::RVec3 p111(mx.GetX(), mx.GetY(), mx.GetZ());
+
+						mDebugRenderer->DrawLine(p000, p001, color);
+						mDebugRenderer->DrawLine(p000, p010, color);
+						mDebugRenderer->DrawLine(p000, p100, color);
+
+						mDebugRenderer->DrawLine(p111, p110, color);
+						mDebugRenderer->DrawLine(p111, p101, color);
+						mDebugRenderer->DrawLine(p111, p011, color);
+
+						mDebugRenderer->DrawLine(p001, p011, color);
+						mDebugRenderer->DrawLine(p001, p101, color);
+
+						mDebugRenderer->DrawLine(p010, p011, color);
+						mDebugRenderer->DrawLine(p010, p110, color);
+
+						mDebugRenderer->DrawLine(p100, p101, color);
+						mDebugRenderer->DrawLine(p100, p110, color);
+
+						continue;
+					}
+				}
+
 				JPH::Shape::GetTrianglesContext ctx;
 				ts.mShape->GetTrianglesStart(
 					ctx,
@@ -1102,9 +1147,9 @@ namespace Ermine
 				);
 
 				const JPH::RMat44 world = ts.GetCenterOfMassTransform();
-
-				constexpr int cMax = 512;
 				std::vector<JPH::Float3> verts(3 * cMax);
+
+				int totalTriangles = 0;
 
 				for (;;)
 				{
@@ -1112,11 +1157,24 @@ namespace Ermine
 					if (triCount == 0)
 						break;
 
+					totalTriangles += triCount;
+
+					// Too expensive, stop drawing this shape
+					if (totalTriangles > kMaxDebugTrianglesPerShape)
+					{
+						break;
+					}
+
 					for (int t = 0; t < triCount; ++t)
 					{
 						const JPH::Float3& p0 = verts[3 * t + 0];
 						const JPH::Float3& p1 = verts[3 * t + 1];
 						const JPH::Float3& p2 = verts[3 * t + 2];
+
+						if (!std::isfinite(p0.x) || !std::isfinite(p0.y) || !std::isfinite(p0.z) ||
+							!std::isfinite(p1.x) || !std::isfinite(p1.y) || !std::isfinite(p1.z) ||
+							!std::isfinite(p2.x) || !std::isfinite(p2.y) || !std::isfinite(p2.z))
+							continue;
 
 						JPH::RVec3 a = world * JPH::RVec3(p0.x, p0.y, p0.z);
 						JPH::RVec3 b = world * JPH::RVec3(p1.x, p1.y, p1.z);
