@@ -7495,7 +7495,7 @@
           ]
         },
         "Material": {
-          "guid": "0a947f53f1d92a468d9d3b2224fc0799"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "f48413f09565c44c9c63034045c08468",
@@ -7671,7 +7671,7 @@
           ]
         },
         "Material": {
-          "guid": "0a947f53f1d92a468d9d3b2224fc0799"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "4903cf4b38da4740b8d6bef7eba17065",
@@ -8023,7 +8023,7 @@
           ]
         },
         "Material": {
-          "guid": "0a947f53f1d92a468d9d3b2224fc0799"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "HierarchyComponent": {
           "parentGuid": "f4e13440738da64a97847e8f9c89d9cb",
@@ -14399,13 +14399,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -14564,13 +14564,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -14953,13 +14953,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -15118,13 +15118,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -18267,13 +18267,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -18432,13 +18432,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -21683,11 +21683,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -22515,11 +22515,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -23347,11 +23347,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -24179,11 +24179,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -25011,11 +25011,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -25843,11 +25843,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -26675,11 +26675,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -27507,11 +27507,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -28339,11 +28339,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -29171,11 +29171,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -30495,13 +30495,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -30660,13 +30660,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -30825,13 +30825,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -30990,13 +30990,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -31155,13 +31155,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -31320,13 +31320,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -31485,13 +31485,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -47541,13 +47541,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.10000000149011612
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.10000000149011612
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -47557,17 +47557,25 @@
                   "t": 0,
                   "v": 8.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
                 },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
+                },
                 "crouchLerpSpeed": {
                   "t": 0,
                   "v": 6.0
+                },
+                "walkSpeed": {
+                  "t": 0,
+                  "v": 8.0
+                },
+                "sprintSpeed": {
+                  "t": 0,
+                  "v": 14.0
                 }
               }
             },
@@ -47575,11 +47583,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
@@ -48175,7 +48183,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f7ec9772da9b1d4c866410998ebdc986"
+          "guid": "5c9003a9fc5fba4d8d5c71ddbeea1a2e"
         },
         "HierarchyComponent": {
           "parentGuid": "391312a00c129346be4c2717bedc87a6",
@@ -48279,7 +48287,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f7ec9772da9b1d4c866410998ebdc986"
+          "guid": "5c9003a9fc5fba4d8d5c71ddbeea1a2e"
         },
         "HierarchyComponent": {
           "parentGuid": "391312a00c129346be4c2717bedc87a6",
@@ -48318,7 +48326,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f7ec9772da9b1d4c866410998ebdc986"
+          "guid": "5c9003a9fc5fba4d8d5c71ddbeea1a2e"
         },
         "HierarchyComponent": {
           "parentGuid": "391312a00c129346be4c2717bedc87a6",
@@ -48357,7 +48365,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "84665417244a6343bed323db41f687b9"
+          "guid": "fd5a36376b7f854ea540c3de12d37e0c"
         },
         "HierarchyComponent": {
           "parentGuid": "391312a00c129346be4c2717bedc87a6",
@@ -65101,13 +65109,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -65567,13 +65575,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -65762,13 +65770,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -66075,13 +66083,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -66913,13 +66921,13 @@
                   "t": 0,
                   "v": 2.0
                 },
-                "sceneName": {
-                  "t": 3,
-                  "v": "LevelTransitionCutscene.scene"
-                },
                 "eDuration": {
                   "t": 0,
                   "v": 3.0
+                },
+                "sceneName": {
+                  "t": 3,
+                  "v": "LevelTransitionCutscene.scene"
                 },
                 "dSpeed": {
                   "t": 0,
@@ -72294,7 +72302,7 @@
           ]
         },
         "Material": {
-          "guid": "0a947f53f1d92a468d9d3b2224fc0799"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "ModelComponent": {
           "model": "ART1_paper_low.fbx",
@@ -72403,7 +72411,7 @@
           ]
         },
         "Material": {
-          "guid": "0a947f53f1d92a468d9d3b2224fc0799"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "ModelComponent": {
           "model": "ART1_paper_low.fbx",
@@ -72512,7 +72520,7 @@
           ]
         },
         "Material": {
-          "guid": "0a947f53f1d92a468d9d3b2224fc0799"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "ModelComponent": {
           "model": "ART1_paper_low.fbx",
@@ -72621,7 +72629,7 @@
           ]
         },
         "Material": {
-          "guid": "0a947f53f1d92a468d9d3b2224fc0799"
+          "guid": "bc8e6db2ba54b547956f897567a62d79"
         },
         "ModelComponent": {
           "model": "ART1_paper_low.fbx",
@@ -84334,7 +84342,7 @@
           "sparkleShape": 0
         },
         "ObjectMetaData": {
-          "name": "ElectricFence",
+          "name": "ElectricFenc",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -84482,7 +84490,7 @@
           "sparkleShape": 0
         },
         "ObjectMetaData": {
-          "name": "ElectricFence (1)",
+          "name": "ElectricFenc 1",
           "tag": "Untagged",
           "selfActive": true
         },
@@ -84515,6 +84523,1176 @@
         },
         "HierarchyComponent": {
           "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1758,
+      "components": {
+        "IDComponent": {
+          "guid": "50220130770d2f4182e63efe734ed296"
+        },
+        "Transform": {
+          "position": [
+            2.4843218326568605,
+            -0.7031652331352234,
+            -1.9653295278549195
+          ],
+          "rotation": [
+            0.0,
+            -0.007205252535641193,
+            0.0,
+            0.9999741315841675
+          ],
+          "scale": [
+            0.0199955552816391,
+            0.03500000014901161,
+            0.1799645870923996
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "IndustrialBeam (42)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_industrial beam_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1759,
+      "components": {
+        "IDComponent": {
+          "guid": "b860188e113ebc488421ce2d9d839457"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_industrial beam_low.fbx_pCube5_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4686add7734bf542a3c94a8c5808db98"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "50220130770d2f4182e63efe734ed296",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1760,
+      "components": {
+        "IDComponent": {
+          "guid": "e088d2fc610f414086d21eee7ac584e1"
+        },
+        "Transform": {
+          "position": [
+            -12.66714859008789,
+            -0.7031947374343872,
+            -19.137409210205079
+          ],
+          "rotation": [
+            0.0,
+            -0.7133250832557678,
+            0.0,
+            0.7008333206176758
+          ],
+          "scale": [
+            0.01999557949602604,
+            0.03500000014901161,
+            0.17996473610401154
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "IndustrialBeam (43)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_industrial beam_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1761,
+      "components": {
+        "IDComponent": {
+          "guid": "a8ef4524a4d1794c8ec9c3db9f297e5e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_industrial beam_low.fbx_pCube5_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4686add7734bf542a3c94a8c5808db98"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e088d2fc610f414086d21eee7ac584e1",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1762,
+      "components": {
+        "IDComponent": {
+          "guid": "617a07422d4d594a8de4d68d6fe825ea"
+        },
+        "Transform": {
+          "position": [
+            -8.059328079223633,
+            -0.7621312141418457,
+            -46.76163864135742
+          ],
+          "rotation": [
+            0.0,
+            -0.7133250832557678,
+            0.0,
+            0.7008333206176758
+          ],
+          "scale": [
+            0.01999557949602604,
+            0.03500000014901161,
+            0.17996473610401154
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "IndustrialBeam (44)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_industrial beam_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1763,
+      "components": {
+        "IDComponent": {
+          "guid": "9d2a20995e29d04e860cef8c03faf9c8"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_industrial beam_low.fbx_pCube5_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4686add7734bf542a3c94a8c5808db98"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "617a07422d4d594a8de4d68d6fe825ea",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1764,
+      "components": {
+        "IDComponent": {
+          "guid": "e1fabf4155b8184c8dbc43118d669ba4"
+        },
+        "Transform": {
+          "position": [
+            10.98313045501709,
+            -0.031533896923065189,
+            -93.56324768066406
+          ],
+          "rotation": [
+            0.0,
+            -0.7133250832557678,
+            0.0,
+            0.7008333206176758
+          ],
+          "scale": [
+            0.01999557949602604,
+            0.03500000014901161,
+            0.17996473610401154
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "IndustrialBeam (45)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_industrial beam_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1765,
+      "components": {
+        "IDComponent": {
+          "guid": "5f7c58b23476ee4789ee0484708872b0"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_industrial beam_low.fbx_pCube5_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4686add7734bf542a3c94a8c5808db98"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e1fabf4155b8184c8dbc43118d669ba4",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1766,
+      "components": {
+        "IDComponent": {
+          "guid": "18a51d5513321c44a9f970f84fa8f23c"
+        },
+        "Transform": {
+          "position": [
+            10.801684379577637,
+            -0.031533896923065189,
+            -82.70256042480469
+          ],
+          "rotation": [
+            0.0,
+            -0.7133250832557678,
+            0.0,
+            0.7008333206176758
+          ],
+          "scale": [
+            0.01999557949602604,
+            0.03500000014901161,
+            0.17996473610401154
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "IndustrialBeam (46)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_industrial beam_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1767,
+      "components": {
+        "IDComponent": {
+          "guid": "a0a84b47005fd042936b0db100475adc"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_industrial beam_low.fbx_pCube5_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4686add7734bf542a3c94a8c5808db98"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "18a51d5513321c44a9f970f84fa8f23c",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1768,
+      "components": {
+        "IDComponent": {
+          "guid": "b5163436beeca84bae186f255856193d"
+        },
+        "Transform": {
+          "position": [
+            23.766094207763673,
+            -0.20301485061645509,
+            -118.50110626220703
+          ],
+          "rotation": [
+            0.0,
+            -0.7133250832557678,
+            0.0,
+            0.7008333206176758
+          ],
+          "scale": [
+            0.01999557949602604,
+            0.03500000014901161,
+            0.17996473610401154
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "IndustrialBeam (47)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_industrial beam_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1769,
+      "components": {
+        "IDComponent": {
+          "guid": "3050fad5a689b543bdbcf42f323dbad4"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_industrial beam_low.fbx_pCube5_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4686add7734bf542a3c94a8c5808db98"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "b5163436beeca84bae186f255856193d",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1770,
+      "components": {
+        "IDComponent": {
+          "guid": "8f1957207e84bf49ae29bdc41a8c8442"
+        },
+        "Transform": {
+          "position": [
+            23.583072662353517,
+            -0.20301485061645509,
+            -107.51806640625
+          ],
+          "rotation": [
+            0.0,
+            -0.7133250832557678,
+            0.0,
+            0.7008333206176758
+          ],
+          "scale": [
+            0.01999557949602604,
+            0.03500000014901161,
+            0.17996473610401154
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "IndustrialBeam (48)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_industrial beam_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1771,
+      "components": {
+        "IDComponent": {
+          "guid": "18e1fd18fef92b4d8adaa2d4fe911525"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_industrial beam_low.fbx_pCube5_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4686add7734bf542a3c94a8c5808db98"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "8f1957207e84bf49ae29bdc41a8c8442",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1772,
+      "components": {
+        "IDComponent": {
+          "guid": "eb41650da80770469d21fc236c722336"
+        },
+        "Transform": {
+          "position": [
+            -1.768950343132019,
+            -3.35894513130188,
+            -139.15969848632813
+          ],
+          "rotation": [
+            0.0,
+            -0.7133250832557678,
+            0.0,
+            0.7008333206176758
+          ],
+          "scale": [
+            0.01999557949602604,
+            0.03500000014901161,
+            0.17996473610401154
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "IndustrialBeam (49)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_industrial beam_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1773,
+      "components": {
+        "IDComponent": {
+          "guid": "51322ae3d034054791ff1ccdb599ef27"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_industrial beam_low.fbx_pCube5_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4686add7734bf542a3c94a8c5808db98"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "eb41650da80770469d21fc236c722336",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1774,
+      "components": {
+        "IDComponent": {
+          "guid": "447a4c8abe6cd746ad4dff034d95b554"
+        },
+        "Transform": {
+          "position": [
+            -1.9620201587677003,
+            -3.35894513130188,
+            -128.2322540283203
+          ],
+          "rotation": [
+            0.0,
+            -0.7133250832557678,
+            0.0,
+            0.7008333206176758
+          ],
+          "scale": [
+            0.01999557949602604,
+            0.03500000014901161,
+            0.17996473610401154
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "IndustrialBeam (50)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_industrial beam_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1775,
+      "components": {
+        "IDComponent": {
+          "guid": "f1fd43c88f0d574ba2ea3c2caeb2073e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_industrial beam_low.fbx_pCube5_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4686add7734bf542a3c94a8c5808db98"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "447a4c8abe6cd746ad4dff034d95b554",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1776,
+      "components": {
+        "IDComponent": {
+          "guid": "def3068cd399304187362f232ec41b2c"
+        },
+        "Transform": {
+          "position": [
+            14.61026668548584,
+            1.592029333114624,
+            -167.36676025390626
+          ],
+          "rotation": [
+            0.0,
+            -0.007751801982522011,
+            0.0,
+            0.9999699592590332
+          ],
+          "scale": [
+            0.01999557390809059,
+            0.03500000014901161,
+            0.17996473610401154
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "IndustrialBeam (51)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_industrial beam_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1777,
+      "components": {
+        "IDComponent": {
+          "guid": "1a2bc46c75439c4594226f6d9b7b0afd"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_industrial beam_low.fbx_pCube5_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4686add7734bf542a3c94a8c5808db98"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "def3068cd399304187362f232ec41b2c",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1778,
+      "components": {
+        "IDComponent": {
+          "guid": "f298b13eb4fea34aaefb3dbb510395a8"
+        },
+        "Transform": {
+          "position": [
+            -2.0894112586975099,
+            -3.35894513130188,
+            -121.0220947265625
+          ],
+          "rotation": [
+            0.0,
+            -0.7133250832557678,
+            0.0,
+            0.7008333206176758
+          ],
+          "scale": [
+            0.01999557949602604,
+            0.03500000014901161,
+            0.17996473610401154
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "IndustrialBeam (52)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_industrial beam_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1779,
+      "components": {
+        "IDComponent": {
+          "guid": "69dbc8be35acda4b9c2981c7ba616646"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_industrial beam_low.fbx_pCube5_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4686add7734bf542a3c94a8c5808db98"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f298b13eb4fea34aaefb3dbb510395a8",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1780,
+      "components": {
+        "IDComponent": {
+          "guid": "1b165ec029e5a94da39895e6bc10e3d8"
+        },
+        "Transform": {
+          "position": [
+            25.449064254760743,
+            1.592029333114624,
+            -167.1985321044922
+          ],
+          "rotation": [
+            0.0,
+            -0.007751801982522011,
+            0.0,
+            0.9999699592590332
+          ],
+          "scale": [
+            0.01999557390809059,
+            0.03500000014901161,
+            0.17996473610401154
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "IndustrialBeam (53)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_industrial beam_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1781,
+      "components": {
+        "IDComponent": {
+          "guid": "2550d91b638d6940aa05dfa8bf078115"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_industrial beam_low.fbx_pCube5_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4686add7734bf542a3c94a8c5808db98"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "1b165ec029e5a94da39895e6bc10e3d8",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1782,
+      "components": {
+        "IDComponent": {
+          "guid": "8b304c40bcf12f46a76c1ad425e0b765"
+        },
+        "Transform": {
+          "position": [
+            15.731746673583985,
+            5.024449825286865,
+            -239.69833374023438
+          ],
+          "rotation": [
+            0.0,
+            -0.007751801982522011,
+            0.0,
+            0.9999699592590332
+          ],
+          "scale": [
+            0.01999557390809059,
+            0.03500000014901161,
+            0.17996473610401154
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "IndustrialBeam (54)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_industrial beam_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1783,
+      "components": {
+        "IDComponent": {
+          "guid": "b85b92c22a5b1f4b9b014703f4d46d7a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_industrial beam_low.fbx_pCube5_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4686add7734bf542a3c94a8c5808db98"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "8b304c40bcf12f46a76c1ad425e0b765",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1784,
+      "components": {
+        "IDComponent": {
+          "guid": "108c60eeab07ad40bf11e27155129429"
+        },
+        "Transform": {
+          "position": [
+            26.679948806762697,
+            5.024449825286865,
+            -239.5285186767578
+          ],
+          "rotation": [
+            0.0,
+            -0.007751801982522011,
+            0.0,
+            0.9999699592590332
+          ],
+          "scale": [
+            0.01999557390809059,
+            0.03500000014901161,
+            0.17996473610401154
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "IndustrialBeam (55)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_industrial beam_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1785,
+      "components": {
+        "IDComponent": {
+          "guid": "fa60627e8381a846a9c30ca829798555"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_industrial beam_low.fbx_pCube5_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4686add7734bf542a3c94a8c5808db98"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "108c60eeab07ad40bf11e27155129429",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1786,
+      "components": {
+        "IDComponent": {
+          "guid": "00fdb94251edd64db96bc81ab857ed0f"
+        },
+        "Transform": {
+          "position": [
+            37.51960754394531,
+            5.024449825286865,
+            -239.36044311523438
+          ],
+          "rotation": [
+            0.0,
+            -0.007751801982522011,
+            0.0,
+            0.9999699592590332
+          ],
+          "scale": [
+            0.01999557390809059,
+            0.03500000014901161,
+            0.17996473610401154
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "IndustrialBeam (56)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_industrial beam_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1787,
+      "components": {
+        "IDComponent": {
+          "guid": "c176121f91b169488bb9d112518f1dc6"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_industrial beam_low.fbx_pCube5_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4686add7734bf542a3c94a8c5808db98"
+        },
+        "HierarchyComponent": {
+          "parentGuid": "00fdb94251edd64db96bc81ab857ed0f",
+          "depth": 1
         },
         "GlobalTransform": {}
       }

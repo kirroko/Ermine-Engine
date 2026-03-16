@@ -783,9 +783,20 @@ void AudioSystem::UpdateAudioComponents()
         // **NEW: Update volume if it changed while playing**
         if (audioComp.isPlaying && audioComp.channelId != -1)
         {
-            float currentVolume = ConvertVolumeToFMOD(audioComp.volume);
-            //std::cout << "Updating volume for channel " << audioComp.channelId
-            //    << " to " << audioComp.volume << " (dB: " << currentVolume << ")" << std::endl;
+            // Get GlobalAudioComponent to apply SFX volume multiplier
+            float globalSFXVolume = 1.0f;
+            for (Ermine::EntityID e = 0; e < Ermine::MAX_ENTITIES; ++e)
+            {
+                if (ecs.IsEntityValid(e) && ecs.HasComponent<GlobalAudioComponent>(e))
+                {
+                    globalSFXVolume = ecs.GetComponent<GlobalAudioComponent>(e).sfxVolume;
+                    break;
+                }
+            }
+
+            // Apply both AudioComponent volume AND global SFX volume
+            float finalVolume = audioComp.volume * globalSFXVolume;
+            float currentVolume = ConvertVolumeToFMOD(finalVolume);
             CAudioEngine::SetChannelVolume(audioComp.channelId, currentVolume);
         }
 
@@ -961,10 +972,10 @@ void AudioSystem::PlayEntityAudio(AudioComponent& audioComp, const Transform& tr
         audioComp.isPlaying = CAudioEngine::IsEventPlaying(audioComp.eventName);
         audioComp.channelId = -1; // Events don't use channel IDs
     }
-    else if (!soundToPlay.empty())  // ← Changed from soundName to soundToPlay
+    else if (!soundToPlay.empty())
     {
         // Handle regular sounds (including variations!)
-        CAudioEngine::LoadSound(soundToPlay, audioComp.is3D, audioComp.isLooping, audioComp.isStreaming);  // ← Changed
+        CAudioEngine::LoadSound(soundToPlay, audioComp.is3D, audioComp.isLooping, audioComp.isStreaming);
 
         // Convert Vec3 to Vector3D for CAudioEngine compatibility
         Vector3D position(0.0f, 0.0f, 0.0f);
@@ -973,10 +984,23 @@ void AudioSystem::PlayEntityAudio(AudioComponent& audioComp, const Transform& tr
             position = Vector3D(transform.position.x, transform.position.y, transform.position.z);
         }
 
-        // Convert 0-1 volume to dB
-        float volumeDB = ConvertVolumeToFMOD(audioComp.volume);
+        // Get GlobalAudioComponent to apply SFX volume multiplier
+        auto& ecs = ECS::GetInstance();
+        float globalSFXVolume = 1.0f;
+        for (Ermine::EntityID e = 0; e < Ermine::MAX_ENTITIES; ++e)
+        {
+            if (ecs.IsEntityValid(e) && ecs.HasComponent<GlobalAudioComponent>(e))
+            {
+                globalSFXVolume = ecs.GetComponent<GlobalAudioComponent>(e).sfxVolume;
+                break;
+            }
+        }
 
-        audioComp.channelId = CAudioEngine::PlaySounds(soundToPlay, position, volumeDB);  // ← Changed
+        // Apply both AudioComponent volume AND global SFX volume
+        float finalVolume = audioComp.volume * globalSFXVolume;
+        float volumeDB = ConvertVolumeToFMOD(finalVolume);
+
+        audioComp.channelId = CAudioEngine::PlaySounds(soundToPlay, position, volumeDB);
         audioComp.isPlaying = (audioComp.channelId != -1);
     }
 }
