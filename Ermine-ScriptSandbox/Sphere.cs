@@ -67,12 +67,7 @@ public class Sphere : MonoBehaviour
                 explosionPos = hit.point;
             }
 
-            // Spawn explosion effect on contact
-            GameObject explosion = Prefab.Instantiate("../Resources/Prefabs/ParticleExplosion.prefab");
-            if (explosion != null)
-            {
-                explosion.transform.position = explosionPos;
-            }
+            SpawnExplosionLayers(explosionPos);
 
             Deactivate();
         }
@@ -87,5 +82,20 @@ public class Sphere : MonoBehaviour
             Physics.SetPosition((ulong)col.gameObject.GetInstanceID(), col.gameObject.transform.position);
         }
         */
+    }
+
+    private void SpawnExplosionLayers(Vector3 position)
+    {
+        GameObject coreExplosion = Prefab.Instantiate("../Resources/Prefabs/ParticleExplosion.prefab");
+        if (coreExplosion != null)
+        {
+            coreExplosion.transform.position = position;
+        }
+
+        GameObject smokeExplosion = Prefab.Instantiate("../Resources/Prefabs/ParticleExplosionSmoke.prefab");
+        if (smokeExplosion != null)
+        {
+            smokeExplosion.transform.position = position;
+        }
     }
 }

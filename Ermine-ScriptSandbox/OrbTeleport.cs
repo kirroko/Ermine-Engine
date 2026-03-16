@@ -237,12 +237,7 @@ public class OrbTeleport : MonoBehaviour
             explosionPos = hit.point + Vector3.up * 0.1f; // Slightly above ground
         }
 
-        // Spawn explosion effect at teleport location
-        GameObject explosion = Prefab.Instantiate("../Resources/Prefabs/ParticleExplosion.prefab");
-        if (explosion != null)
-        {
-            explosion.transform.position = explosionPos;
-        }
+        SpawnExplosionLayers(explosionPos);
 
         teleportDashStart = gameObject.transform.position;
         teleportDashTarget = orbProjectile.transform.position;
@@ -400,6 +395,21 @@ public class OrbTeleport : MonoBehaviour
             PostEffects.RadialBlurSamples = dashEndPrevRadialBlurSamples;
             PostEffects.RadialBlurCenter = dashEndPrevRadialBlurCenter;
             dashEndRadialBlurRestoreActive = false;
+        }
+    }
+
+    void SpawnExplosionLayers(Vector3 position)
+    {
+        GameObject coreExplosion = Prefab.Instantiate("../Resources/Prefabs/ParticleExplosion.prefab");
+        if (coreExplosion != null)
+        {
+            coreExplosion.transform.position = position;
+        }
+
+        GameObject smokeExplosion = Prefab.Instantiate("../Resources/Prefabs/ParticleExplosionSmoke.prefab");
+        if (smokeExplosion != null)
+        {
+            smokeExplosion.transform.position = position;
         }
     }
 
