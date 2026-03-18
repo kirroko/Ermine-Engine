@@ -3,6 +3,8 @@ using System;
 
 public class Sphere : MonoBehaviour
 {
+    private static readonly Vector3 ParkedPosition = new Vector3(0.0f, -1000.0f, 0.0f);
+
     public Vector3 direction;
     public float speed = 20.0f;
 
@@ -10,6 +12,25 @@ public class Sphere : MonoBehaviour
 
     private void Start()
     {
+    }
+
+    public void Launch(Vector3 spawnPosition, Quaternion spawnRotation, Vector3 shootDirection)
+    {
+        gameObject.SetActive(true);
+        transform.position = spawnPosition;
+        transform.rotation = spawnRotation;
+        direction = shootDirection;
+        timeAlive = 1.0f;
+        Physics.SetPosition((ulong)gameObject.GetInstanceID(), transform.position);
+    }
+
+    public void Deactivate()
+    {
+        timeAlive = 0.0f;
+        direction = Vector3.zero;
+        transform.position = ParkedPosition;
+        Physics.SetPosition((ulong)gameObject.GetInstanceID(), transform.position);
+        gameObject.SetActive(false);
     }
 
     private void Update()
@@ -20,8 +41,7 @@ public class Sphere : MonoBehaviour
         Physics.SetPosition((ulong)gameObject.GetInstanceID(), transform.position);
         if (timeAlive < 0.0f)
         {
-            Physics.RemovePhysic((ulong)gameObject.GetInstanceID());
-            GameObject.Destroy(gameObject);
+            Deactivate();
         }
 
     }
@@ -47,14 +67,9 @@ public class Sphere : MonoBehaviour
                 explosionPos = hit.point;
             }
 
-            // Spawn explosion effect on contact
-            GameObject explosion = Prefab.Instantiate("../Resources/Prefabs/ParticleExplosion.prefab");
-            if (explosion != null)
-            {
-                explosion.transform.position = explosionPos;
-            }
+            SpawnExplosionLayers(explosionPos);
 
-            timeAlive = 0f;
+            Deactivate();
         }
         /*
         Debug.Log("Yes me lord? : " + gameObject.name);
@@ -67,5 +82,20 @@ public class Sphere : MonoBehaviour
             Physics.SetPosition((ulong)col.gameObject.GetInstanceID(), col.gameObject.transform.position);
         }
         */
+    }
+
+    private void SpawnExplosionLayers(Vector3 position)
+    {
+        GameObject coreExplosion = Prefab.Instantiate("../Resources/Prefabs/ParticleExplosion.prefab");
+        if (coreExplosion != null)
+        {
+            coreExplosion.transform.position = position;
+        }
+
+        GameObject smokeExplosion = Prefab.Instantiate("../Resources/Prefabs/ParticleExplosionSmoke.prefab");
+        if (smokeExplosion != null)
+        {
+            smokeExplosion.transform.position = position;
+        }
     }
 }

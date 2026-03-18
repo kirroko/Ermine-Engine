@@ -1,4 +1,4 @@
-﻿using ErmineEngine;
+using ErmineEngine;
 using System;
 
 public class Chase : MonoBehaviour
@@ -43,6 +43,10 @@ public class Chase : MonoBehaviour
     public float lightForwardOffset = 0.5f;
     public Vector3 lightRotationOffset = new Vector3(0f, 0f, 0f); // radians
 
+    // STUN FEEDBACK
+    private GameObject stunVFX;
+    private string stunPrefabPath = "../Resources/Prefabs/EnemyStunSpark.prefab";
+
     private void CachePlayerIfNeeded()
     {
         if (playerGO == null)
@@ -56,6 +60,14 @@ public class Chase : MonoBehaviour
 
         isStunned = true;
         stunTimer = stunDuration;
+
+        if (stunVFX != null)
+        {
+            Debug.Log("ChaseState: Activating Stun VFX");
+            stunVFX.SetActive(true);
+            stunVFX.transform.scale = new Vector3(1.0f, 1.0f, 1.0f);
+            stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+        }
 
         if (anim != null)
         {
@@ -126,7 +138,39 @@ public class Chase : MonoBehaviour
         anim = GetComponent<Animator>();
         CachePlayerIfNeeded();
         loseSightTimer = loseSightGraceTime;
+
+        // Instantiate Stun VFX
+        stunVFX = Prefab.Instantiate(stunPrefabPath);
+        if (stunVFX != null)
+        {
+            stunVFX.SetActive(false);
+        }
+
         ShowEnemyLight();
+    }
+    
+    private void UpdateStunVFX(bool recovering, float recoveryProgress)
+    {
+        if (stunVFX == null) return;
+
+        if (recovering)
+        {
+            float ratio = recoveryProgress;
+            stunVFX.SetActive(ratio > 0.05f);
+
+            if (stunVFX.activeSelf)
+            {
+                // Linear scale down from 1.0 to 0.0
+                stunVFX.transform.scale = new Vector3(ratio, ratio, ratio);
+                stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+            }
+        }
+        else
+        {
+             stunVFX.SetActive(true);
+             stunVFX.transform.scale = new Vector3(1.0f, 1.0f, 1.0f);
+             stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+        }
     }
 
     private bool HasLineOfSightToPlayer()
@@ -191,12 +235,14 @@ public class Chase : MonoBehaviour
                 anim.SetBool("IsHit", true);
             }
 
+            UpdateStunVFX(false, 1.0f);
+
             stunTimer -= Time.deltaTime;
             if (stunTimer <= 0.0f)
             {
                 isStunned = false;
                 recoverTimer = stunRecoverDelay;
-
+                
                 if (anim != null)
                     anim.SetBool("IsHit", false);
             }
@@ -206,7 +252,26 @@ public class Chase : MonoBehaviour
         if (recoverTimer > 0.0f)
         {
             HideEnemyLight();
+            
             recoverTimer -= Time.deltaTime;
+            
+            // End 6.0s earlier
+            float visibleTime = Math.Max(0.0f, stunRecoverDelay - 6.0f);
+            float currentVisibleTime = Math.Max(0.0f, recoverTimer - 6.0f);
+            
+            float ratio = 0.0f;
+            if (visibleTime > 0.001f)
+                ratio = currentVisibleTime / visibleTime;
+
+            // Aggressive ramp down (squared)
+            ratio = ratio * ratio;
+
+            UpdateStunVFX(true, ratio);
+            
+            if (ratio <= 0.01f)
+            {
+                 if (stunVFX != null) stunVFX.SetActive(false);
+            }
 
             if (anim != null)
                 anim.SetBool("IsMoving", false);
@@ -214,6 +279,8 @@ public class Chase : MonoBehaviour
             NavAgent.SetDestination(entityID, transform.position);
             return;
         }
+        
+        if (stunVFX != null && stunVFX.activeSelf) stunVFX.SetActive(false);
 
         if (isStunned || recoverTimer > 0.0f)
             HideEnemyLight();

@@ -1,4 +1,4 @@
-﻿using ErmineEngine;
+using ErmineEngine;
 using System;
 
 public class Attack : MonoBehaviour
@@ -57,6 +57,35 @@ public class Attack : MonoBehaviour
     public string healthBarName = "Healthbar";
     private GameObject healthBar;
     private float health = 0f;
+
+    // STUN FEEDBACK
+    private GameObject stunVFX;
+    private string stunPrefabPath = "../Resources/Prefabs/EnemyStunSpark.prefab";
+
+    private void UpdateStunVFX(bool recovering, float recoveryProgress)
+    {
+        if (stunVFX == null) return;
+
+        if (recovering)
+        {
+            float ratio = recoveryProgress;
+            stunVFX.SetActive(ratio > 0.05f);
+
+            if (stunVFX.activeSelf)
+            {
+                // Linear scale down from 1.0 to 0.0
+                stunVFX.transform.scale = new Vector3(ratio, ratio, ratio);
+                stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+            }
+        }
+        else
+        {
+             stunVFX.SetActive(true);
+             stunVFX.transform.scale = new Vector3(1.0f, 1.0f, 1.0f);
+             stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+        }
+    }
+
     private void TryStun()
     {
         if (isStunned)
@@ -64,6 +93,14 @@ public class Attack : MonoBehaviour
 
         isStunned = true;
         stunTimer = stunDuration;
+
+        if (stunVFX != null)
+        {
+            Debug.Log("AttackState: Activating Stun VFX");
+            stunVFX.SetActive(true);
+            stunVFX.transform.scale = new Vector3(1.0f, 1.0f, 1.0f);
+            stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+        }
 
         if (anim != null)
         {
@@ -142,6 +179,13 @@ public class Attack : MonoBehaviour
         CachePlayerIfNeeded();
         tickTimer = tickInterval;
         loseSightTimer = loseSightGraceTime;
+
+        // Instantiate Stun VFX
+        stunVFX = Prefab.Instantiate(stunPrefabPath);
+        if (stunVFX != null)
+        {
+            stunVFX.SetActive(false);
+        }
 
         // Find healthbar by name (replace to this)
         //playerHealthBar = GameObject.Find(playerHealthBarName);
@@ -233,6 +277,9 @@ public class Attack : MonoBehaviour
                 anim.SetBool("IsHit", true);
             }
 
+            // Keep VFX attached
+            UpdateStunVFX(false, 1.0f);
+
             stunTimer -= Time.deltaTime;
             if (stunTimer <= 0.0f)
             {
@@ -249,9 +296,25 @@ public class Attack : MonoBehaviour
         {
             HideEnemyLight();
             recoverTimer -= Time.deltaTime;
+            
+            // End 6.0s earlier
+            float visibleTime = Math.Max(0.0f, stunRecoverDelay - 6.0f);
+            float currentVisibleTime = Math.Max(0.0f, recoverTimer - 6.0f);
+            
+            float ratio = 0.0f;
+            if (visibleTime > 0.001f)
+                ratio = currentVisibleTime / visibleTime;
+
+            // Aggressive ramp down (squared)
+            ratio = ratio * ratio;
+
+            UpdateStunVFX(true, ratio);
 
             if (anim != null)
                 anim.SetBool("IsMoving", false);
+            
+            if (ratio <= 0.01f && stunVFX != null) 
+                 stunVFX.SetActive(false);
 
             NavAgent.SetDestination(entityID, transform.position);
             return;
@@ -346,6 +409,7 @@ public class Attack : MonoBehaviour
         if (!RightClickStunArmed) return;
         if (col.gameObject.name == "Sphere")
         {
+            Debug.Log("Attack: Hit by sphere! Attempting stun.");
             TryStun();
             armTimer = 0.0f;
             RightClickStunArmed = false;
@@ -360,6 +424,7 @@ public class Attack : MonoBehaviour
         if (!RightClickStunArmed) return;
         if (col.gameObject.name == "Sphere")
         {
+            Debug.Log("Attack: Hit by sphere! Attempting stun.");
             TryStun();
             armTimer = 0.0f;
             RightClickStunArmed = false;

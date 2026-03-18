@@ -1,4 +1,4 @@
-﻿using ErmineEngine;
+using ErmineEngine;
 using System;
 
 public class Move : MonoBehaviour
@@ -54,6 +54,10 @@ public class Move : MonoBehaviour
     public float stunRecoverDelay = 8.0f;
     private float recoverTimer = 0.0f;
 
+    // STUN FEEDBACK
+    private GameObject stunVFX;
+    private string stunPrefabPath = "../Resources/Prefabs/EnemyStunSpark.prefab";
+
     private void CachePlayerIfNeeded()
     {
         if (playerGO == null)
@@ -88,6 +92,30 @@ public class Move : MonoBehaviour
                hit.transform.gameObject.name == playerName;
     }
 
+    private void UpdateStunVFX(bool recovering, float recoveryProgress)
+    {
+        if (stunVFX == null) return;
+
+        if (recovering)
+        {
+            float ratio = recoveryProgress;
+            stunVFX.SetActive(ratio > 0.05f);
+
+            if (stunVFX.activeSelf)
+            {
+                // Linear scale down from 1.0 to 0.0
+                stunVFX.transform.scale = new Vector3(ratio, ratio, ratio);
+                stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+            }
+        }
+        else
+        {
+             stunVFX.SetActive(true);
+             stunVFX.transform.scale = new Vector3(1.0f, 1.0f, 1.0f);
+             stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+        }
+    }
+
     private void TryStun()
     {
         if (isStunned)
@@ -95,6 +123,14 @@ public class Move : MonoBehaviour
 
         isStunned = true;
         stunTimer = stunDuration;
+
+        if (stunVFX != null)
+        {
+            Debug.Log("MoveState: Activating Stun VFX");
+            stunVFX.SetActive(true);
+            stunVFX.transform.scale = new Vector3(1.0f, 1.0f, 1.0f);
+            stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+        }
 
         if (anim != null)
         {
@@ -112,6 +148,13 @@ public class Move : MonoBehaviour
         anim = GetComponent<Animator>();
         lastPos = transform.position;
         lastTargetDist = float.MaxValue;
+
+        // Instantiate Stun VFX
+        stunVFX = Prefab.Instantiate(stunPrefabPath);
+        if (stunVFX != null)
+        {
+            stunVFX.SetActive(false);
+        }
 
         // this can be used for the enemy lightcone to damage player
         //rayDebug = Prefab.Instantiate("../Resources/Prefabs/Sphere.prefab");
@@ -149,6 +192,9 @@ public class Move : MonoBehaviour
                 anim.SetBool("IsHit", true);
             }
 
+            // Keep VFX attached
+            UpdateStunVFX(false, 1.0f);
+
             //Debug.Log("stunned");
             stunTimer -= Time.deltaTime;
             if (stunTimer <= 0.0f)
@@ -164,9 +210,25 @@ public class Move : MonoBehaviour
         if (recoverTimer > 0.0f)
         {
             recoverTimer -= Time.deltaTime;
+            
+            // End 6.0s earlier
+            float visibleTime = Math.Max(0.0f, stunRecoverDelay - 6.0f);
+            float currentVisibleTime = Math.Max(0.0f, recoverTimer - 6.0f);
+            
+            float ratio = 0.0f;
+            if (visibleTime > 0.001f)
+                ratio = currentVisibleTime / visibleTime;
+
+            // Aggressive ramp down (squared)
+            ratio = ratio * ratio;
+
+            UpdateStunVFX(true, ratio);
 
             if (anim != null)
                 anim.SetBool("IsMoving", false);
+
+            if (ratio <= 0.01f && stunVFX != null) 
+                 stunVFX.SetActive(false);
 
             NavAgent.SetDestination(entityID, transform.position);
             return;
@@ -328,6 +390,7 @@ public class Move : MonoBehaviour
         if (!RightClickStunArmed) return;
         if (col.gameObject.name == "Sphere")
         {
+            Debug.Log("Move: Hit by sphere! Attempting stun.");
             TryStun();
             armTimer = 0.0f;
             RightClickStunArmed = false;
@@ -345,6 +408,7 @@ public class Move : MonoBehaviour
         if (!RightClickStunArmed) return;
         if (col.gameObject.name == "Sphere")
         {
+            Debug.Log("Move: Hit by sphere! Attempting stun.");
             TryStun();
             armTimer = 0.0f;
             RightClickStunArmed = false;

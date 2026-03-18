@@ -1,4 +1,4 @@
-﻿using ErmineEngine;
+using ErmineEngine;
 using System;
 
 public class Patrol : MonoBehaviour
@@ -47,6 +47,10 @@ public class Patrol : MonoBehaviour
     private Animator anim;
     public float stunRecoverDelay = 8.0f;
     private float recoverTimer = 0.0f;
+
+    // STUN FEEDBACK
+    private GameObject stunVFX;
+    private string stunPrefabPath = "../Resources/Prefabs/EnemyStunSpark.prefab";
 
     private void CachePlayerIfNeeded()
     {
@@ -133,6 +137,30 @@ public class Patrol : MonoBehaviour
         MoveToNextPoint();
     }
 
+    private void UpdateStunVFX(bool recovering, float recoveryProgress)
+    {
+        if (stunVFX == null) return;
+
+        if (recovering)
+        {
+            float ratio = recoveryProgress;
+            stunVFX.SetActive(ratio > 0.05f);
+
+            if (stunVFX.activeSelf)
+            {
+                // Linear scale down from 1.0 to 0.0
+                stunVFX.transform.scale = new Vector3(ratio, ratio, ratio);
+                stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+            }
+        }
+        else
+        {
+             stunVFX.SetActive(true);
+             stunVFX.transform.scale = new Vector3(1.0f, 1.0f, 1.0f);
+             stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+        }
+    }
+
     private void TryStun()
     {
         if (isStunned)
@@ -140,6 +168,14 @@ public class Patrol : MonoBehaviour
 
         isStunned = true;
         stunTimer = stunDuration;
+
+        if (stunVFX != null)
+        {
+            Debug.Log("PatrolState: Activating Stun VFX");
+            stunVFX.SetActive(true);
+            stunVFX.transform.scale = new Vector3(1.0f, 1.0f, 1.0f);
+            stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+        }
 
         if (anim != null)
         {
@@ -156,6 +192,13 @@ public class Patrol : MonoBehaviour
         entityID = (ulong)gameObject.GetInstanceID();
         anim = GetComponent<Animator>();
         CachePlayerIfNeeded();
+
+        // Instantiate Stun VFX
+        stunVFX = Prefab.Instantiate(stunPrefabPath);
+        if (stunVFX != null)
+        {
+            stunVFX.SetActive(false);
+        }
 
         // Build patrol points around the spawn position
         patrolCenter = transform.position;
@@ -183,15 +226,17 @@ public class Patrol : MonoBehaviour
                 anim.SetBool("IsHit", true);
             }
 
+            // Keep VFX attached
+            UpdateStunVFX(false, 1.0f);
+
             //Debug.Log("stunned");
             stunTimer -= Time.deltaTime;
             if (stunTimer <= 0.0f)
             {
                 isStunned = false;
                 recoverTimer = stunRecoverDelay;
-
-                if (anim != null)
-                    anim.SetBool("IsHit", false);
+                
+                if (anim != null) anim.SetBool("IsHit", false);
 
                 // Resume the current target after stun ends
                 if (patrolPoints != null && patrolPoints.Length > 0 && currentIndex >= 0)
@@ -202,9 +247,25 @@ public class Patrol : MonoBehaviour
         if (recoverTimer > 0.0f)
         {
             recoverTimer -= Time.deltaTime;
+            
+            // End 6.0s earlier to avoid lingering effect
+            float visibleTime = Math.Max(0.0f, stunRecoverDelay - 6.0f);
+            float currentVisibleTime = Math.Max(0.0f, recoverTimer - 6.0f);
+            
+            float ratio = 0.0f;
+            if (visibleTime > 0.001f)
+                ratio = currentVisibleTime / visibleTime;
+            
+            // Aggressive ramp down (squared)
+            ratio = ratio * ratio;
+
+            UpdateStunVFX(true, ratio);
 
             if (anim != null)
                 anim.SetBool("IsMoving", false);
+            
+            if (ratio <= 0.01f && stunVFX != null) 
+                 stunVFX.SetActive(false);
 
             NavAgent.SetDestination(entityID, transform.position);
             return;
@@ -307,4 +368,3 @@ public class Patrol : MonoBehaviour
         }
     }
 }
-
