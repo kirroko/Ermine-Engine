@@ -1,4 +1,4 @@
-﻿using ErmineEngine;
+using ErmineEngine;
 using System;
 
 public class Attack : MonoBehaviour
@@ -57,6 +57,11 @@ public class Attack : MonoBehaviour
     public string healthBarName = "Healthbar";
     private GameObject healthBar;
     private float health = 0f;
+
+    // STUN FEEDBACK
+    private GameObject stunVFX;
+    private string stunPrefabPath = "../Resources/Prefabs/EnemyStunSpark.prefab";
+
     private void TryStun()
     {
         if (isStunned)
@@ -64,6 +69,13 @@ public class Attack : MonoBehaviour
 
         isStunned = true;
         stunTimer = stunDuration;
+
+        if (stunVFX != null)
+        {
+            Debug.Log("AttackState: Activating Stun VFX");
+            stunVFX.SetActive(true);
+            stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+        }
 
         if (anim != null)
         {
@@ -142,6 +154,13 @@ public class Attack : MonoBehaviour
         CachePlayerIfNeeded();
         tickTimer = tickInterval;
         loseSightTimer = loseSightGraceTime;
+
+        // Instantiate Stun VFX
+        stunVFX = Prefab.Instantiate(stunPrefabPath);
+        if (stunVFX != null)
+        {
+            stunVFX.SetActive(false);
+        }
 
         // Find healthbar by name (replace to this)
         //playerHealthBar = GameObject.Find(playerHealthBarName);
@@ -233,11 +252,19 @@ public class Attack : MonoBehaviour
                 anim.SetBool("IsHit", true);
             }
 
+            // Keep VFX attached
+            if (stunVFX != null && stunVFX.activeSelf)
+            {
+                stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+            }
+
             stunTimer -= Time.deltaTime;
             if (stunTimer <= 0.0f)
             {
                 isStunned = false;
                 recoverTimer = stunRecoverDelay;
+
+                if (stunVFX != null) stunVFX.SetActive(false);
 
                 if (anim != null)
                     anim.SetBool("IsHit", false);
@@ -346,6 +373,7 @@ public class Attack : MonoBehaviour
         if (!RightClickStunArmed) return;
         if (col.gameObject.name == "Sphere")
         {
+            Debug.Log("Attack: Hit by sphere! Attempting stun.");
             TryStun();
             armTimer = 0.0f;
             RightClickStunArmed = false;
@@ -360,6 +388,7 @@ public class Attack : MonoBehaviour
         if (!RightClickStunArmed) return;
         if (col.gameObject.name == "Sphere")
         {
+            Debug.Log("Attack: Hit by sphere! Attempting stun.");
             TryStun();
             armTimer = 0.0f;
             RightClickStunArmed = false;

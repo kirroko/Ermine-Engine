@@ -1,4 +1,4 @@
-﻿using ErmineEngine;
+using ErmineEngine;
 using System;
 
 public class Patrol : MonoBehaviour
@@ -47,6 +47,10 @@ public class Patrol : MonoBehaviour
     private Animator anim;
     public float stunRecoverDelay = 8.0f;
     private float recoverTimer = 0.0f;
+
+    // STUN FEEDBACK
+    private GameObject stunVFX;
+    private string stunPrefabPath = "../Resources/Prefabs/EnemyStunSpark.prefab";
 
     private void CachePlayerIfNeeded()
     {
@@ -141,6 +145,13 @@ public class Patrol : MonoBehaviour
         isStunned = true;
         stunTimer = stunDuration;
 
+        if (stunVFX != null)
+        {
+            Debug.Log("PatrolState: Activating Stun VFX");
+            stunVFX.SetActive(true);
+            stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+        }
+
         if (anim != null)
         {
             anim.SetBool("IsMoving", false);
@@ -156,6 +167,13 @@ public class Patrol : MonoBehaviour
         entityID = (ulong)gameObject.GetInstanceID();
         anim = GetComponent<Animator>();
         CachePlayerIfNeeded();
+
+        // Instantiate Stun VFX
+        stunVFX = Prefab.Instantiate(stunPrefabPath);
+        if (stunVFX != null)
+        {
+            stunVFX.SetActive(false);
+        }
 
         // Build patrol points around the spawn position
         patrolCenter = transform.position;
@@ -183,12 +201,20 @@ public class Patrol : MonoBehaviour
                 anim.SetBool("IsHit", true);
             }
 
+            // Keep VFX attached
+            if (stunVFX != null && stunVFX.activeSelf)
+            {
+                stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+            }
+
             //Debug.Log("stunned");
             stunTimer -= Time.deltaTime;
             if (stunTimer <= 0.0f)
             {
                 isStunned = false;
                 recoverTimer = stunRecoverDelay;
+
+                if (stunVFX != null) stunVFX.SetActive(false);
 
                 if (anim != null)
                     anim.SetBool("IsHit", false);
@@ -307,4 +333,3 @@ public class Patrol : MonoBehaviour
         }
     }
 }
-
