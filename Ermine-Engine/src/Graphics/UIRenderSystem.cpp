@@ -18,6 +18,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "AssetManager.h"
 #include "Logger.h"
 #include "Texture.h"
+#include "SettingsManager.h"
 #include <cmath>
 #include <algorithm>
 #include <vector>
@@ -265,6 +266,26 @@ namespace Ermine
         {
             const auto& imageComp = ecs.GetComponent<UIImageComponent>(entity);
 
+            // Check if this is the gamma preview image
+            bool isGammaPreview = false;
+            if (ecs.HasComponent<ObjectMetaData>(entity))
+            {
+                const auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
+                if (meta.name == "Gamma Preview Image")
+                    isGammaPreview = true;
+            }
+
+            // Set gamma uniform: apply gamma correction only to the preview image
+            if (isGammaPreview)
+            {
+                float gamma = 2.8f - (Ermine::SettingsManager::GetInstance().gammaSliderValue * 1.2f);
+                m_uiShader->SetUniform1f("u_Gamma", gamma);
+            }
+            else
+            {
+                m_uiShader->SetUniform1f("u_Gamma", 1.0f);
+            }
+
             // Load texture if image path is specified
             std::shared_ptr<graphics::Texture> texture;
             if (!imageComp.imagePath.empty())
@@ -337,6 +358,9 @@ namespace Ermine
                 );
             }
         }
+
+        // Reset gamma uniform so other UI elements are not affected
+        m_uiShader->SetUniform1f("u_Gamma", 1.0f);
 
         // Render UI for all entities with UIComponent (legacy support)
         for (EntityID entity : m_Entities)

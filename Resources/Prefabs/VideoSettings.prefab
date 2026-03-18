@@ -204,6 +204,73 @@
     {
       "components": {
         "IDComponent": {
+          "guid": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Gamma Preview Image",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "08a03f881d3d9a4b90d960735483b17b",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": ".\\Resources/Textures/UI/gamma_preview.png",
+          "fullscreen": false,
+          "position": [
+            0.7,
+            0.38,
+            0.0
+          ],
+          "width": 0.4,
+          "height": 0.2,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "renderOrder": 5,
+          "caption": "Adjust until the logo is barely visible",
+          "showCaption": true,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 16.0,
+          "captionPosition": [
+            0.7,
+            0.24,
+            0.0
+          ]
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
           "guid": "6de9bd648d45304ba99de6cc97f8f872"
         },
         "Transform": {

@@ -166,7 +166,8 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 0.0,
-          "renderOrder": 0
+          "renderOrder": 0,
+          "disabled": false
         }
       }
     },
@@ -244,7 +245,8 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 0.0,
-          "renderOrder": 0
+          "renderOrder": 0,
+          "disabled": false
         }
       }
     },
@@ -278,9 +280,9 @@
           "selfActive": false
         },
         "GlobalAudioComponent": {
-          "masterVolume": 1.0,
-          "musicVolume": 0.5099999904632568,
-          "sfxVolume": 0.800000011920929,
+          "masterVolume": 0.4380350112915039,
+          "musicVolume": 1.0,
+          "sfxVolume": 1.0,
           "ambienceVolume": 1.0,
           "voiceVolume": 1.0,
           "autoPlay": true,
@@ -502,7 +504,8 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 0.0,
-          "renderOrder": 0
+          "renderOrder": 0,
+          "disabled": false
         }
       }
     },
@@ -580,297 +583,13 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 0.0,
-          "renderOrder": 0
+          "renderOrder": 0,
+          "disabled": false
         }
       }
     },
     {
       "id": 10,
-      "components": {
-        "IDComponent": {
-          "guid": "08a03f881d3d9a4b90d960735483b17b"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "VideoSettings",
-          "tag": "Untagged",
-          "selfActive": false
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 11,
-      "components": {
-        "IDComponent": {
-          "guid": "6de9bd648d45304ba99de6cc97f8f872"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Back Button",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "parentGuid": "08a03f881d3d9a4b90d960735483b17b",
-          "depth": 1
-        },
-        "GlobalTransform": {},
-        "UIButtonComponent": {
-          "text": "",
-          "position": [
-            0.18000000715255738,
-            0.8999999761581421,
-            0.0
-          ],
-          "size": [
-            0.14000000059604646,
-            0.11999999731779099
-          ],
-          "normalColor": [
-            0.30000001192092898,
-            0.30000001192092898,
-            0.30000001192092898
-          ],
-          "hoverColor": [
-            0.5,
-            0.5,
-            0.5
-          ],
-          "pressedColor": [
-            0.699999988079071,
-            0.699999988079071,
-            0.699999988079071
-          ],
-          "textColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "textScale": 1.0,
-          "backgroundAlpha": 1.0,
-          "normalImage": ".\\Resources/Textures/UI/Back_Button_V2.png",
-          "hoverImage": "",
-          "pressedImage": "",
-          "action": 3,
-          "actionData": "BackToSettingsPage",
-          "hoverSoundName": "",
-          "clickSoundName": "",
-          "soundVolume": 1.0,
-          "renderOrder": 0
-        }
-      }
-    },
-    {
-      "id": 12,
-      "components": {
-        "IDComponent": {
-          "guid": "6f59d04bc221414c9ccbbd5e09b9ca9b"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Gamma Slider",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "parentGuid": "08a03f881d3d9a4b90d960735483b17b",
-          "depth": 1
-        },
-        "GlobalTransform": {},
-        "UISliderComponent": {
-          "position": [
-            0.699999988079071,
-            0.5899999737739563,
-            0.0
-          ],
-          "size": [
-            0.5,
-            0.05000000074505806
-          ],
-          "trackColor": [
-            0.20000000298023225,
-            0.20000000298023225,
-            0.20000000298023225
-          ],
-          "fillColor": [
-            0.4000000059604645,
-            0.6000000238418579,
-            0.8999999761581421
-          ],
-          "handleColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "handleHoverColor": [
-            0.8999999761581421,
-            0.8999999761581421,
-            0.5
-          ],
-          "trackAlpha": 1.0,
-          "handleSize": 0.03999999910593033,
-          "trackImage": ".\\Resources/Textures/UI/Audio_Bar.png",
-          "fillImage": ".\\Resources/Textures/UI/Audio_Fill.png",
-          "handleImage": ".\\Resources/Textures/UI/Audio_Indicator.png",
-          "value": 0.4970000088214874,
-          "minValue": 0.0,
-          "maxValue": 1.0,
-          "target": 5,
-          "customTarget": "Gamma",
-          "label": "GAMMA",
-          "labelColor": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "labelScale": 1.0,
-          "labelOffset": [
-            -0.10000000149011612,
-            0.03999999910593033
-          ],
-          "labelImagePath": "",
-          "labelActiveImagePath": "",
-          "showValue": true,
-          "valueColor": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "valueScale": 0.5,
-          "valueOffset": [
-            0.10999999940395355,
-            0.019999999552965165
-          ],
-          "valueAsPercentage": true,
-          "renderOrder": 0
-        }
-      }
-    },
-    {
-      "id": 13,
-      "components": {
-        "IDComponent": {
-          "guid": "8567f99576b4a84e80bcbffdc4c6fe3f"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Video Background",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "parentGuid": "08a03f881d3d9a4b90d960735483b17b",
-          "depth": 1
-        },
-        "UIImageComponent": {
-          "imagePath": ".\\Resources/Textures/UI/Book_Audio_Menu_BG.png",
-          "fullscreen": true,
-          "position": [
-            0.5,
-            0.5,
-            0.0
-          ],
-          "width": 1.0,
-          "height": 1.0,
-          "tintColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "alpha": 1.0,
-          "maintainAspectRatio": true,
-          "caption": "",
-          "showCaption": false,
-          "captionColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "captionFontSize": 24.0,
-          "captionPosition": [
-            0.5,
-            0.10000000149011612,
-            0.0
-          ],
-          "renderOrder": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 14,
       "components": {
         "IDComponent": {
           "guid": "7093cee4580290408114a4a705f9abde"
@@ -905,7 +624,7 @@
       }
     },
     {
-      "id": 15,
+      "id": 11,
       "components": {
         "IDComponent": {
           "guid": "2ba3765b521ba24fbfde0e0d5af269bf"
@@ -979,12 +698,13 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 0.0,
-          "renderOrder": 0
+          "renderOrder": 0,
+          "disabled": false
         }
       }
     },
     {
-      "id": 16,
+      "id": 12,
       "components": {
         "IDComponent": {
           "guid": "3ed681a799964041b5443c41ca25cc89"
@@ -1058,12 +778,13 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 0.0,
-          "renderOrder": 0
+          "renderOrder": 0,
+          "disabled": false
         }
       }
     },
     {
-      "id": 17,
+      "id": 13,
       "components": {
         "IDComponent": {
           "guid": "a5cd534bad38dd42bcacd6434a0111bd"
@@ -1131,7 +852,7 @@
       }
     },
     {
-      "id": 18,
+      "id": 14,
       "components": {
         "IDComponent": {
           "guid": "ed37397de32db54fabbc28d3d0544b98"
@@ -1205,12 +926,13 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 1.0,
-          "renderOrder": 0
+          "renderOrder": 0,
+          "disabled": false
         }
       }
     },
     {
-      "id": 19,
+      "id": 15,
       "components": {
         "IDComponent": {
           "guid": "14e608b3467d3f4585595a5ff90c831f"
@@ -1275,7 +997,7 @@
             1.0
           ],
           "textScale": 1.0,
-          "backgroundAlpha": 1.0,
+          "backgroundAlpha": 0.2800000011920929,
           "normalImage": "Resources/Textures/UI/Brightness_Unselected.png",
           "hoverImage": "Resources/Textures/UI/Brightness_Selected.png",
           "pressedImage": "",
@@ -1284,12 +1006,13 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 1.0,
-          "renderOrder": 0
+          "renderOrder": 0,
+          "disabled": false
         }
       }
     },
     {
-      "id": 20,
+      "id": 16,
       "components": {
         "IDComponent": {
           "guid": "ca16bf44239b2b4db4fdeee9ab5fd92b"
@@ -1324,7 +1047,7 @@
       }
     },
     {
-      "id": 21,
+      "id": 17,
       "components": {
         "IDComponent": {
           "guid": "01bbff40fe314340aeb4d0f8bb5f8355"
@@ -1392,7 +1115,7 @@
       }
     },
     {
-      "id": 22,
+      "id": 18,
       "components": {
         "IDComponent": {
           "guid": "02f3417890c10743b8787168b379aa57"
@@ -1460,7 +1183,7 @@
           "trackImage": "./Resources/Textures/UI/Audio_Bar.png",
           "fillImage": "./Resources/Textures/UI/Audio_Fill.png",
           "handleImage": "./Resources/Textures/UI/Audio_Indicator.png",
-          "value": 1.0,
+          "value": 0.4380350112915039,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 1,
@@ -1495,7 +1218,7 @@
       }
     },
     {
-      "id": 23,
+      "id": 19,
       "components": {
         "IDComponent": {
           "guid": "494e236414f4554e9f4aef9b74db9777"
@@ -1598,7 +1321,7 @@
       }
     },
     {
-      "id": 24,
+      "id": 20,
       "components": {
         "IDComponent": {
           "guid": "b3aa12512e177947a5d2fb95a4974262"
@@ -1701,7 +1424,7 @@
       }
     },
     {
-      "id": 25,
+      "id": 21,
       "components": {
         "IDComponent": {
           "guid": "ace3617ceb104a4f965920f5f2b0d62a"
@@ -1775,12 +1498,13 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 1.0,
-          "renderOrder": 0
+          "renderOrder": 0,
+          "disabled": false
         }
       }
     },
     {
-      "id": 26,
+      "id": 22,
       "components": {
         "IDComponent": {
           "guid": "6c2af57615bf924ea91fe4d8afdeb977"
@@ -1848,7 +1572,7 @@
       }
     },
     {
-      "id": 27,
+      "id": 23,
       "components": {
         "IDComponent": {
           "guid": "6ac6d4116f3f2349a1626f28824ee6fb"
@@ -1921,12 +1645,13 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 1.0,
-          "renderOrder": 0
+          "renderOrder": 0,
+          "disabled": false
         }
       }
     },
     {
-      "id": 28,
+      "id": 24,
       "components": {
         "IDComponent": {
           "guid": "361cb962fc75f04baed34282b1e3a76a"
@@ -1961,7 +1686,7 @@
       }
     },
     {
-      "id": 29,
+      "id": 25,
       "components": {
         "IDComponent": {
           "guid": "88ce05c1678bba4495c9a1f4bc597b4d"
@@ -2029,7 +1754,7 @@
       }
     },
     {
-      "id": 30,
+      "id": 26,
       "components": {
         "IDComponent": {
           "guid": "701e5031e956194a9e12f4a6a1c01f12"
@@ -2103,12 +1828,13 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 1.0,
-          "renderOrder": 0
+          "renderOrder": 0,
+          "disabled": false
         }
       }
     },
     {
-      "id": 31,
+      "id": 27,
       "components": {
         "IDComponent": {
           "guid": "7913adc8d5428544b12448c969705438"
@@ -2182,12 +1908,13 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 1.0,
-          "renderOrder": 0
+          "renderOrder": 0,
+          "disabled": false
         }
       }
     },
     {
-      "id": 32,
+      "id": 28,
       "components": {
         "IDComponent": {
           "guid": "cc7eb9d4601f79439f0e7daee2d2f27b"
@@ -2261,12 +1988,13 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 1.0,
-          "renderOrder": 0
+          "renderOrder": 0,
+          "disabled": false
         }
       }
     },
     {
-      "id": 33,
+      "id": 29,
       "components": {
         "IDComponent": {
           "guid": "4440ea5ea32fb64d9380a74953de17f2"
@@ -2340,12 +2068,13 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 1.0,
-          "renderOrder": 0
+          "renderOrder": 0,
+          "disabled": false
         }
       }
     },
     {
-      "id": 34,
+      "id": 30,
       "components": {
         "IDComponent": {
           "guid": "2c03a2169e3256489a04dffeb2b493c2"
@@ -2419,12 +2148,13 @@
           "hoverSoundName": "",
           "clickSoundName": "",
           "soundVolume": 1.0,
-          "renderOrder": 0
+          "renderOrder": 0,
+          "disabled": false
         }
       }
     },
     {
-      "id": 35,
+      "id": 31,
       "components": {
         "IDComponent": {
           "guid": "e35dd96a6fa9c74b87a408714d607992"
@@ -2492,7 +2222,7 @@
       }
     },
     {
-      "id": 36,
+      "id": 32,
       "components": {
         "IDComponent": {
           "guid": "587289e4e63251408f0f598a8db7bf58"
@@ -2560,7 +2290,7 @@
       }
     },
     {
-      "id": 37,
+      "id": 33,
       "components": {
         "IDComponent": {
           "guid": "ca1278c0c9f0dd429783988f70c352f0"
@@ -2628,7 +2358,7 @@
       }
     },
     {
-      "id": 38,
+      "id": 34,
       "components": {
         "IDComponent": {
           "guid": "a009851bf5a457448282c94755dff678"
@@ -2694,6 +2424,360 @@
         },
         "GlobalTransform": {}
       }
+    },
+    {
+      "id": 35,
+      "components": {
+        "IDComponent": {
+          "guid": "d8628cb2bb0642459fea2558ce4f72af"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "VideoSettings",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 36,
+      "components": {
+        "IDComponent": {
+          "guid": "079c9929646cd247952efc6306ac0ca4"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Video Background",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d8628cb2bb0642459fea2558ce4f72af",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": ".\\Resources/Textures/UI/Book_Audio_Menu_BG.png",
+          "fullscreen": true,
+          "position": [
+            0.5,
+            0.5,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 1.0,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ],
+          "renderOrder": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 37,
+      "components": {
+        "IDComponent": {
+          "guid": "dc6c4e6ec52897429f22267008fc62b7"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Gamma Slider",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d8628cb2bb0642459fea2558ce4f72af",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "UISliderComponent": {
+          "position": [
+            0.699999988079071,
+            0.5899999737739563,
+            0.0
+          ],
+          "size": [
+            0.5,
+            0.05000000074505806
+          ],
+          "trackColor": [
+            0.20000000298023225,
+            0.20000000298023225,
+            0.20000000298023225
+          ],
+          "fillColor": [
+            0.4000000059604645,
+            0.6000000238418579,
+            0.8999999761581421
+          ],
+          "handleColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "handleHoverColor": [
+            0.8999999761581421,
+            0.8999999761581421,
+            0.5
+          ],
+          "trackAlpha": 1.0,
+          "handleSize": 0.03999999910593033,
+          "trackImage": ".\\Resources/Textures/UI/Audio_Bar.png",
+          "fillImage": ".\\Resources/Textures/UI/Audio_Fill.png",
+          "handleImage": ".\\Resources/Textures/UI/Audio_Indicator.png",
+          "value": 0.8702718615531921,
+          "minValue": 0.0,
+          "maxValue": 1.0,
+          "target": 5,
+          "customTarget": "Gamma",
+          "label": "Gamma",
+          "labelColor": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "labelScale": 1.0,
+          "labelOffset": [
+            -0.12999999523162843,
+            0.03999999910593033
+          ],
+          "labelImagePath": "",
+          "labelActiveImagePath": "",
+          "showValue": true,
+          "valueColor": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "valueScale": 0.5,
+          "valueOffset": [
+            0.10999999940395355,
+            0.019999999552965165
+          ],
+          "valueAsPercentage": true,
+          "renderOrder": 0
+        }
+      }
+    },
+    {
+      "id": 38,
+      "components": {
+        "IDComponent": {
+          "guid": "f239b7ee31b58c4ea1b6b9e7da3977b6"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Gamma Preview Image",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d8628cb2bb0642459fea2558ce4f72af",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": ".\\Resources/Textures/UI/gamma_preview.png",
+          "fullscreen": false,
+          "position": [
+            0.7012947201728821,
+            0.4142298400402069,
+            0.0
+          ],
+          "width": 0.5597392320632935,
+          "height": 0.27986961603164675,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "Adjust until the logo is barely visible",
+          "showCaption": true,
+          "captionColor": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "captionFontSize": 16.0,
+          "captionPosition": [
+            0.5899999737739563,
+            0.23999999463558198,
+            0.0
+          ],
+          "renderOrder": 5
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 39,
+      "components": {
+        "IDComponent": {
+          "guid": "6dc3edadca30df4981ce68e1830928d8"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Back Button",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d8628cb2bb0642459fea2558ce4f72af",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "UIButtonComponent": {
+          "text": "",
+          "position": [
+            0.18000000715255738,
+            0.8999999761581421,
+            0.0
+          ],
+          "size": [
+            0.14000000059604646,
+            0.11999999731779099
+          ],
+          "normalColor": [
+            0.30000001192092898,
+            0.30000001192092898,
+            0.30000001192092898
+          ],
+          "hoverColor": [
+            0.5,
+            0.5,
+            0.5
+          ],
+          "pressedColor": [
+            0.699999988079071,
+            0.699999988079071,
+            0.699999988079071
+          ],
+          "textColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "textScale": 1.0,
+          "backgroundAlpha": 1.0,
+          "normalImage": ".\\Resources/Textures/UI/Back_Button_V2.png",
+          "hoverImage": "",
+          "pressedImage": "",
+          "action": 3,
+          "actionData": "BackToSettingsPage",
+          "hoverSoundName": "",
+          "clickSoundName": "",
+          "soundVolume": 1.0,
+          "renderOrder": 0,
+          "disabled": false
+        }
+      }
     }
   ],
   "globalGraphics": {
@@ -2732,7 +2816,7 @@
     "exposure": 1.0,
     "contrast": 1.0,
     "saturation": 1.0,
-    "gamma": 2.200000047683716,
+    "gamma": 1.7556736469268799,
     "vignetteIntensity": 0.30000001192092898,
     "vignetteRadius": 0.800000011920929,
     "vignetteCoverage": 0.0,
