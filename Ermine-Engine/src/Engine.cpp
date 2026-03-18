@@ -38,6 +38,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Cubemap.h"
 #include "ScriptSystem.h"
 #include "AnimationManager.h"
+#include "SettingsManager.h"
 #include "ConsoleGUI.h"
 #include "SettingsGUI.h"
 #include "GuidRegistry.h"
@@ -521,6 +522,9 @@ bool engine::Init(GLFWwindow* windowContext)
 	else
 		ECS::GetInstance().GetSystem<VideoManager>()->Init(1920, 1080);
 
+	// Load persistent user settings (audio volumes, gamma) from disk
+	Ermine::SettingsManager::GetInstance().Load();
+
 	// Editor windows
 #if defined(EE_EDITOR)
 	SceneManager::GetInstance().NewScene();
@@ -609,6 +613,9 @@ void engine::Shutdown()
 #endif
 
 	SaveConfigToFile(cfg, "Ermine-Engine.config", false);
+
+	// Save persistent user settings to disk
+	Ermine::SettingsManager::GetInstance().Save();
 
 	skybox.reset();           // Destroy skybox before cubemap
 	environmentCubemap.reset(); // Destroy cubemap before AssetManager cleanup

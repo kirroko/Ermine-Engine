@@ -26,6 +26,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "VideoManager.h"
 #include "../../../Ermine-ResourcePipeline/xresource_pipeline_v2-main/dependencies/xstrtool/source/xstrtool.h"
 #include "NavMesh.h"
+#include "SettingsManager.h"
 
 namespace
 {
@@ -436,6 +437,9 @@ void SceneManager::OpenScene(const std::string& path)
     // Apply cursor rules based on scene type
     //ApplySceneCursorState(path);
     
+    // Apply persistent user settings (audio volumes, gamma) to the newly loaded scene
+    Ermine::SettingsManager::GetInstance().ApplyToSystems();
+
     EE_CORE_INFO("Scene '{}' loaded successfully with {} entities", sceneName, newScene->GetEntityCount());
 }
 

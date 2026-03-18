@@ -24,6 +24,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "AssetManager.h"
 #include "AudioManager.h"
+#include "SettingsManager.h"
 #include "fmod.h"
 #include "fmod.hpp"
 
@@ -349,6 +350,12 @@ namespace Ermine
                     }
                     if (it->second->audioChannel)
                         it->second->audioChannel->setMode(it->second->loop ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF);
+                    // Apply master volume from user settings on playback start
+                    if (it->second->audioChannel)
+                    {
+                        float masterVol = SettingsManager::GetInstance().masterVolume;
+                        it->second->audioChannel->setVolume(std::max(0.0f, std::min(1.0f, masterVol)));
+                    }
                     if (it->second->audioChannel)
                     {
                         unsigned long long channelClock = 0;
@@ -612,7 +619,12 @@ namespace Ermine
             return;
         auto& video = it->second;
         if (video->audioChannel)
-            video->audioChannel->setVolume(std::max(0.0f, std::min(1.0f, volume)));
+        {
+            // Apply master volume from user settings so cutscene audio respects the player's volume preference
+            float masterVol = SettingsManager::GetInstance().masterVolume;
+            float finalVolume = std::max(0.0f, std::min(1.0f, volume * masterVol));
+            video->audioChannel->setVolume(finalVolume);
+        }
     }
 
 #pragma region Private Methods

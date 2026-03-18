@@ -25,6 +25,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "VideoManager.h"
 #include "Window.h"
 #include "Renderer.h"
+#include "SettingsManager.h"
 
 #ifdef EE_EDITOR
 #include "EditorGUI.h"
@@ -931,6 +932,8 @@ namespace Ermine
 
             auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(globalAudioEntity);
 
+            auto& settings = Ermine::SettingsManager::GetInstance();
+
             switch (slider.target)
             {
             case UISliderComponent::SliderTarget::MasterVolume:
@@ -939,18 +942,26 @@ namespace Ermine
                 globalAudio.SetMusicVolume(globalAudio.musicVolume);
                 globalAudio.SetSFXVolume(globalAudio.sfxVolume);
                 globalAudio.SetAmbienceVolume(globalAudio.ambienceVolume);
+                settings.masterVolume = slider.value;
+                settings.Save();
                 break;
 
             case UISliderComponent::SliderTarget::MusicVolume:
                 globalAudio.SetMusicVolume(slider.value);
+                settings.musicVolume = slider.value;
+                settings.Save();
                 break;
 
             case UISliderComponent::SliderTarget::SFXVolume:
                 globalAudio.SetSFXVolume(slider.value);
+                settings.sfxVolume = slider.value;
+                settings.Save();
                 break;
 
             case UISliderComponent::SliderTarget::AmbienceVolume:
                 globalAudio.SetAmbienceVolume(slider.value);
+                settings.ambienceVolume = slider.value;
+                settings.Save();
                 break;
 
             default:
@@ -967,6 +978,10 @@ namespace Ermine
                 float gamma = 2.8f - (slider.value * 1.2f);
                 ecs.GetSystem<graphics::Renderer>()->m_Gamma = gamma;
                 EE_CORE_INFO("Gamma slider: value={}, gamma={}", slider.value, gamma);
+
+                auto& settings = Ermine::SettingsManager::GetInstance();
+                settings.gammaSliderValue = slider.value;
+                settings.Save();
             }
             else
             {
