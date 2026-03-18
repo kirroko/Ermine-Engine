@@ -23,10 +23,10 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd -- "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")" && pwd -P)"
 PROJECT_ROOT="$SCRIPT_DIR"
-RESOURCES_DIR="${PROJECT_ROOT}/Resources"
-RESOURCES_VALIDATION_DIR="$PROJECT_ROOT/Resources"
+RESOURCES_DIR="$PROJECT_ROOT/Resources"
+RESOURCES_VALIDATION_DIR="$(cd -- "$PROJECT_ROOT/../../../Resources" && pwd -P)"
 
 # Compare source assets against build assets
 SOURCE_RESOURCES_DIR="${SOURCE_RESOURCES_DIR:-$RESOURCES_VALIDATION_DIR}"
@@ -120,9 +120,15 @@ validate_build_file_presence() {
     log_info "Source: $SOURCE_RESOURCES_DIR"
     log_info "Build:  $BUILD_RESOURCES_DIR"
 
-    if [ ! -d "$SOURCE_RESOURCES_DIR" ] || [ ! -d "$BUILD_RESOURCES_DIR" ]; then
+    if [ ! -d "$SOURCE_RESOURCES_DIR" ]; then
         ((TOTAL_CHECKS++))
-        log_error "One or both resource directories missing."
+        log_error "Source resources directory not found: $SOURCE_RESOURCES_DIR"
+        return 1
+    fi
+
+    if [ ! -d "$BUILD_RESOURCES_DIR" ]; then
+        ((TOTAL_CHECKS++))
+        log_error "Build resources directory not found: $BUILD_RESOURCES_DIR"
         return 1
     fi
 
