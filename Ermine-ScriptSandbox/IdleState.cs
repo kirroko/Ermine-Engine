@@ -51,6 +51,7 @@ public class Idle : MonoBehaviour
         {
             Debug.Log("IdleState: Activating Stun VFX");
             stunVFX.SetActive(true);
+            stunVFX.transform.scale = new Vector3(1.0f, 1.0f, 1.0f);
             stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
         }
 
@@ -121,6 +122,30 @@ public class Idle : MonoBehaviour
         }
     }
 
+    private void UpdateStunVFX(bool recovering, float recoveryProgress)
+    {
+        if (stunVFX == null) return;
+
+        if (recovering)
+        {
+            float ratio = recoveryProgress;
+            stunVFX.SetActive(ratio > 0.05f);
+
+            if (stunVFX.activeSelf)
+            {
+                // Linear scale down from 1.0 to 0.0
+                stunVFX.transform.scale = new Vector3(ratio, ratio, ratio);
+                stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+            }
+        }
+        else
+        {
+             stunVFX.SetActive(true);
+             stunVFX.transform.scale = new Vector3(1.0f, 1.0f, 1.0f);
+             stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+        }
+    }
+
     void Update()
     {
         if (Input.GetMouseButtonDown(1))
@@ -141,11 +166,8 @@ public class Idle : MonoBehaviour
                 anim.SetBool("IsHit", true);
             }
 
-            // Keep VFX attached
-            if (stunVFX != null && stunVFX.activeSelf)
-            {
-                stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
-            }
+            // Keep VFX attached and full power
+            UpdateStunVFX(false, 1.0f);
 
             //Debug.Log("stunned");
             stunTimer -= Time.deltaTime;
@@ -153,19 +175,43 @@ public class Idle : MonoBehaviour
             {
                 isStunned = false;
                 recoverTimer = stunRecoverDelay;
-
-                if (stunVFX != null) stunVFX.SetActive(false);
-
+                
                 if (anim != null)
                     anim.SetBool("IsHit", false);
             }
             return; // do NOTHING while stunned
         }
+        
         if (recoverTimer > 0.0f)
         {
+            // RAMP DOWN PHASE
             recoverTimer -= Time.deltaTime;
+            
+            // End 6.0s earlier
+            float visibleTime = Math.Max(0.0f, stunRecoverDelay - 6.0f);
+            float currentVisibleTime = Math.Max(0.0f, recoverTimer - 6.0f);
+            
+            float ratio = 0.0f;
+            if (visibleTime > 0.001f)
+                ratio = currentVisibleTime / visibleTime;
+
+            // Aggressive ramp down (squared)
+            ratio = ratio * ratio;
+
+            UpdateStunVFX(true, ratio);
+            
+            if (ratio <= 0.01f)
+            {
+                 // Recovery complete, ensure VFX is off
+                 if (stunVFX != null) stunVFX.SetActive(false);
+            }
             return;
         }
+        
+        // Normal state - ensure VFX off
+        if (stunVFX != null && stunVFX.activeSelf) stunVFX.SetActive(false);
+
+        // If player is visible, switch state
 
         // If player is visible, switch state
         if (HasLineOfSightToPlayer())

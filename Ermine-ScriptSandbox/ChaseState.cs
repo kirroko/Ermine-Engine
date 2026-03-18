@@ -65,6 +65,7 @@ public class Chase : MonoBehaviour
         {
             Debug.Log("ChaseState: Activating Stun VFX");
             stunVFX.SetActive(true);
+            stunVFX.transform.scale = new Vector3(1.0f, 1.0f, 1.0f);
             stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
         }
 
@@ -147,6 +148,30 @@ public class Chase : MonoBehaviour
 
         ShowEnemyLight();
     }
+    
+    private void UpdateStunVFX(bool recovering, float recoveryProgress)
+    {
+        if (stunVFX == null) return;
+
+        if (recovering)
+        {
+            float ratio = recoveryProgress;
+            stunVFX.SetActive(ratio > 0.05f);
+
+            if (stunVFX.activeSelf)
+            {
+                // Linear scale down from 1.0 to 0.0
+                stunVFX.transform.scale = new Vector3(ratio, ratio, ratio);
+                stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+            }
+        }
+        else
+        {
+             stunVFX.SetActive(true);
+             stunVFX.transform.scale = new Vector3(1.0f, 1.0f, 1.0f);
+             stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
+        }
+    }
 
     private bool HasLineOfSightToPlayer()
     {
@@ -210,20 +235,14 @@ public class Chase : MonoBehaviour
                 anim.SetBool("IsHit", true);
             }
 
-            // Keep VFX attached
-            if (stunVFX != null && stunVFX.activeSelf)
-            {
-                stunVFX.transform.position = transform.position + new Vector3(0, 1.0f, 0);
-            }
+            UpdateStunVFX(false, 1.0f);
 
             stunTimer -= Time.deltaTime;
             if (stunTimer <= 0.0f)
             {
                 isStunned = false;
                 recoverTimer = stunRecoverDelay;
-
-                if (stunVFX != null) stunVFX.SetActive(false);
-
+                
                 if (anim != null)
                     anim.SetBool("IsHit", false);
             }
@@ -233,7 +252,26 @@ public class Chase : MonoBehaviour
         if (recoverTimer > 0.0f)
         {
             HideEnemyLight();
+            
             recoverTimer -= Time.deltaTime;
+            
+            // End 6.0s earlier
+            float visibleTime = Math.Max(0.0f, stunRecoverDelay - 6.0f);
+            float currentVisibleTime = Math.Max(0.0f, recoverTimer - 6.0f);
+            
+            float ratio = 0.0f;
+            if (visibleTime > 0.001f)
+                ratio = currentVisibleTime / visibleTime;
+
+            // Aggressive ramp down (squared)
+            ratio = ratio * ratio;
+
+            UpdateStunVFX(true, ratio);
+            
+            if (ratio <= 0.01f)
+            {
+                 if (stunVFX != null) stunVFX.SetActive(false);
+            }
 
             if (anim != null)
                 anim.SetBool("IsMoving", false);
@@ -241,6 +279,8 @@ public class Chase : MonoBehaviour
             NavAgent.SetDestination(entityID, transform.position);
             return;
         }
+        
+        if (stunVFX != null && stunVFX.activeSelf) stunVFX.SetActive(false);
 
         if (isStunned || recoverTimer > 0.0f)
             HideEnemyLight();
