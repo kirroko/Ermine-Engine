@@ -40,7 +40,7 @@
           "overallScale": 1.0,
           "spawnBoxExtents": [
             0.8,
-            2.0,
+            2.5,
             0.8
           ],
           "spawnRadius": 1.0,
