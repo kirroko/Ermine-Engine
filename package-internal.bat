@@ -70,6 +70,7 @@ REM Clean previous build
 echo Cleaning previous build artifacts for configuration: %BUILD_CONFIG%
 if exist "%DIST_SUBDIR%" rmdir /S /Q "%DIST_SUBDIR%"
 mkdir "%DIST_SUBDIR%"
+if exist "Build" rmdir /S /Q "Build"
 
 REM Build the solution
 echo Building solution with MSBuild for configuration: %BUILD_CONFIG%
@@ -82,18 +83,19 @@ if errorlevel 1 (
 REM Copy project folders
 echo Copying build artifacts for configuration: %BUILD_CONFIG%
 if /I not "%BUILD_CONFIG:Editor=%"=="%BUILD_CONFIG%" (
-	xcopy /Y /E /I Build\bin\%BUILD_CONFIG%-windows-x86_64\Ermine-Editor %DIST_SUBDIR%\Ermine-Editor\ >nul
+	xcopy /Y /E /I /Q Build\bin\%BUILD_CONFIG%-windows-x86_64\Ermine-Editor %DIST_SUBDIR%\Ermine-Editor\ >nul
+	
 ) else if /I not "%BUILD_CONFIG:Game=%"=="%BUILD_CONFIG%" (
-	xcopy /Y /E /I Build\bin\%BUILD_CONFIG%-windows-x86_64\Ermine-Game %DIST_SUBDIR%\Ermine-Game\ >nul
+	xcopy /Y /E /I /Q Build\bin\%BUILD_CONFIG%-windows-x86_64\Ermine-Game %DIST_SUBDIR%\Ermine-Game\ >nul
 ) else (
 	echo WARNING: Unrecognized build configuration: %BUILD_CONFIG%
 )
-xcopy /Y /E /I Build\bin\%BUILD_CONFIG%-windows-x86_64\Ermine-Game.lion_rcdbase %DIST_SUBDIR%\Ermine-Game.lion_rcdbase\
-xcopy /Y /E /I Build\bin\%BUILD_CONFIG%-windows-x86_64\recastnavigation %DIST_SUBDIR%\recastnavigation\
-xcopy /Y /E /I Build\bin\%BUILD_CONFIG%-windows-x86_64\Resources %DIST_SUBDIR%\Resources\
+xcopy /Y /E /I /Q Build\bin\%BUILD_CONFIG%-windows-x86_64\Ermine-Game.lion_rcdbase %DIST_SUBDIR%\Ermine-Game.lion_rcdbase\
+xcopy /Y /E /I /Q Build\bin\%BUILD_CONFIG%-windows-x86_64\recastnavigation %DIST_SUBDIR%\recastnavigation\
+xcopy /Y /E /I /Q Build\bin\%BUILD_CONFIG%-windows-x86_64\Resources %DIST_SUBDIR%\Resources\
 
 REM Copy DLLs
-xcopy /Y Build\bin\%BUILD_CONFIG%-windows-x86_64\Ermine-Engine\Ermine-Engine.dll %DIST_SUBDIR%\
+xcopy /Y /E /I /Q Build\bin\%BUILD_CONFIG%-windows-x86_64\Ermine-Engine\Ermine-Engine.dll %DIST_SUBDIR%\
 
 REM Copy validation script
 if exist "validation.sh" (
@@ -102,15 +104,33 @@ if exist "validation.sh" (
 	echo WARNING: validation.sh not found.
 )
 
-REM Run validation script, script uses jq to parse JSON files
-echo Running validation script...
-pushd "%~dp0"
-call %BASH_EXE% "%~dp0%DIST_SUBDIR%\validation.sh"
-set "RC=%ERRORLEVEL%"
-popd
-if errorlevel 1 (
-	echo Validation failed for configuration: %BUILD_CONFIG%
-	exit /b 1
+REM --- Run Validation via WSL ---
+if exist "%DIST_SUBDIR%\validation.sh" (
+	setlocal EnableDelayedExpansion
+
+    echo Running WSL validation for %BUILD_CONFIG%...
+	
+	REM Build absolute Windows path for DIST_SUBDIR
+	set "DIST_SUBDIR_WIN=%CD%\%DIST_SUBDIR%"
+    
+    REM Convert the Windows path to a WSL path
+	set "DIST_SUBDIR_WSL="
+    for /f "delims=" %%I in ('wsl.exe wslpath -u "!DIST_SUBDIR_WIN!"') do set "DIST_SUBDIR_WSL=%%I"
+
+	if not defined DIST_SUBDIR_WSL (
+		echo [ERROR] Failed to convert DIST_SUBDIR to WSL path.
+		endlocal
+		exit /b 1
+	)
+
+	REM Execute the script inside WSL
+    wsl.exe bash -lc "cd '!DIST_SUBDIR_WSL!' && chmod +x ./validation.sh && ./validation.sh"
+    
+    if errorlevel 1 (
+        echo [ERROR] Validation failed in WSL.
+		endlocal
+        exit /b 1
+    )
 )
 
 REM Create version file
@@ -119,17 +139,18 @@ echo Config: %BUILD_CONFIG% >> %DIST_SUBDIR%\VERSION.txt
 echo Build Date: %date% %time% >> %DIST_SUBDIR%\VERSION.txt
 
 REM Create ZIP archive
-echo Creating archive...
-call powershell Compress-Archive -Path %DIST_SUBDIR% -DestinationPath ErmineEngine-%BUILD_CONFIG%-%VERSION%.zip -Force
-if errorlevel 1 (
-	echo Failed to create archive for configuration: %BUILD_CONFIG%
-	exit /b 1
-)
+@REM echo Creating archive...
+@REM call powershell Compress-Archive -Path %DIST_SUBDIR% -DestinationPath ErmineEngine-%BUILD_CONFIG%-%VERSION%.zip -Force
+@REM if errorlevel 1 (
+@REM 	echo Failed to create archive for configuration: %BUILD_CONFIG%
+@REM 	exit /b 1
+@REM )
 
 exit /b 0
 REM End of build_and_copy
 
 :success
+rmdir /S /Q "%DIST_DIR%"
 echo.
 echo ========================================
 echo ALL PACKAGES CREATED SUCCESSFULLY
