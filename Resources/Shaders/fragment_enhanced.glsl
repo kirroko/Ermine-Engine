@@ -414,13 +414,6 @@ void main()
         result += emissive;
     }
     
-    // Tone mapping (ACES approximation)
-    vec3 a = 2.51 * result;
-    vec3 b = 0.03 + result;
-    vec3 c = 2.43 * result + 0.59;
-    vec3 d = 0.14 + result;
-    result = clamp((a * b) / (c * d), 0.0, 1.0);
-    
     // Use alpha directly from albedo
     float alpha = material.albedo.a;
     FragColor = vec4(result, alpha);

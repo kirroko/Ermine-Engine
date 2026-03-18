@@ -208,18 +208,17 @@ void main()
         color += bloomColor * u_BloomStrength;
     }
     
-    if(!isSky || u_SkyboxIsHDR == 1)
+    // Tone-map the fully composed scene once. At this point the buffer already
+    // contains deferred lighting, skybox, and forward transparency together.
+    if(u_ToneMapping == 1)
     {
-        if(u_ToneMapping == 1)
-        {
-            // Using ACES tone mapping for better results
-            color = acesToneMapping(color * u_Exposure);
-        }
-        
-        if(u_GammaCorrection == 1)
-        {
-            color = gammaCorrection(color, u_Gamma);
-        }
+        // Using ACES tone mapping for better results
+        color = acesToneMapping(color * u_Exposure);
+    }
+
+    if(u_GammaCorrection == 1)
+    {
+        color = gammaCorrection(color, u_Gamma);
     }
     
     if(u_Vignette == 1)
