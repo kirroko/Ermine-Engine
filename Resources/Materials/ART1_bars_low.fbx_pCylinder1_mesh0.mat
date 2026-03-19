@@ -11,7 +11,7 @@
         },
         "materialRoughness": {
             "type": "float",
-            "value": 0.3009999990463257
+            "value": 0.7
         },
         "materialEmissive": {
             "type": "vec3",

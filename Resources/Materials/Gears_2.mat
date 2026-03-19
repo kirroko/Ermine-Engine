@@ -15,7 +15,7 @@
         },
         "materialRoughness": {
             "type": "float",
-            "value": 0.8585786819458008
+            "value": 0.7
         },
         "materialAo": {
             "type": "float",
