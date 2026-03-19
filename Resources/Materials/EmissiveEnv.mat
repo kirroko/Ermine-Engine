@@ -3,10 +3,10 @@
         "materialAlbedo": {
             "type": "vec4",
             "value": [
-                1.0,
-                1.0,
-                1.0,
-                0.30000001192092898
+                0.800000011920929,
+                0.800000011920929,
+                0.800000011920929,
+                1.0
             ]
         },
         "materialAo": {
@@ -20,14 +20,14 @@
         "materialEmissive": {
             "type": "vec3",
             "value": [
-                0.0,
-                0.0,
-                0.0
+                1.0,
+                0.9885207414627075,
+                0.5690072774887085
             ]
         },
         "materialEmissiveIntensity": {
             "type": "float",
-            "value": 0.0
+            "value": 5.0
         },
         "materialFillAmount": {
             "type": "float",
@@ -82,7 +82,7 @@
         },
         "materialRoughness": {
             "type": "float",
-            "value": 0.5
+            "value": 0.30000001192092898
         },
         "materialShadingModel": {
             "type": "int",

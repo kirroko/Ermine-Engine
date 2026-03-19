@@ -1,17 +1,37 @@
 {
     "parameters": {
+        "materialAlbedoMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Rotating_platform_BC.png"
+        },
+        "materialHasNormalMap": {
+            "type": "bool",
+            "value": true
+        },
+        "materialMetallicMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Metallic.png"
+        },
+        "materialNormalMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Rotating_platform_NRM.png"
+        },
         "materialAlbedo": {
             "type": "vec4",
             "value": [
                 1.0,
                 1.0,
                 1.0,
-                0.30000001192092898
+                1.0
             ]
         },
         "materialAo": {
             "type": "float",
             "value": 1.0
+        },
+        "materialAoMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Rotating_platform_AO.png"
         },
         "materialCastsShadows": {
             "type": "bool",
@@ -50,11 +70,11 @@
         },
         "materialHasAlbedoMap": {
             "type": "bool",
-            "value": false
+            "value": true
         },
         "materialHasAoMap": {
             "type": "bool",
-            "value": false
+            "value": true
         },
         "materialHasEmissiveMap": {
             "type": "bool",
@@ -62,15 +82,11 @@
         },
         "materialHasMetallicMap": {
             "type": "bool",
-            "value": false
-        },
-        "materialHasNormalMap": {
-            "type": "bool",
-            "value": false
+            "value": true
         },
         "materialHasRoughnessMap": {
             "type": "bool",
-            "value": false
+            "value": true
         },
         "materialMetallic": {
             "type": "float",
@@ -83,6 +99,10 @@
         "materialRoughness": {
             "type": "float",
             "value": 0.5
+        },
+        "materialRoughnessMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Rotating_platform_Roughness.png"
         },
         "materialShadingModel": {
             "type": "int",
