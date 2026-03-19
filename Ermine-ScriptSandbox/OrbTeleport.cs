@@ -18,6 +18,8 @@ public class OrbTeleport : MonoBehaviour
     private float rightOffset = -0.3f;  // Slightly to the right
     private float upOffset = 4.2f;      // Above the player
 
+    private float teleportVerticalOffset = -3.5f; // Adjust so player sits on orb
+
     private bool orbShot = false;       // Tracks if we already shot an orb
 
     private float timeSinceLastDamage = 0f;
@@ -240,7 +242,7 @@ public class OrbTeleport : MonoBehaviour
         SpawnExplosionLayers(explosionPos);
 
         teleportDashStart = gameObject.transform.position;
-        teleportDashTarget = orbProjectile.transform.position;
+        teleportDashTarget = orbProjectile.transform.position + Vector3.up * teleportVerticalOffset;
         teleportDashElapsed = 0f;
         isTeleportDashing = true;
 
