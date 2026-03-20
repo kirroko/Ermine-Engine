@@ -250,11 +250,12 @@ namespace Ermine
 	{
 		auto& ecs = ECS::GetInstance();
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+		auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
 
 		// Make a snapshot of the map to avoid concurrent modification / iterator invalidation
 		std::vector<std::pair<EntityID, JPH::BodyID>> entries;
 		entries.reserve(mEntityToBody.size());
-		for (auto const& kv : mEntityToBody)
+		for (const auto& kv : mEntityToBody)
 			entries.emplace_back(kv.first, kv.second);
 
 		// Helper lambda to remove stale mapping
@@ -278,10 +279,17 @@ namespace Ermine
 					continue;
 				}
 
+				if (ecs.HasComponent<ObjectMetaData>(entity))
+				{
+					const auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
+					if (!meta.selfActive)
+						continue;
+				}
+
 				auto& p = ecs.GetComponent<PhysicComponent>(entity);
 
 				// Get world transform from hierarchy (Transform may be local!)
-				auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
+				
 				Vec3       worldPos = hierarchySystem->GetWorldPosition(entity);
 				Quaternion worldRot = hierarchySystem->GetWorldRotation(entity);
 
@@ -294,18 +302,8 @@ namespace Ermine
 
 				JPH::Quat quat(combined.x, combined.y, combined.z, combined.w);
 
-				//wrap potentially dangerous calls with checks/logging
-				try
-				{
-					bodyInterface.SetPositionAndRotationWhenChanged(
-						rigidBody, pos, quat, JPH::EActivation::DontActivate);
-				}
-				catch (...)
-				{
-					std::cerr << "Physics::Update: SetPositionAndRotationWhenChanged failed for entity " << entity << "\n";
-					removeMapping(entity);
-					continue;
-				}
+				bodyInterface.SetPositionAndRotationWhenChanged(
+					rigidBody, pos, quat, JPH::EActivation::DontActivate);
 
 				if (p.motionType == JPH::EMotionType::Dynamic)
 				{
@@ -316,44 +314,6 @@ namespace Ermine
 			}
 			return;
 		}
-
-		//Kinematic ECS
-		/*for (auto const& [entity, rigidBody] : entries)
-		{
-			if (!ecs.IsEntityValid(entity) ||
-				!ecs.HasComponent<PhysicComponent>(entity) ||
-				!ecs.HasComponent<Transform>(entity))
-			{
-				removeMapping(entity);
-				continue;
-			}
-			if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
-			{
-				const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
-				if (!meta.selfActive)
-					continue;
-			}
-
-			auto& p = ecs.GetComponent<PhysicComponent>(entity);
-			auto& t = ecs.GetComponent<Transform>(entity);
-			if (p.isDead)
-				continue;
-
-			if (p.motionType == JPH::EMotionType::Kinematic)
-			{
-				Ermine::Quaternion rot = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
-				Ermine::Quaternion combined = QuaternionNormalize(t.rotation * rot);
-
-				JPH::Vec3 pos(t.position.x,
-					t.position.y,
-					t.position.z);
-
-				JPH::Quat quat(combined.x, combined.y, combined.z, combined.w);
-
-				bodyInterface.SetPositionAndRotationWhenChanged(
-					rigidBody, pos, quat, JPH::EActivation::DontActivate);
-			}
-		}*/
 
 		//Flush pending pairs first
 		FlushPendingPairsToEntityEvents();
@@ -464,20 +424,6 @@ namespace Ermine
 			if (p.motionType == JPH::EMotionType::Static || p.isDead)
 				continue;
 
-			auto& t = ecs.GetComponent<Transform>(entity);
-
-			JPH::RMat44 transform;
-			try
-			{
-				transform = bodyInterface.GetWorldTransform(rigidBody);
-			}
-			catch (...)
-			{
-				std::cerr << "Physics::Update: GetWorldTransform failed for entity " << entity << "\n";
-				removeMapping(entity);
-				continue;
-			}
-
 			auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
 			if (hierarchySystem->GetParent(entity) != 0)
 			{
@@ -502,6 +448,7 @@ namespace Ermine
 
 				continue;
 			}
+			JPH::RMat44 transform = bodyInterface.GetWorldTransform(rigidBody);
 
 			// World position of the *object* (rigidbody center minus collider pivot)
 			Vec3 worldPos(
