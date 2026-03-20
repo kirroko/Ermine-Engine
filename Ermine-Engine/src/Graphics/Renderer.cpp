@@ -7974,6 +7974,7 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 		if (skinnedVAO != 0)
 		{
 			glBindVertexArray(skinnedVAO);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SKELETAL_SSBO_BINDING, m_MeshManager.m_SkeletalSSBO.GetBufferID());
 
 			// Render all skinned meshes from picking buffer (opaque + transparent)
 			m_PickingIndirectSkinnedShader->SetUniform1ui("baseDrawID", 0);
@@ -8030,6 +8031,7 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 		if (skinnedVAO != 0)
 		{
 			glBindVertexArray(skinnedVAO);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SKELETAL_SSBO_BINDING, m_MeshManager.m_SkeletalSSBO.GetBufferID());
 			m_PickingIndirectSkinnedShader->SetUniform1ui("baseDrawID", 0);
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardOpaqueCustomSkinnedInfoBuffer);
 			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomSkinnedCmdBuffer);
@@ -8083,6 +8085,7 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 		if (skinnedVAO != 0)
 		{
 			glBindVertexArray(skinnedVAO);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SKELETAL_SSBO_BINDING, m_MeshManager.m_SkeletalSSBO.GetBufferID());
 			m_PickingIndirectSkinnedShader->SetUniform1ui("baseDrawID", 0);
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardTransparentCustomSkinnedInfoBuffer);
 			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
