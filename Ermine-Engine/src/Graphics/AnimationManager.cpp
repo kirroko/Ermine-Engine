@@ -15,6 +15,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "PreCompile.h"
 #include "AnimationManager.h"
 #include "Components.h"
+#include "Renderer.h"
 
 namespace Ermine::graphics
 {
@@ -97,6 +98,11 @@ namespace Ermine::graphics
 				if (animComp.boneTransformOffset == -1)
 				{
 					animComp.boneTransformOffset = m_SkeletalSSBO->AllocateBoneSpace(finalBones.size());
+					if (animComp.boneTransformOffset >= 0) {
+						if (auto renderer = ecs.GetSystem<Renderer>()) {
+							renderer->MarkDrawDataForRebuild();
+						}
+					}
 				}
 
 				// Update bone transforms using persistent mapped buffer (direct memcpy, zero-copy)

@@ -1649,14 +1649,32 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 			}
 
 			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
-			glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
-				commands.size() * sizeof(DrawElementsIndirectCommand),
-				commands.data());
+			if (commands.size() > m_ForwardTransparentCustomStandardCmdBufferCapacity) {
+				glBufferData(GL_DRAW_INDIRECT_BUFFER,
+					commands.size() * sizeof(DrawElementsIndirectCommand),
+					commands.data(),
+					GL_DYNAMIC_DRAW);
+				m_ForwardTransparentCustomStandardCmdBufferCapacity = commands.size();
+			}
+			else {
+				glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
+					commands.size() * sizeof(DrawElementsIndirectCommand),
+					commands.data());
+			}
 
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardTransparentCustomStandardInfoBuffer);
-			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-				infos.size() * sizeof(DrawInfo),
-				infos.data());
+			if (infos.size() > m_ForwardTransparentCustomStandardInfoBufferCapacity) {
+				glBufferData(GL_SHADER_STORAGE_BUFFER,
+					infos.size() * sizeof(DrawInfo),
+					infos.data(),
+					GL_DYNAMIC_DRAW);
+				m_ForwardTransparentCustomStandardInfoBufferCapacity = infos.size();
+			}
+			else {
+				glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+					infos.size() * sizeof(DrawInfo),
+					infos.data());
+			}
 		}
 
 		if (!m_ForwardTransparentCustomSkinnedItems.empty() &&
@@ -1672,14 +1690,32 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 			}
 
 			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
-			glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
-				commands.size() * sizeof(DrawElementsIndirectCommand),
-				commands.data());
+			if (commands.size() > m_ForwardTransparentCustomSkinnedCmdBufferCapacity) {
+				glBufferData(GL_DRAW_INDIRECT_BUFFER,
+					commands.size() * sizeof(DrawElementsIndirectCommand),
+					commands.data(),
+					GL_DYNAMIC_DRAW);
+				m_ForwardTransparentCustomSkinnedCmdBufferCapacity = commands.size();
+			}
+			else {
+				glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
+					commands.size() * sizeof(DrawElementsIndirectCommand),
+					commands.data());
+			}
 
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardTransparentCustomSkinnedInfoBuffer);
-			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-				infos.size() * sizeof(DrawInfo),
-				infos.data());
+			if (infos.size() > m_ForwardTransparentCustomSkinnedInfoBufferCapacity) {
+				glBufferData(GL_SHADER_STORAGE_BUFFER,
+					infos.size() * sizeof(DrawInfo),
+					infos.data(),
+					GL_DYNAMIC_DRAW);
+				m_ForwardTransparentCustomSkinnedInfoBufferCapacity = infos.size();
+			}
+			else {
+				glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+					infos.size() * sizeof(DrawInfo),
+					infos.data());
+			}
 		}
 
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
@@ -3354,14 +3390,32 @@ void Renderer::UpdateDrawData()
 
 		size_t cmdSize = commands.size();
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomStandardCmdBuffer);
-		glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data());
+		if (cmdSize > m_ForwardOpaqueCustomStandardCmdBufferCapacity) {
+			glBufferData(GL_DRAW_INDIRECT_BUFFER,
+				cmdSize * sizeof(DrawElementsIndirectCommand),
+				commands.data(),
+				GL_DYNAMIC_DRAW);
+			m_ForwardOpaqueCustomStandardCmdBufferCapacity = cmdSize;
+		}
+		else {
+			glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
+				cmdSize * sizeof(DrawElementsIndirectCommand),
+				commands.data());
+		}
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardOpaqueCustomStandardInfoBuffer);
-		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-			cmdSize * sizeof(DrawInfo),
-			infos.data());
+		if (cmdSize > m_ForwardOpaqueCustomStandardInfoBufferCapacity) {
+			glBufferData(GL_SHADER_STORAGE_BUFFER,
+				cmdSize * sizeof(DrawInfo),
+				infos.data(),
+				GL_DYNAMIC_DRAW);
+			m_ForwardOpaqueCustomStandardInfoBufferCapacity = cmdSize;
+		}
+		else {
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+				cmdSize * sizeof(DrawInfo),
+				infos.data());
+		}
 
 		m_ForwardOpaqueCustomStandardUploadedCount = cmdSize;
 	}
@@ -3383,14 +3437,32 @@ void Renderer::UpdateDrawData()
 
 		size_t cmdSize = commands.size();
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomSkinnedCmdBuffer);
-		glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data());
+		if (cmdSize > m_ForwardOpaqueCustomSkinnedCmdBufferCapacity) {
+			glBufferData(GL_DRAW_INDIRECT_BUFFER,
+				cmdSize * sizeof(DrawElementsIndirectCommand),
+				commands.data(),
+				GL_DYNAMIC_DRAW);
+			m_ForwardOpaqueCustomSkinnedCmdBufferCapacity = cmdSize;
+		}
+		else {
+			glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
+				cmdSize * sizeof(DrawElementsIndirectCommand),
+				commands.data());
+		}
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardOpaqueCustomSkinnedInfoBuffer);
-		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-			cmdSize * sizeof(DrawInfo),
-			infos.data());
+		if (cmdSize > m_ForwardOpaqueCustomSkinnedInfoBufferCapacity) {
+			glBufferData(GL_SHADER_STORAGE_BUFFER,
+				cmdSize * sizeof(DrawInfo),
+				infos.data(),
+				GL_DYNAMIC_DRAW);
+			m_ForwardOpaqueCustomSkinnedInfoBufferCapacity = cmdSize;
+		}
+		else {
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+				cmdSize * sizeof(DrawInfo),
+				infos.data());
+		}
 
 		m_ForwardOpaqueCustomSkinnedUploadedCount = cmdSize;
 	}
@@ -3412,14 +3484,32 @@ void Renderer::UpdateDrawData()
 
 		size_t cmdSize = commands.size();
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
-		glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data());
+		if (cmdSize > m_ForwardTransparentCustomStandardCmdBufferCapacity) {
+			glBufferData(GL_DRAW_INDIRECT_BUFFER,
+				cmdSize * sizeof(DrawElementsIndirectCommand),
+				commands.data(),
+				GL_DYNAMIC_DRAW);
+			m_ForwardTransparentCustomStandardCmdBufferCapacity = cmdSize;
+		}
+		else {
+			glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
+				cmdSize * sizeof(DrawElementsIndirectCommand),
+				commands.data());
+		}
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardTransparentCustomStandardInfoBuffer);
-		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-			cmdSize * sizeof(DrawInfo),
-			infos.data());
+		if (cmdSize > m_ForwardTransparentCustomStandardInfoBufferCapacity) {
+			glBufferData(GL_SHADER_STORAGE_BUFFER,
+				cmdSize * sizeof(DrawInfo),
+				infos.data(),
+				GL_DYNAMIC_DRAW);
+			m_ForwardTransparentCustomStandardInfoBufferCapacity = cmdSize;
+		}
+		else {
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+				cmdSize * sizeof(DrawInfo),
+				infos.data());
+		}
 
 		m_ForwardTransparentCustomStandardUploadedCount = cmdSize;
 	}
@@ -3441,14 +3531,32 @@ void Renderer::UpdateDrawData()
 
 		size_t cmdSize = commands.size();
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
-		glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data());
+		if (cmdSize > m_ForwardTransparentCustomSkinnedCmdBufferCapacity) {
+			glBufferData(GL_DRAW_INDIRECT_BUFFER,
+				cmdSize * sizeof(DrawElementsIndirectCommand),
+				commands.data(),
+				GL_DYNAMIC_DRAW);
+			m_ForwardTransparentCustomSkinnedCmdBufferCapacity = cmdSize;
+		}
+		else {
+			glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
+				cmdSize * sizeof(DrawElementsIndirectCommand),
+				commands.data());
+		}
 
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardTransparentCustomSkinnedInfoBuffer);
-		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
-			cmdSize * sizeof(DrawInfo),
-			infos.data());
+		if (cmdSize > m_ForwardTransparentCustomSkinnedInfoBufferCapacity) {
+			glBufferData(GL_SHADER_STORAGE_BUFFER,
+				cmdSize * sizeof(DrawInfo),
+				infos.data(),
+				GL_DYNAMIC_DRAW);
+			m_ForwardTransparentCustomSkinnedInfoBufferCapacity = cmdSize;
+		}
+		else {
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+				cmdSize * sizeof(DrawInfo),
+				infos.data());
+		}
 
 		m_ForwardTransparentCustomSkinnedUploadedCount = cmdSize;
 	}
@@ -7995,118 +8103,14 @@ void Renderer::RenderPickingPass(const Mtx44& view, const Mtx44& projection)
 		m_PickingIndirectSkinnedShader->Unbind();
 	}
 
-	// ========== RENDER OPAQUE CUSTOM SHADER MESHES ==========
-	if (m_ForwardOpaqueCustomStandardUploadedCount > 0)
-	{
-		m_PickingIndirectShader->Bind();
-		m_PickingIndirectShader->SetUniformMatrix4fv("u_ViewProjection", vp);
+	// Custom-shader meshes are already included in m_PickingStandardCommands /
+	// m_PickingSkinnedCommands during draw-data compilation. Re-drawing them here is redundant
+	// and can diverge from the generic picking buffers.
 
-		GLuint standardVAO = m_MeshManager.GetStandardVAO();
-		if (standardVAO != 0)
-		{
-			glBindVertexArray(standardVAO);
-			m_PickingIndirectShader->SetUniform1ui("baseDrawID", 0);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardOpaqueCustomStandardInfoBuffer);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomStandardCmdBuffer);
-			glMultiDrawElementsIndirect(
-				GL_TRIANGLES,
-				GL_UNSIGNED_INT,
-				nullptr,
-				static_cast<GLsizei>(m_ForwardOpaqueCustomStandardUploadedCount),
-				0
-			);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-			glBindVertexArray(0);
-		}
-
-		m_PickingIndirectShader->Unbind();
-	}
-
-	if (m_ForwardOpaqueCustomSkinnedUploadedCount > 0)
-	{
-		m_PickingIndirectSkinnedShader->Bind();
-		m_PickingIndirectSkinnedShader->SetUniformMatrix4fv("u_ViewProjection", vp);
-
-		GLuint skinnedVAO = m_MeshManager.GetSkinnedVAO();
-		if (skinnedVAO != 0)
-		{
-			glBindVertexArray(skinnedVAO);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SKELETAL_SSBO_BINDING, m_MeshManager.m_SkeletalSSBO.GetBufferID());
-			m_PickingIndirectSkinnedShader->SetUniform1ui("baseDrawID", 0);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardOpaqueCustomSkinnedInfoBuffer);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomSkinnedCmdBuffer);
-			glMultiDrawElementsIndirect(
-				GL_TRIANGLES,
-				GL_UNSIGNED_INT,
-				nullptr,
-				static_cast<GLsizei>(m_ForwardOpaqueCustomSkinnedUploadedCount),
-				0
-			);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-			glBindVertexArray(0);
-		}
-
-		m_PickingIndirectSkinnedShader->Unbind();
-	}
-
-	// ========== RENDER TRANSPARENT CUSTOM SHADER MESHES ==========
-	if (m_ForwardTransparentCustomStandardUploadedCount > 0)
-	{
-		m_PickingIndirectShader->Bind();
-		m_PickingIndirectShader->SetUniformMatrix4fv("u_ViewProjection", vp);
-
-		GLuint standardVAO = m_MeshManager.GetStandardVAO();
-		if (standardVAO != 0)
-		{
-			glBindVertexArray(standardVAO);
-			m_PickingIndirectShader->SetUniform1ui("baseDrawID", 0);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardTransparentCustomStandardInfoBuffer);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
-			glMultiDrawElementsIndirect(
-				GL_TRIANGLES,
-				GL_UNSIGNED_INT,
-				nullptr,
-				static_cast<GLsizei>(m_ForwardTransparentCustomStandardUploadedCount),
-				0
-			);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-			glBindVertexArray(0);
-		}
-
-		m_PickingIndirectShader->Unbind();
-	}
-
-	if (m_ForwardTransparentCustomSkinnedUploadedCount > 0)
-	{
-		m_PickingIndirectSkinnedShader->Bind();
-		m_PickingIndirectSkinnedShader->SetUniformMatrix4fv("u_ViewProjection", vp);
-
-		GLuint skinnedVAO = m_MeshManager.GetSkinnedVAO();
-		if (skinnedVAO != 0)
-		{
-			glBindVertexArray(skinnedVAO);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SKELETAL_SSBO_BINDING, m_MeshManager.m_SkeletalSSBO.GetBufferID());
-			m_PickingIndirectSkinnedShader->SetUniform1ui("baseDrawID", 0);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardTransparentCustomSkinnedInfoBuffer);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
-			glMultiDrawElementsIndirect(
-				GL_TRIANGLES,
-				GL_UNSIGNED_INT,
-				nullptr,
-				static_cast<GLsizei>(m_ForwardTransparentCustomSkinnedUploadedCount),
-				0
-			);
-			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-			glBindVertexArray(0);
-		}
-
-		m_PickingIndirectSkinnedShader->Unbind();
-	}
-
-	// Restore
+	// Restore default framebuffer after the picking pass.
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 	glCheckError();
+
 #endif
 }
 
