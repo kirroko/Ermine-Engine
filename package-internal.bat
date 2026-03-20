@@ -124,7 +124,7 @@ if exist "%DIST_SUBDIR%\validation.sh" (
 	)
 
 	REM Execute the script inside WSL
-    wsl.exe bash -lc "cd '!DIST_SUBDIR_WSL!' && chmod +x ./validation.sh && ./validation.sh"
+    wsl.exe bash -lc "cd '!DIST_SUBDIR_WSL!' && sed -i 's/\r$//' ./validation.sh && chmod +x ./validation.sh && ./validation.sh"
     
     if errorlevel 1 (
         echo [ERROR] Validation failed in WSL.
