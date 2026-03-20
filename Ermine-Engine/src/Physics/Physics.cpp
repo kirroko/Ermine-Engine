@@ -250,66 +250,63 @@ namespace Ermine
 	{
 		auto& ecs = ECS::GetInstance();
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+		auto hierarchySystem = ecs.GetSystem<HierarchySystem>();
 
-		// Make a snapshot of the map to avoid concurrent modification / iterator invalidation
+		if (!hierarchySystem)
+			return;
+
+		// Snapshot to avoid iterator invalidation while removing mappings
 		std::vector<std::pair<EntityID, JPH::BodyID>> entries;
 		entries.reserve(mEntityToBody.size());
-		for (auto const& kv : mEntityToBody)
+		for (const auto& kv : mEntityToBody)
 			entries.emplace_back(kv.first, kv.second);
 
-		// Helper lambda to remove stale mapping
-		auto removeMapping = [&](EntityID e) {
-			auto it = mEntityToBody.find(e);
-			if (it != mEntityToBody.end())
-				mEntityToBody.erase(it);
+		auto removeMapping = [&](EntityID e)
+			{
+				auto it = mEntityToBody.find(e);
+				if (it != mEntityToBody.end())
+					mEntityToBody.erase(it);
 			};
 
 		if (editor::EditorGUI::s_state == editor::EditorGUI::SimState::stopped)
 		{
-			for (auto const& [entity, rigidBody] : entries)
+			for (const auto& [entity, rigidBody] : entries)
 			{
-				// validate entity & components
 				if (!ecs.IsEntityValid(entity) ||
 					!ecs.HasComponent<PhysicComponent>(entity) ||
 					!ecs.HasComponent<Transform>(entity))
 				{
-					// Remove stale mapping
 					removeMapping(entity);
 					continue;
 				}
 
+				if (const auto* meta = ecs.TryGetComponent<ObjectMetaData>(entity))
+				{
+					if (!meta->selfActive)
+						continue;
+				}
+
 				auto& p = ecs.GetComponent<PhysicComponent>(entity);
 
-				// Get world transform from hierarchy (Transform may be local!)
-				auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
-				Vec3       worldPos = hierarchySystem->GetWorldPosition(entity);
+				Vec3 worldPos = hierarchySystem->GetWorldPosition(entity);
 				Quaternion worldRot = hierarchySystem->GetWorldRotation(entity);
 
 				Quaternion colliderOffset = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
 				Quaternion combined = QuaternionNormalize(worldRot * colliderOffset);
 
-				JPH::Vec3 pos(worldPos.x + p.colliderPivot.x,
+				JPH::Vec3 pos(
+					worldPos.x + p.colliderPivot.x,
 					worldPos.y + p.colliderPivot.y,
-					worldPos.z + p.colliderPivot.z);
+					worldPos.z + p.colliderPivot.z
+				);
 
 				JPH::Quat quat(combined.x, combined.y, combined.z, combined.w);
 
-				//wrap potentially dangerous calls with checks/logging
-				try
-				{
-					bodyInterface.SetPositionAndRotationWhenChanged(
-						rigidBody, pos, quat, JPH::EActivation::DontActivate);
-				}
-				catch (...)
-				{
-					std::cerr << "Physics::Update: SetPositionAndRotationWhenChanged failed for entity " << entity << "\n";
-					removeMapping(entity);
-					continue;
-				}
+				bodyInterface.SetPositionAndRotationWhenChanged(
+					rigidBody, pos, quat, JPH::EActivation::DontActivate);
 
 				if (p.motionType == JPH::EMotionType::Dynamic)
 				{
-					// Zero velocities while editor stopped
 					bodyInterface.SetLinearVelocity(rigidBody, JPH::Vec3::sZero());
 					bodyInterface.SetAngularVelocity(rigidBody, JPH::Vec3::sZero());
 				}
@@ -317,48 +314,9 @@ namespace Ermine
 			return;
 		}
 
-		//Kinematic ECS
-		/*for (auto const& [entity, rigidBody] : entries)
-		{
-			if (!ecs.IsEntityValid(entity) ||
-				!ecs.HasComponent<PhysicComponent>(entity) ||
-				!ecs.HasComponent<Transform>(entity))
-			{
-				removeMapping(entity);
-				continue;
-			}
-			if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
-			{
-				const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
-				if (!meta.selfActive)
-					continue;
-			}
 
-			auto& p = ecs.GetComponent<PhysicComponent>(entity);
-			auto& t = ecs.GetComponent<Transform>(entity);
-			if (p.isDead)
-				continue;
-
-			if (p.motionType == JPH::EMotionType::Kinematic)
-			{
-				Ermine::Quaternion rot = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
-				Ermine::Quaternion combined = QuaternionNormalize(t.rotation * rot);
-
-				JPH::Vec3 pos(t.position.x,
-					t.position.y,
-					t.position.z);
-
-				JPH::Quat quat(combined.x, combined.y, combined.z, combined.w);
-
-				bodyInterface.SetPositionAndRotationWhenChanged(
-					rigidBody, pos, quat, JPH::EActivation::DontActivate);
-			}
-		}*/
-
-		//Flush pending pairs first
 		FlushPendingPairsToEntityEvents();
 
-		//Safe collision event processing: copy event before popping
 		while (!mCollisionEvent.empty())
 		{
 			auto ev = mCollisionEvent.front();
@@ -366,27 +324,28 @@ namespace Ermine
 
 			auto const& [type, recipientEntity, otherEntity, sensor] = ev;
 
-			if (ecs.HasComponent<PhysicComponent>(recipientEntity) && ecs.HasComponent<PhysicComponent>(otherEntity))
+			if (!ecs.IsEntityValid(recipientEntity) || !ecs.IsEntityValid(otherEntity))
+				continue;
+
+			if (ecs.HasComponent<PhysicComponent>(recipientEntity) &&
+				ecs.HasComponent<PhysicComponent>(otherEntity))
 			{
-				if (ecs.GetComponent<PhysicComponent>(recipientEntity).isDead || ecs.GetComponent<PhysicComponent>(otherEntity).isDead)
+				if (ecs.GetComponent<PhysicComponent>(recipientEntity).isDead ||
+					ecs.GetComponent<PhysicComponent>(otherEntity).isDead)
 				{
 					continue;
 				}
 			}
 
-			if (!ecs.IsEntityValid(recipientEntity) || !ecs.IsEntityValid(otherEntity))
-				continue;
-
-			if (ECS::GetInstance().HasComponent<ObjectMetaData>(recipientEntity))
+			if (const auto* meta = ecs.TryGetComponent<ObjectMetaData>(recipientEntity))
 			{
-				const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(recipientEntity);
-				if (!meta.selfActive)
+				if (!meta->selfActive)
 					continue;
 			}
-			if (ECS::GetInstance().HasComponent<ObjectMetaData>(otherEntity))
+
+			if (const auto* meta = ecs.TryGetComponent<ObjectMetaData>(otherEntity))
 			{
-				const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(otherEntity);
-				if (!meta.selfActive)
+				if (!meta->selfActive)
 					continue;
 			}
 
@@ -417,7 +376,7 @@ namespace Ermine
 			{
 				auto& statem = ecs.GetComponent<StateMachine>(recipientEntity);
 
-				if (!statem.m_CurrentScript)
+				if (!statem.m_CurrentScript || !statem.m_CurrentScript->instance)
 					continue;
 
 				switch (type)
@@ -435,16 +394,16 @@ namespace Ermine
 			}
 		}
 
-		//Run physics step
+
 		mPhysicsSystem.Update(deltaTime, 1, &mTempAllocator, &mJobSystem);
 
-		//Physics to ECS
+
 		entries.clear();
 		entries.reserve(mEntityToBody.size());
-		for (auto const& kv : mEntityToBody)
+		for (const auto& kv : mEntityToBody)
 			entries.emplace_back(kv.first, kv.second);
 
-		for (auto const& [entity, rigidBody] : entries)
+		for (const auto& [entity, rigidBody] : entries)
 		{
 			if (!ecs.IsEntityValid(entity) ||
 				!ecs.HasComponent<PhysicComponent>(entity) ||
@@ -453,10 +412,10 @@ namespace Ermine
 				removeMapping(entity);
 				continue;
 			}
-			if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+
+			if (const auto* meta = ecs.TryGetComponent<ObjectMetaData>(entity))
 			{
-				const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
-				if (!meta.selfActive)
+				if (!meta->selfActive)
 					continue;
 			}
 
@@ -464,24 +423,9 @@ namespace Ermine
 			if (p.motionType == JPH::EMotionType::Static || p.isDead)
 				continue;
 
-			auto& t = ecs.GetComponent<Transform>(entity);
-
-			JPH::RMat44 transform;
-			try
-			{
-				transform = bodyInterface.GetWorldTransform(rigidBody);
-			}
-			catch (...)
-			{
-				std::cerr << "Physics::Update: GetWorldTransform failed for entity " << entity << "\n";
-				removeMapping(entity);
-				continue;
-			}
-
-			auto hierarchySystem = ECS::GetInstance().GetSystem<HierarchySystem>();
 			if (hierarchySystem->GetParent(entity) != 0)
 			{
-				// Child: ECS → Physics (collider follows visual)
+
 				Vec3 worldPos = hierarchySystem->GetWorldPosition(entity);
 				Quaternion worldRot = hierarchySystem->GetWorldRotation(entity);
 
@@ -489,9 +433,9 @@ namespace Ermine
 				Quaternion combined = QuaternionNormalize(worldRot * colliderOffset);
 
 				JPH::Vec3 pos(
-					worldPos.x - p.colliderPivot.x,
-					worldPos.y - p.colliderPivot.y,
-					worldPos.z - p.colliderPivot.z
+					worldPos.x + p.colliderPivot.x,
+					worldPos.y + p.colliderPivot.y,
+					worldPos.z + p.colliderPivot.z
 				);
 
 				JPH::Quat quat(combined.x, combined.y, combined.z, combined.w);
@@ -503,25 +447,28 @@ namespace Ermine
 				continue;
 			}
 
-			// World position of the *object* (rigidbody center minus collider pivot)
+
+			JPH::RMat44 transform = bodyInterface.GetWorldTransform(rigidBody);
+
 			Vec3 worldPos(
 				transform.GetTranslation().GetX() - p.colliderPivot.x,
 				transform.GetTranslation().GetY() - p.colliderPivot.y,
 				transform.GetTranslation().GetZ() - p.colliderPivot.z
 			);
 
-			// World rotation of the rigidbody
 			JPH::Quat rot = transform.GetRotation().GetQuaternion().Normalized();
 			Quaternion bodyRot(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW());
 
-			// Remove colliderRot offset to recover the object's world rotation
 			Quaternion colliderOffset = QuaternionNormalize(FromEulerDegrees(p.colliderRot));
-			// If your quaternions are unit length, inverse is just the conjugate:
-			Quaternion invOffset(-colliderOffset.x, -colliderOffset.y, -colliderOffset.z, colliderOffset.w);
+			Quaternion invOffset(
+				-colliderOffset.x,
+				-colliderOffset.y,
+				-colliderOffset.z,
+				colliderOffset.w
+			);
 
-			Quaternion worldRot = bodyRot * invOffset;
+			Quaternion worldRot = QuaternionNormalize(bodyRot * invOffset);
 
-			// Now write back as *world* transform
 			hierarchySystem->SetWorldPosition(entity, worldPos);
 			hierarchySystem->SetWorldRotation(entity, worldRot);
 		}
