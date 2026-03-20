@@ -57,6 +57,9 @@ uniform float shellPower = 1.0;
 uniform float shellAlphaClip = 0.7;
 uniform float ringIntensity = 2.0;
 
+const float ORB_SIZE_SCALE = 0.4;
+const float SWIRL_RADIUS_SCALE = 1.15;
+
 const uint MAT_FLAG_ALBEDO_MAP = 1u << 0u;
 const uint MAT_FLAG_NORMAL_MAP = 1u << 1u;
 const uint MAT_FLAG_ROUGHNESS_MAP = 1u << 2u;
@@ -136,6 +139,8 @@ void compositeOver(inout vec3 color, inout float alpha, vec3 layerColor, float l
 void main() {
     MaterialData material = materials[vMaterialIndex];
     vec2 uvScale = safeUVScale(material.uvScale);
+    float scaledOrbRadius = orbRadius * ORB_SIZE_SCALE;
+    float scaledShellRadiusOffset = shellRadiusOffset * ORB_SIZE_SCALE;
 
     vec3 orbColor = vec3(0.0);
     float orbAlpha = 0.0;
@@ -149,27 +154,30 @@ void main() {
     float tPlane;
     vec2 planeUV = getRayPlaneUV(rayOrigin, rayDir, vModelCenter, tPlane);
     float planeDist = length(planeUV);
+    vec2 orbPlaneUV = planeUV / ORB_SIZE_SCALE;
+    float orbPlaneDist = length(orbPlaneUV);
 
     if (tPlane <= 0.0) {
         discard;
     }
 
-    float orbMask = 1.0 - smoothstep(orbRadius, orbRadius + 0.02, planeDist);
+    float orbMask = 1.0 - smoothstep(orbRadius, orbRadius + 0.02, orbPlaneDist);
     addAdditive(orbColor, orbAlpha, ORB_GLOW_COLOR * orbIntensity, orbMask);
 
-    if ((material.textureFlags & MAT_FLAG_ALBEDO_MAP) != 0u && material.albedoMapIndex >= 0) {
-        float ringScale = mix(1.2, 1.4, 0.5 + 0.5 * sin(u_Time * 1.8));
-        vec2 ringUV = planeUV / max(ringScale, 0.0001) * 0.5 + 0.5;
-        ringUV = ringUV * uvScale + material.uvOffset;
-        float ringMask = sampleMask(material.albedoMapIndex, ringUV);
-        ringMask = smoothstep(0.2, 0.9, ringMask);
-        ringMask *= 0.5;
-        ringMaskValue = ringMask;
-        addAdditive(ringColor, ringAlpha, RING_COLOR * ringIntensity, ringMask);
-    }
+    // if ((material.textureFlags & MAT_FLAG_ALBEDO_MAP) != 0u && material.albedoMapIndex >= 0) {
+    //     float ringScale = mix(1.2, 1.4, 0.5 + 0.5 * sin(u_Time * 1.8));
+    //     vec2 ringUV = orbPlaneUV / max(ringScale, 0.0001) * 0.5 + 0.5;
+    //     ringUV = ringUV * uvScale + material.uvOffset;
+    //     float ringMask = sampleMask(material.albedoMapIndex, ringUV);
+    //     ringMask = smoothstep(0.2, 0.9, ringMask);
+    //     ringMask *= 0.5;
+    //     ringMaskValue = ringMask;
+    //     addAdditive(ringColor, ringAlpha, RING_COLOR * ringIntensity, ringMask);
+    // }
 
     if ((material.textureFlags & MAT_FLAG_NORMAL_MAP) != 0u && material.normalMapIndex >= 0) {
-        vec2 discUV = planeUV / max(swirlRadius, 0.0001) * 0.5 + 0.5;
+        float swirlRadiusScaled = swirlRadius * SWIRL_RADIUS_SCALE;
+        vec2 discUV = orbPlaneUV / max(swirlRadiusScaled, 0.0001) * 0.5 + 0.5;
         vec2 centeredUV = discUV - 0.5;
 
         float zoomPhase = fract(u_Time * zoomCyclesPerSecond);
@@ -187,8 +195,8 @@ void main() {
         float blend = smoothstep(0.0, 1.0, zoomPhase);
         float grayscaleMask = 1.0 - mix(sampleA, sampleB, blend);
         float swirlMask = thresholdMask(grayscaleMask, material.emissiveIntensity);
-        float swirlBand = clamp(1.0 - (planeDist / swirlRadius), 0.0, 1.0);
-        float orbOcclusion = smoothstep(orbRadius, orbRadius + 0.03, planeDist);
+        float swirlBand = clamp(1.0 - (orbPlaneDist / swirlRadiusScaled), 0.0, 1.0);
+        float orbOcclusion = smoothstep(orbRadius, orbRadius + 0.03, orbPlaneDist);
         float ringOcclusion = 1.0 - ringMaskValue;
 
         addAdditive(raysColor, raysAlpha, EMISSIVE_RAYS_COLOR * swirlIntensity, swirlMask * swirlBand * orbOcclusion * ringOcclusion);
@@ -202,7 +210,7 @@ void main() {
     if ((material.textureFlags & MAT_FLAG_ROUGHNESS_MAP) != 0u && material.roughnessMapIndex >= 0) {
         float shellNear;
         float shellFar;
-        float shellRadius = orbRadius + shellRadiusOffset;
+        float shellRadius = scaledOrbRadius + scaledShellRadiusOffset;
 
         if (intersectSphere(rayOrigin, rayDir, vModelCenter, shellRadius, shellNear, shellFar)) {
             float shellHits[2] = float[2](shellNear, shellFar);
@@ -224,7 +232,7 @@ void main() {
                 }
 
                 if (i == 1) {
-                    shellMask *= smoothstep(orbRadius, orbRadius + 0.02, planeDist);
+                    shellMask *= smoothstep(orbRadius, orbRadius + 0.02, orbPlaneDist);
                     if (shellMask <= shellAlphaClip) {
                         continue;
                     }

@@ -31,7 +31,7 @@
         },
         "materialEmissiveIntensity": {
             "type": "float",
-            "value": 0.6299999952316284
+            "value": 0
         },
         "materialNormalStrength": {
             "type": "float",

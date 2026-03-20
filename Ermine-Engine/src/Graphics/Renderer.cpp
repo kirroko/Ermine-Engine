@@ -1612,6 +1612,80 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 	// - Full rebuild: Sort by shader FIRST (creates stable batches), then distance
 	// - Fast update: Sort by distance ONLY within existing shader groups
 	SortTransparentObjects(cameraPos, m_NeedsTransparentSort);
+	auto uploadSortedTransparentBuffers = [&]() {
+		std::vector<DrawElementsIndirectCommand> forwardTransparentDefaultStandardCommands;
+		std::vector<DrawInfo> forwardTransparentDefaultStandardInfos;
+		forwardTransparentDefaultStandardCommands.reserve(m_ForwardTransparentDefaultStandardItems.size());
+		forwardTransparentDefaultStandardInfos.reserve(m_ForwardTransparentDefaultStandardItems.size());
+		for (const auto& item : m_ForwardTransparentDefaultStandardItems) {
+			forwardTransparentDefaultStandardCommands.push_back(item.command);
+			forwardTransparentDefaultStandardInfos.push_back(item.info);
+		}
+
+		std::vector<DrawElementsIndirectCommand> forwardTransparentDefaultSkinnedCommands;
+		std::vector<DrawInfo> forwardTransparentDefaultSkinnedInfos;
+		forwardTransparentDefaultSkinnedCommands.reserve(m_ForwardTransparentDefaultSkinnedItems.size());
+		forwardTransparentDefaultSkinnedInfos.reserve(m_ForwardTransparentDefaultSkinnedItems.size());
+		for (const auto& item : m_ForwardTransparentDefaultSkinnedItems) {
+			forwardTransparentDefaultSkinnedCommands.push_back(item.command);
+			forwardTransparentDefaultSkinnedInfos.push_back(item.info);
+		}
+
+		m_MeshManager.m_ForwardStandardDrawCommandBuffer.WriteCommands(forwardTransparentDefaultStandardCommands, 0);
+		m_MeshManager.m_ForwardStandardDrawInfoBuffer.WriteDrawInfos(forwardTransparentDefaultStandardInfos, 0);
+		m_MeshManager.m_ForwardSkinnedDrawCommandBuffer.WriteCommands(forwardTransparentDefaultSkinnedCommands, 0);
+		m_MeshManager.m_ForwardSkinnedDrawInfoBuffer.WriteDrawInfos(forwardTransparentDefaultSkinnedInfos, 0);
+
+		if (!m_ForwardTransparentCustomStandardItems.empty() &&
+			m_ForwardTransparentCustomStandardCmdBuffer != 0 &&
+			m_ForwardTransparentCustomStandardInfoBuffer != 0) {
+			std::vector<DrawElementsIndirectCommand> commands;
+			std::vector<DrawInfo> infos;
+			commands.reserve(m_ForwardTransparentCustomStandardItems.size());
+			infos.reserve(m_ForwardTransparentCustomStandardItems.size());
+			for (const auto& item : m_ForwardTransparentCustomStandardItems) {
+				commands.push_back(item.command);
+				infos.push_back(item.info);
+			}
+
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
+			glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
+				commands.size() * sizeof(DrawElementsIndirectCommand),
+				commands.data());
+
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardTransparentCustomStandardInfoBuffer);
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+				infos.size() * sizeof(DrawInfo),
+				infos.data());
+		}
+
+		if (!m_ForwardTransparentCustomSkinnedItems.empty() &&
+			m_ForwardTransparentCustomSkinnedCmdBuffer != 0 &&
+			m_ForwardTransparentCustomSkinnedInfoBuffer != 0) {
+			std::vector<DrawElementsIndirectCommand> commands;
+			std::vector<DrawInfo> infos;
+			commands.reserve(m_ForwardTransparentCustomSkinnedItems.size());
+			infos.reserve(m_ForwardTransparentCustomSkinnedItems.size());
+			for (const auto& item : m_ForwardTransparentCustomSkinnedItems) {
+				commands.push_back(item.command);
+				infos.push_back(item.info);
+			}
+
+			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
+			glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0,
+				commands.size() * sizeof(DrawElementsIndirectCommand),
+				commands.data());
+
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardTransparentCustomSkinnedInfoBuffer);
+			glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0,
+				infos.size() * sizeof(DrawInfo),
+				infos.data());
+		}
+
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	};
+	uploadSortedTransparentBuffers();
 	m_NeedsTransparentSort = false;  // Reset flag after sorting
 
 	// Save current VP for next frame's velocity computation
@@ -1994,6 +2068,7 @@ void Renderer::RebuildDrawData()
 
 			// Process each mesh in the model
 			for (const auto& mesh : modelComp.m_model->GetMeshes()) {
+				glm::mat4 meshModel = entityModel * mesh.localTransform;
 
 				// Get mesh handle from MeshManager
 				MeshHandle meshHandle = m_MeshManager.GetMeshHandle(mesh.meshID);
@@ -2058,11 +2133,11 @@ void Renderer::RebuildDrawData()
 
 				// Build draw info with AABB and model matrix
 				DrawInfo info;
-				info.modelMatrix = entityModel;
+				info.modelMatrix = meshModel;
 				
 
 				// Pre-calculate normal matrix and store as 3 separate columns (std430 mat3 has 16-byte stride!)
-				glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(entityModel)));
+				glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(meshModel)));
 				info.normalMatrixCol0 = glm::vec4(normalMat[0], 0.0f);
 				info.normalMatrixCol1 = glm::vec4(normalMat[1], 0.0f);
 				info.normalMatrixCol2 = glm::vec4(normalMat[2], 0.0f);
@@ -2233,6 +2308,7 @@ void Renderer::RebuildDrawData()
 			const auto& meshes = modelComp.m_model->GetMeshes();
 
 			for (const auto& mesh : meshes) {
+				glm::mat4 meshModelMatrix = modelMatrix * mesh.localTransform;
 
 				// Get mesh handle from MeshManager
 				MeshHandle meshHandle = m_MeshManager.GetMeshHandle(mesh.meshID);
@@ -2302,11 +2378,11 @@ void Renderer::RebuildDrawData()
 
 				// Build draw info with AABB and model matrix
 				DrawInfo info;
-				info.modelMatrix = modelMatrix;
+				info.modelMatrix = meshModelMatrix;
 				
 
 				// Pre-calculate normal matrix and store as 3 separate columns (std430 mat3 has 16-byte stride!)
-				glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(modelMatrix)));
+				glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(meshModelMatrix)));
 				info.normalMatrixCol0 = glm::vec4(normalMat[0], 0.0f);
 				info.normalMatrixCol1 = glm::vec4(normalMat[1], 0.0f);
 				info.normalMatrixCol2 = glm::vec4(normalMat[2], 0.0f);
@@ -2882,6 +2958,9 @@ void Renderer::UpdateDrawData()
 		}
 		else {
 			model = GetEntityWorldMatrix(cachedItem.entity);
+		}
+		if (cachedItem.modelMeshData) {
+			model *= cachedItem.modelMeshData->localTransform;
 		}
 
 		glm::vec3 localAabbMin = cachedItem.aabbMin;
@@ -6259,6 +6338,8 @@ void Renderer::SortOpaqueCustomShadersByShader()
  */
 void Renderer::SortTransparentObjects(const Vec3& cameraPos, bool fullRebuild)
 {
+	(void)fullRebuild;
+
 	// Skip if no transparent objects at all
 	bool hasTransparentStandard = !m_ForwardTransparentDefaultStandardItems.empty() || !m_ForwardTransparentDefaultSkinnedItems.empty();
 	bool hasTransparentCustom = !m_ForwardTransparentCustomStandardItems.empty() || !m_ForwardTransparentCustomSkinnedItems.empty();
@@ -6299,96 +6380,31 @@ void Renderer::SortTransparentObjects(const Vec3& cameraPos, bool fullRebuild)
 
 	// ========== SORT TRANSPARENT CUSTOM STANDARD MESHES (NON-SKINNED) ==========
 	if (!m_ForwardTransparentCustomStandardItems.empty()) {
-		if (fullRebuild) {
-			// FULL REBUILD: Sort by SHADER first (batching), then by DISTANCE within each shader group
-			std::sort(m_ForwardTransparentCustomStandardItems.begin(),
-			          m_ForwardTransparentCustomStandardItems.end(),
-			          [&camPos](const CustomShaderDrawItem& a, const CustomShaderDrawItem& b) {
-				          // Primary sort: Shader pointer (creates batches)
-				          if (a.shader.get() != b.shader.get()) {
-					          return a.shader.get() < b.shader.get();
-				          }
-
-				          // Secondary sort: Distance back-to-front within each shader group
-				          glm::vec3 posA = glm::vec3(a.info.modelMatrix[3]);
-				          glm::vec3 posB = glm::vec3(b.info.modelMatrix[3]);
-				          float distA = glm::distance(posA, camPos);
-				          float distB = glm::distance(posB, camPos);
-				          return distA > distB; // Back-to-front
-			          });
-		}
-		else {
-			// FAST REBUILD: Sort by DISTANCE only within each existing shader group
-			// Find shader group boundaries and sort each group independently
-			size_t groupStart = 0;
-			for (size_t i = 1; i <= m_ForwardTransparentCustomStandardItems.size(); ++i) {
-				// Check if we've reached a new shader or end of array
-				bool newGroup = (i == m_ForwardTransparentCustomStandardItems.size()) ||
-				                (m_ForwardTransparentCustomStandardItems[i].shader.get() !=
-				                 m_ForwardTransparentCustomStandardItems[groupStart].shader.get());
-
-				if (newGroup) {
-					// Sort this shader group by distance
-					std::sort(m_ForwardTransparentCustomStandardItems.begin() + groupStart,
-					          m_ForwardTransparentCustomStandardItems.begin() + i,
-					          [&camPos](const CustomShaderDrawItem& a, const CustomShaderDrawItem& b) {
-						          glm::vec3 posA = glm::vec3(a.info.modelMatrix[3]);
-						          glm::vec3 posB = glm::vec3(b.info.modelMatrix[3]);
-						          float distA = glm::distance(posA, camPos);
-						          float distB = glm::distance(posB, camPos);
-						          return distA > distB; // Back-to-front
-					          });
-					groupStart = i;
-				}
-			}
-		}
+		// Transparent blending correctness requires a single global back-to-front order.
+		// Do not group by shader here: batching can make nearer transparent surfaces render
+		// before farther ones when multiple meshes share the same custom material.
+		std::sort(m_ForwardTransparentCustomStandardItems.begin(),
+		          m_ForwardTransparentCustomStandardItems.end(),
+		          [&camPos](const CustomShaderDrawItem& a, const CustomShaderDrawItem& b) {
+			          glm::vec3 posA = glm::vec3(a.info.modelMatrix[3]);
+			          glm::vec3 posB = glm::vec3(b.info.modelMatrix[3]);
+			          float distA = glm::distance(posA, camPos);
+			          float distB = glm::distance(posB, camPos);
+			          return distA > distB; // Back-to-front
+		          });
 	}
 
 	// ========== SORT TRANSPARENT CUSTOM SKINNED MESHES ==========
 	if (!m_ForwardTransparentCustomSkinnedItems.empty()) {
-		if (fullRebuild) {
-			// FULL REBUILD: Sort by SHADER first (batching), then by DISTANCE within each shader group
-			std::sort(m_ForwardTransparentCustomSkinnedItems.begin(),
-			          m_ForwardTransparentCustomSkinnedItems.end(),
-			          [&camPos](const CustomShaderDrawItem& a, const CustomShaderDrawItem& b) {
-				          // Primary sort: Shader pointer (creates batches)
-				          if (a.shader.get() != b.shader.get()) {
-					          return a.shader.get() < b.shader.get();
-				          }
-
-				          // Secondary sort: Distance back-to-front within each shader group
-				          glm::vec3 posA = glm::vec3(a.info.modelMatrix[3]);
-				          glm::vec3 posB = glm::vec3(b.info.modelMatrix[3]);
-				          float distA = glm::distance(posA, camPos);
-				          float distB = glm::distance(posB, camPos);
-				          return distA > distB; // Back-to-front
-			          });
-		}
-		else {
-			// FAST REBUILD: Sort by DISTANCE only within each existing shader group
-			// Find shader group boundaries and sort each group independently
-			size_t groupStart = 0;
-			for (size_t i = 1; i <= m_ForwardTransparentCustomSkinnedItems.size(); ++i) {
-				// Check if we've reached a new shader or end of array
-				bool newGroup = (i == m_ForwardTransparentCustomSkinnedItems.size()) ||
-				                (m_ForwardTransparentCustomSkinnedItems[i].shader.get() !=
-				                 m_ForwardTransparentCustomSkinnedItems[groupStart].shader.get());
-
-				if (newGroup) {
-					// Sort this shader group by distance
-					std::sort(m_ForwardTransparentCustomSkinnedItems.begin() + groupStart,
-					          m_ForwardTransparentCustomSkinnedItems.begin() + i,
-					          [&camPos](const CustomShaderDrawItem& a, const CustomShaderDrawItem& b) {
-						          glm::vec3 posA = glm::vec3(a.info.modelMatrix[3]);
-						          glm::vec3 posB = glm::vec3(b.info.modelMatrix[3]);
-						          float distA = glm::distance(posA, camPos);
-						          float distB = glm::distance(posB, camPos);
-						          return distA > distB; // Back-to-front
-					          });
-					groupStart = i;
-				}
-			}
-		}
+		std::sort(m_ForwardTransparentCustomSkinnedItems.begin(),
+		          m_ForwardTransparentCustomSkinnedItems.end(),
+		          [&camPos](const CustomShaderDrawItem& a, const CustomShaderDrawItem& b) {
+			          glm::vec3 posA = glm::vec3(a.info.modelMatrix[3]);
+			          glm::vec3 posB = glm::vec3(b.info.modelMatrix[3]);
+			          float distA = glm::distance(posA, camPos);
+			          float distB = glm::distance(posB, camPos);
+			          return distA > distB; // Back-to-front
+		          });
 	}
 }
 
@@ -6527,6 +6543,7 @@ void Renderer::RenderOpaqueCustomShaders(const Mtx44& view, const Mtx44& project
 		// Check that VAO and GPU buffers are valid before binding
 		if (skinnedVAO != 0 && m_ForwardOpaqueCustomSkinnedInfoBuffer != 0 && m_ForwardOpaqueCustomSkinnedCmdBuffer != 0) {
 			glBindVertexArray(skinnedVAO);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SKELETAL_SSBO_BINDING, m_MeshManager.m_SkeletalSSBO.GetBufferID());
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardOpaqueCustomSkinnedInfoBuffer);
 			glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomSkinnedCmdBuffer);
 
@@ -6699,6 +6716,7 @@ void Renderer::RenderTransparentCustomShaders(const Mtx44& view, const Mtx44& pr
 		const auto& items = m_ForwardTransparentCustomSkinnedItems;
 		const size_t renderCount = std::min(m_ForwardTransparentCustomSkinnedUploadedCount, items.size());
 		glBindVertexArray(m_MeshManager.GetSkinnedVAO());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, SKELETAL_SSBO_BINDING, m_MeshManager.m_SkeletalSSBO.GetBufferID());
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, DRAW_INFO_SSBO_BINDING, m_ForwardTransparentCustomSkinnedInfoBuffer);
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
 

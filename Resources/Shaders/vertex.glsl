@@ -146,8 +146,9 @@ void main()
     // Pass material index to fragment shader
     vMaterialIndex = drawInfo.materialIndex;
 
-    // Extract model center from model matrix (translation component) for volumetric shaders
-    vModelCenter = vec3(model[3][0], model[3][1], model[3][2]);
+    // Use the current draw's mesh bounds so custom volumetrics center on the submesh, not the model root.
+    vec3 localMeshCenter = 0.5 * (drawInfo.aabbMin + drawInfo.aabbMax);
+    vModelCenter = vec3(model * vec4(localMeshCenter, 1.0));
 
     // Extract camera position from view matrix for volumetric shaders
     mat3 viewRot = mat3(view);
