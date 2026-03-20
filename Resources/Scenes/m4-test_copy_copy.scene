@@ -21,10 +21,10 @@
           "selfActive": false
         },
         "GlobalAudioComponent": {
-          "masterVolume": 0.20349650084972382,
-          "musicVolume": 1.0,
+          "masterVolume": 1.0,
+          "musicVolume": 0.24,
           "sfxVolume": 1.0,
-          "ambienceVolume": 1.0,
+          "ambienceVolume": 0.1,
           "voiceVolume": 1.0,
           "autoPlay": true,
           "music": [

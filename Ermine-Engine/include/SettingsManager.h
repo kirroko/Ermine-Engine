@@ -32,10 +32,11 @@ namespace Ermine
         void Save(const std::filesystem::path& path = "user_settings.json");
 
         // Audio volumes (slider values 0.0 - 1.0)
-        float masterVolume  = 1.0f;
-        float musicVolume   = 1.0f;
-        float sfxVolume     = 1.0f;
-        float ambienceVolume = 1.0f;
+        // Defaults match scene audio mix (m4-test_copy_copy.scene, Level2Wcol.scene)
+        float masterVolume   = 1.0f;
+        float musicVolume    = 0.24f;  // Low music volume to not overpower gameplay
+        float sfxVolume      = 1.0f;
+        float ambienceVolume = 0.1f;   // Subtle background ambience
 
         // Gamma (slider value 0.0 - 1.0, mapped to actual gamma in the UI system)
         float gammaSliderValue = 0.5f; // 0.5 maps to default gamma 2.2
