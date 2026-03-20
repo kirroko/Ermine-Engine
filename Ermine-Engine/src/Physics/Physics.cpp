@@ -279,10 +279,9 @@ namespace Ermine
 					continue;
 				}
 
-				if (ecs.HasComponent<ObjectMetaData>(entity))
+				if (const auto& meta = ecs.TryGetComponent<ObjectMetaData>(entity))
 				{
-					const auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
-					if (!meta.selfActive)
+					if (!meta->selfActive)
 						continue;
 				}
 
