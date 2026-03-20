@@ -37,6 +37,8 @@ public class GameManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha0)) TeleportToPoint(9);
         if (Input.GetKeyDown(KeyCode.Equal)) TeleportToPoint(10);
         if (Input.GetKeyDown(KeyCode.Minus)) TeleportToPoint(11);
+
+        if (player.transform.position.y <= -15f) PlayerRespawn();
     }
 
     public void PlayerRespawn()
