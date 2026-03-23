@@ -53,18 +53,18 @@
           ],
           "coneAngle": 180.0,
           "coneInnerAngle": 0.0,
-          "speedMin": 18.0,
-          "speedMax": 34.0,
+          "speedMin": 25.0,
+          "speedMax": 45.0,
           "gravity": [
             0.0,
-            -2.2,
+            -8.0,
             0.0
           ],
           "drag": 2.8,
           "turbulenceStrength": 2.4,
           "turbulenceScale": 2.2,
           "boundsMode": 0,
-          "renderMode": 2,
+          "renderMode": 0,
           "colorStart": [
             0.78,
             0.92,
@@ -83,7 +83,7 @@
           "sizeEndMax": 0.12,
           "lifetimeMin": 0.28,
           "lifetimeMax": 0.55,
-          "sparkleShape": 0
+          "sparkleShape": 2
         },
         "ObjectMetaData": {
           "name": "OrbExplosion",
