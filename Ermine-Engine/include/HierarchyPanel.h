@@ -82,10 +82,24 @@ namespace Ermine {
         bool NameMatchesSearch(const std::string& name, const char* search) const;
 
         /*!
+        \brief Recursively checks if an entity or any of its descendants match the search query
+        \param entity The entity to check
+        \return True if the entity or any descendant matches the search query, false otherwise
+        */
+        bool EntityMatchesSearchRecursive(EntityID entity);
+
+        /*!
+        \brief Recursively draws an entity node and its children, filtering by search query
+        \param entity The entity ID to draw
+        \param depth Current depth level for indentation (0 = root level)
+        */
+        void DrawEntityNode_Search(EntityID entity, int depth);
+
+        /*!
         \brief Builds a flat list of visible entities in display order for range selection
         \param outList Output vector to store the ordered entity list
         */
-        void BuildVisibleEntityList(std::vector<EntityID>& outList) const;
+        void BuildVisibleEntityList(std::vector<EntityID>& outList);
 
         /*!
         \brief Helper to recursively add entities to visible list in hierarchy order

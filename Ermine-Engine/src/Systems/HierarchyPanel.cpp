@@ -105,23 +105,9 @@ namespace Ermine {
         else
         {
             // Search result view (flat list)
-            auto& ecs = ECS::GetInstance();
-
-            for (EntityID id = 1; id < MAX_ENTITIES; ++id)
-            {
-                if (!ecs.IsEntityValid(id))
-                    continue;
-
-                if (!ecs.HasComponent<ObjectMetaData>(id))
-                    continue;
-
-                const auto& meta = ecs.GetComponent<ObjectMetaData>(id);
-
-                if (!NameMatchesSearch(meta.name, m_SearchBuffer))
-                    continue;
-
-                DrawEntityNode(id, 0);
-            }
+            auto rootEntities = m_ActiveScene->GetRootEntities();
+            for (auto entity : rootEntities)
+                DrawEntityNode_Search(entity, 0);           
         }
 
         // Add invisible button to catch drops on empty space
@@ -739,7 +725,200 @@ namespace Ermine {
         return lowerName.find(lowerSearch) != std::string::npos;
     }
 
-    void HierarchyPanel::BuildVisibleEntityList(std::vector<EntityID>& outList) const
+    bool HierarchyPanel::EntityMatchesSearchRecursive(EntityID entity)
+    {
+        auto& ecs = ECS::GetInstance();
+
+        if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<ObjectMetaData>(entity))
+            return false;
+
+        const auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
+
+        if (NameMatchesSearch(meta.name, m_SearchBuffer))
+            return true;
+
+        if (ecs.HasComponent<HierarchyComponent>(entity))
+        {
+            const auto& children = ecs.GetComponent<HierarchyComponent>(entity).children;
+            for (auto child : children)
+            {
+                if (EntityMatchesSearchRecursive(child))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    void HierarchyPanel::DrawEntityNode_Search(EntityID entity, int depth)
+    {
+        auto& ecs = ECS::GetInstance();
+
+        if (!ecs.IsEntityValid(entity))
+            return;
+
+        // Filter: only draw matching branches
+        if (!EntityMatchesSearchRecursive(entity))
+            return;
+
+        auto& metadata = ecs.GetComponent<ObjectMetaData>(entity);
+        bool isSelected = editor::Selection::IsSelected(entity);
+
+        // Inactive color
+        bool isInactive = !metadata.selfActive;
+        bool pushedColor = false;
+        if (isInactive)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+            pushedColor = true;
+        }
+
+        ImGui::PushID((int)entity);
+
+        // Children
+        std::vector<EntityID> children;
+        if (ecs.HasComponent<HierarchyComponent>(entity))
+            children = ecs.GetComponent<HierarchyComponent>(entity).children;
+
+        // Indent
+        float indent = static_cast<float>(depth) * m_indentPadding;
+        if (indent > 0) ImGui::Indent(indent);
+
+        // Label
+        std::string visible = metadata.name.empty() ? "Entity" : metadata.name;
+        std::string label = visible + "##" + std::to_string((uint64_t)entity);
+
+        ImGuiTreeNodeFlags nodeFlags =
+            ImGuiTreeNodeFlags_OpenOnArrow |
+            ImGuiTreeNodeFlags_SpanAvailWidth |
+            ImGuiTreeNodeFlags_FramePadding;
+
+        if (isSelected)
+            nodeFlags |= ImGuiTreeNodeFlags_Selected;
+
+        if (children.empty())
+            nodeFlags |= ImGuiTreeNodeFlags_Leaf;
+
+        // Always expand during search
+        ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+
+        bool nodeOpen = ImGui::TreeNodeEx(label.c_str(), nodeFlags);
+
+        // Scroll to selected
+        if (isSelected && m_LastScrolledEntity != entity)
+        {
+            ImGui::SetScrollHereY(0.5f);
+            m_LastScrolledEntity = entity;
+        }
+
+        // Drag & drop
+        HandleDragDrop(entity);
+
+        // Selection logic
+        if (ImGui::IsItemClicked())
+        {
+            if (ImGui::GetIO().KeyShift && m_LastClickedEntity != 0)
+            {
+                SelectRange(entity);
+            }
+            else if (ImGui::GetIO().KeyCtrl)
+            {
+                editor::Selection::Toggle(m_ActiveScene, entity);
+                m_LastClickedEntity = entity;
+            }
+            else
+            {
+                editor::Selection::SelectSingle(m_ActiveScene, entity);
+                m_LastClickedEntity = entity;
+            }
+        }
+
+        // Double click focus
+        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+        {
+            editor::Selection::SelectSingle(m_ActiveScene, entity);
+            m_LastClickedEntity = entity;
+
+            if (ecs.HasComponent<Transform>(entity))
+            {
+                auto pos = ecs.GetComponent<Transform>(entity).position;
+                editor::EditorCamera::GetInstance().Focus(pos, 2.5f);
+            }
+
+            ImGui::SetWindowFocus("Inspector");
+        }
+
+        // Context menu
+        if (ImGui::BeginPopupContextItem(("ctx##" + std::to_string((uint64_t)entity)).c_str()))
+        {
+            if (ImGui::MenuItem("Delete"))
+            {
+                auto sel = editor::Selection::All();
+
+                if (sel.empty() || !editor::Selection::IsSelected(entity))
+                {
+                    ECS::GetInstance().GetSystem<Physics>()->RemovePhysic(entity);
+                    m_ActiveScene->DestroyEntity(entity);
+                    ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+                }
+                else
+                {
+                    std::vector<EntityID> toDelete(sel.begin(), sel.end());
+                    for (auto id : toDelete)
+                    {
+                        ECS::GetInstance().GetSystem<Physics>()->RemovePhysic(id);
+                        m_ActiveScene->DestroyEntity(id);
+                    }
+                    ECS::GetInstance().GetSystem<Physics>()->UpdatePhysicList();
+                    editor::Selection::Clear(m_ActiveScene);
+                }
+
+                ImGui::CloseCurrentPopup();
+            }
+
+            if (ImGui::MenuItem("Duplicate"))
+            {
+                auto sel = editor::Selection::All();
+
+                if (sel.empty() || !editor::Selection::IsSelected(entity))
+                {
+                    DuplicateEntity(entity);
+                }
+                else
+                {
+                    std::vector<EntityID> toDuplicate(sel.begin(), sel.end());
+                    for (auto id : toDuplicate)
+                    {
+                        DuplicateEntity(id);
+                    }
+                }
+
+                ImGui::CloseCurrentPopup();
+            }
+
+            ImGui::EndPopup();
+        }
+
+        // Only draw matching children
+        if (nodeOpen)
+        {
+            for (auto child : children)
+            {
+                if (EntityMatchesSearchRecursive(child))
+                    DrawEntityNode_Search(child, depth + 1);
+            }
+            ImGui::TreePop();
+        }
+
+        if (indent > 0) ImGui::Unindent(indent);
+
+        if (pushedColor)
+            ImGui::PopStyleColor();
+
+        ImGui::PopID();
+    }
+
+    void HierarchyPanel::BuildVisibleEntityList(std::vector<EntityID>& outList)
     {
         outList.clear();
         if (!m_ActiveScene) return;
@@ -759,15 +938,10 @@ namespace Ermine {
             auto& ecs = ECS::GetInstance();
             for (EntityID id = 1; id < MAX_ENTITIES; ++id)
             {
-                if (!ecs.IsEntityValid(id))
-                    continue;
+                if (!ecs.IsEntityValid(id)) continue;
+                if (!ecs.HasComponent<ObjectMetaData>(id)) continue;
 
-                if (!ecs.HasComponent<ObjectMetaData>(id))
-                    continue;
-
-                const auto& meta = ecs.GetComponent<ObjectMetaData>(id);
-
-                if (NameMatchesSearch(meta.name, m_SearchBuffer))
+                if (NameMatchesSearch(ecs.GetComponent<ObjectMetaData>(id).name, m_SearchBuffer))
                     outList.push_back(id);
             }
         }
