@@ -29,6 +29,7 @@ namespace Ermine {
         EntityID m_PendingFocusEntity = 0;    ///< Entity waiting for inspector focus after interaction
         float m_indentPadding = 8.0f;
         EntityID m_LastClickedEntity = 0;     ///< Last clicked entity for Shift+Click range selection
+        EntityID m_LastScrolledEntity = 0;    ///< Last entity that was scrolled into view for auto-scrolling logic
 
         char m_SearchBuffer[128] = {};  ///< Buffer for entity search input
         bool m_IsSearching = false;		///< Flag indicating if search mode is active

@@ -300,10 +300,19 @@ namespace Ermine {
         if (isSelected) nodeFlags |= ImGuiTreeNodeFlags_Selected;
         if (children.empty()) nodeFlags |= ImGuiTreeNodeFlags_Leaf;
 
+        // Auto open if child is selected
+        bool hasSelectedChild = HasSelectedDescendant(entity);
+        if ((isSelected || hasSelectedChild) && !m_IsSearching)
+            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+
         bool nodeOpen = ImGui::TreeNodeEx(label.c_str(), nodeFlags);
 
-        if (isSelected && ImGui::IsWindowAppearing())
+        // Scroll to selected entity
+        if (isSelected && m_LastScrolledEntity != entity)
+        {
             ImGui::SetScrollHereY(0.5f);
+            m_LastScrolledEntity = entity;
+        }
 
         HandleDragDrop(entity);
 
