@@ -2,11 +2,12 @@
 /*!
 \file       HierarchyPanel.cpp
 \author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu
-\date       Sep 05, 2025
+\co-author  Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
+\date       Mar 23, 2026
 \brief      Hierarchy panel UI for scene entity tree management with drag-and-drop
             parenting support.
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
@@ -94,6 +95,8 @@ namespace Ermine {
 
         ImGui::Separator();
 
+        ImGui::BeginChild("HierarchyScrollRegion", ImVec2(0, 0), false);
+
         // Entity hierarchy
         if (!m_IsSearching)
         {
@@ -115,6 +118,8 @@ namespace Ermine {
         if (space.x != 0.0f && space.y != 0.0f)
             ImGui::InvisibleButton("UnparentDropZone", ImGui::GetContentRegionAvail());
         HandleUnparentDrop();
+
+        ImGui::EndChild(); // HierarchyScrollRegion
 
         // Right-click context menu
         DrawContextMenu();

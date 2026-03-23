@@ -2,11 +2,12 @@
 /*!
 \file       HierarchyPanel.h
 \author     Edwin Lee Zirui, edwinzirui.lee, 2301299, edwinzirui.lee\@digipen.edu
-\date       Sep 05, 2025
+\co-author  Lum Ko Sand, kosand.lum, 2301263, kosand.lum\@digipen.edu
+\date       Mar 23, 2026
 \brief      Declares the HierarchyPanel class which provides an ImGui-based interface
             for visualizing and manipulating the scene's entity hierarchy tree.
 
-Copyright (C) 2025 DigiPen Institute of Technology.
+Copyright (C) 2026 DigiPen Institute of Technology.
 Reproduction or disclosure of this file or its contents without the
 prior written consent of DigiPen Institute of Technology is prohibited.
 */
