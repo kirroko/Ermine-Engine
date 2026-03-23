@@ -57,7 +57,7 @@ uniform float shellPower = 1.0;
 uniform float shellAlphaClip = 0.7;
 uniform float ringIntensity = 2.0;
 
-const float ORB_SIZE_SCALE = 0.4;
+const float ORB_SIZE_SCALE = 0.55;
 const float SWIRL_RADIUS_SCALE = 1.15;
 
 const uint MAT_FLAG_ALBEDO_MAP = 1u << 0u;
