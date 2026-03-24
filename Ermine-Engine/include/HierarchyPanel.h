@@ -24,7 +24,7 @@ namespace Ermine {
     */
     class HierarchyPanel {
     private:
-        Scene* m_ActiveScene = nullptr;      ///< Pointer to the currently active scene
+        Scene* m_ActiveScene = nullptr;       ///< Pointer to the currently active scene
         bool m_IsVisible = true;              ///< Panel visibility state
         bool m_ShowInactive = false;          ///< Show inactive entities in hierarchy (grayed out)
         EntityID m_PendingFocusEntity = 0;    ///< Entity waiting for inspector focus after interaction
@@ -32,8 +32,9 @@ namespace Ermine {
         EntityID m_LastClickedEntity = 0;     ///< Last clicked entity for Shift+Click range selection
         EntityID m_LastScrolledEntity = 0;    ///< Last entity that was scrolled into view for auto-scrolling logic
 
-        char m_SearchBuffer[128] = {};  ///< Buffer for entity search input
-        bool m_IsSearching = false;		///< Flag indicating if search mode is active
+        char m_SearchBuffer[128] = {};        ///< Buffer for entity search input
+        bool m_IsSearching = false;		      ///< Flag indicating if search mode is active
+        bool m_CloseAllNodes = false;         ///< Flag to close all tree nodes
 
         // UI helper functions
         void DuplicateEntity(EntityID sourceEntity);

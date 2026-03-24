@@ -57,6 +57,13 @@ namespace Ermine {
             editor::Selection::SelectSingle(m_ActiveScene, newEntity);
             ImGui::SetWindowFocus("Inspector");
         }
+
+        ImGui::SameLine();
+
+        // Close All button to collapse all tree nodes
+        if (ImGui::Button("Collapse All"))
+            m_CloseAllNodes = true;
+
         ImGui::SameLine();
 
         EntityID primary = editor::Selection::Primary();
@@ -165,6 +172,9 @@ namespace Ermine {
                 }
             }
         }
+        
+        // Reset the flag after rendering so that nodes can be reopened in the next frame if needed
+        m_CloseAllNodes = false;
 
         ImGui::End();
     }
@@ -293,7 +303,10 @@ namespace Ermine {
 
         // Auto open if child is selected
         bool hasSelectedChild = HasSelectedDescendant(entity);
-        if ((isSelected || hasSelectedChild) && !m_IsSearching)
+
+        if(m_CloseAllNodes)
+            ImGui::SetNextItemOpen(false, ImGuiCond_Always);
+        else if ((isSelected || hasSelectedChild) && !m_IsSearching)
             ImGui::SetNextItemOpen(true, ImGuiCond_Once);
 
         bool nodeOpen = ImGui::TreeNodeEx(label.c_str(), nodeFlags);
