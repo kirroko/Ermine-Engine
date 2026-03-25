@@ -620,17 +620,13 @@ void engine::Shutdown()
 	skybox.reset();           // Destroy skybox before cubemap
 	environmentCubemap.reset(); // Destroy cubemap before AssetManager cleanup
 
-	CoUninitialize();
+	auto& ecs = ECS::GetInstance();
+	ecs.GetSystem<Physics>()->Shutdown();
+	ecs.GetSystem<NavMeshSystem>()->Shutdown();
+	ecs.GetSystem<VideoManager>()->Shutdown();
 
-	AssetManager::GetInstance().Clear();
-	ECS::GetInstance().GetSystem<Physics>()->Shutdown();
-	ECS::GetInstance().GetSystem<NavMeshSystem>()->Shutdown();
-	ECS::GetInstance().GetSystem<VideoManager>()->Shutdown();
-
-	graphics::GPUProfiler::Shutdown();
-
-#if defined(EE_EDITOR)
 	auto scriptSys = ECS::GetInstance().GetSystem<scripting::ScriptSystem>();
+#if defined(EE_EDITOR)
 	if (scriptSys && scriptSys->m_ScriptEngine)
 	{
 		scriptSys->m_ScriptEngine->StopWatchingScriptSources();
@@ -638,22 +634,17 @@ void engine::Shutdown()
 	}
 #endif
 
-	if (auto scriptSys = ECS::GetInstance().GetSystem<scripting::ScriptSystem>())
-		scriptSys->CleanupAllScripts();
+	scriptSys->CleanupAllScripts();
+	scriptSys->m_ScriptEngine->Shutdown();
 
+	graphics::GPUProfiler::Shutdown();
+	AudioSystem::Shutdown();
 	job::Shutdown();
 
 	AssetManager::GetInstance().Clear();
-	ECS::GetInstance().GetSystem<Physics>()->Shutdown();
-	ECS::GetInstance().GetSystem<NavMeshSystem>()->Shutdown();
-	ECS::GetInstance().GetSystem<VideoManager>()->Shutdown();
-	graphics::GPUProfiler::Shutdown();
+	ecs.Shutdown();
 
-	ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->m_ScriptEngine->Shutdown();
-	AudioSystem::Shutdown();
-
-	ECS::GetInstance().Shutdown();
-
+	CoUninitialize();
 	s_isInitialized = false;
 }
 
@@ -662,19 +653,12 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	if (!s_isInitialized)
 		return;
 
-	// Update FrameController
 	FrameController::BeginFrame();
 
-	// Profiler
 	graphics::GPUProfiler::BeginFrame();
 
-	// Handle shading mode toggle
-	//HandleShadingToggle(windowContext);
-
-	// Handle fullscreen toggle
 	HandleFullscreenToggle(windowContext);
 
-	// Update input states
 	Input::Update();
 
 	glfwPollEvents();
@@ -687,39 +671,40 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 	bool isPaused = UIButtonSystem::IsGamePaused();  // CHANGE THIS LINE
 	// =======================================
 
+	auto& ecs = ECS::GetInstance();
 	// Only update game logic if not paused
 	if (!isPaused)
 	{
 		// Game state update
 		while (FrameController::ShouldUpdateFixed())
 		{
-			ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->FixedUpdate();
-			ECS::GetInstance().GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());		// FSM update
-			ECS::GetInstance().GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());	// AI NavMesh Agent update
-			ECS::GetInstance().GetSystem<Physics>()->Update(FrameController::GetFixedDeltaTime());
+			ecs.GetSystem<scripting::ScriptSystem>()->FixedUpdate();
+			ecs.GetSystem<StateManager>()->Update(FrameController::GetFixedDeltaTime());		// FSM update
+			ecs.GetSystem<NavMeshAgentSystem>()->Update(FrameController::GetFixedDeltaTime());	// AI NavMesh Agent update
+			ecs.GetSystem<Physics>()->Update(FrameController::GetFixedDeltaTime());
 		}
 
 		// Other non-fixed logic
-		ECS::GetInstance().GetSystem<scripting::ScriptSystem>()->Update();									// Game logic updates transforms, forces, etc
-		ECS::GetInstance().GetSystem<HierarchySystem>()->UpdateHierarchy();									// Update hierarchy transforms first
-		ECS::GetInstance().GetSystem<GISystem>()->Update();													// Assign GI probe indices
-		ECS::GetInstance().GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());// Animation Update
-		ECS::GetInstance().GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
-		ECS::GetInstance().GetSystem<GPUParticleSystem>()->Update(FrameController::GetDeltaTime());
+		ecs.GetSystem<scripting::ScriptSystem>()->Update();									// Game logic updates transforms, forces, etc
+		ecs.GetSystem<HierarchySystem>()->UpdateHierarchy();									// Update hierarchy transforms first
+		ecs.GetSystem<GISystem>()->Update();													// Assign GI probe indices
+		ecs.GetSystem<graphics::AnimationManager>()->Update(FrameController::GetDeltaTime());// Animation Update
+		ecs.GetSystem<ParticleSystem>()->Update(FrameController::GetDeltaTime());
+		ecs.GetSystem<GPUParticleSystem>()->Update(FrameController::GetDeltaTime());
 
 		// Update video playback
-		ECS::GetInstance().GetSystem<VideoManager>()->Update(FrameController::GetDeltaTime());
+		ecs.GetSystem<VideoManager>()->Update(FrameController::GetDeltaTime());
 	}
 
 	// UI ALWAYS updates (even when paused, so pause menu works!)
-	ECS::GetInstance().GetSystem<UIButtonSystem>()->Update(FrameController::GetDeltaTime());
-	ECS::GetInstance().GetSystem<UIRenderSystem>()->Update(FrameController::GetDeltaTime());
+	ecs.GetSystem<UIButtonSystem>()->Update(FrameController::GetDeltaTime());
+	ecs.GetSystem<UIRenderSystem>()->Update(FrameController::GetDeltaTime());
 
 	// Update camera
 #if defined(EE_EDITOR)
 	if (editor::EditorGUI::isPlaying)
 	{
-		auto gameCamera = ECS::GetInstance().GetSystem<graphics::CameraSystem>();
+		auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
 		gameCamera->Update();
 	}
 	else
@@ -727,12 +712,12 @@ void engine::Update([[maybe_unused]] GLFWwindow* windowContext)
 		editor::EditorCamera::GetInstance().Update();
 	}
 #else
-	auto gameCamera = ECS::GetInstance().GetSystem<graphics::CameraSystem>();
+	auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
 	gameCamera->Update();
 #endif
 
 	// Audio always updates
-	ECS::GetInstance().GetSystem<AudioSystem>()->Update();
+	ecs.GetSystem<AudioSystem>()->Update();
 }
 
 void engine::Render(GLFWwindow* window)
