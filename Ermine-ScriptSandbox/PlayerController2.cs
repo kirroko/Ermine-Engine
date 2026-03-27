@@ -55,6 +55,9 @@ public class PlayerController2 : MonoBehaviour
     private float subtitleTimer = 0f;
     private float currentSubtitleDuration = 5f;
 
+    private GameObject bgDarken;
+    private bool isPaused = false;
+
     void Start()
     {
         GameObject camObj = GameObject.Find("Main Camera");
@@ -74,6 +77,8 @@ public class PlayerController2 : MonoBehaviour
             Console.WriteLine("Warning: No AudioComponent found on player!");
 
         Cursor.lockState = Cursor.CursorLockState.Confined;
+
+        bgDarken = GameObject.Find("BackgroundDarken");
     }
 
     void Update()
@@ -91,6 +96,7 @@ public class PlayerController2 : MonoBehaviour
 
     private void HandleInput()
     {
+        if (isPaused) return;
         move = Vector3.zero;
         movementKeyPressed = false;
 
@@ -118,7 +124,11 @@ public class PlayerController2 : MonoBehaviour
         {
             isKeyJump = true;
             isGrounded = false; // prevent double jump
-            GlobalAudio.PlaySFX("Jump");
+            
+            // Play jump sound with reverb (zero pre-delay to avoid double sound)
+            GlobalAudio.PlaySFXWithReverbSimple("Jump", wetLevel: -6.0f, decayTime: 3.5f, earlyDelay: 0.001f, lateDelay: 0.1f);
+            //GlobalAudio.PlaySFX("Jump");
+            
             Physics.Jump((ulong)gameObject.GetInstanceID(), jumpspeed);
         }
 
@@ -133,6 +143,7 @@ public class PlayerController2 : MonoBehaviour
     private void HandleLook()
     {
         if (cam == null) return;
+        if (isPaused) return;
 
         lookInput = Input.mousePositionDelta;
 
@@ -189,6 +200,8 @@ public class PlayerController2 : MonoBehaviour
         {
             if (!audioComp.isPlaying)
             {
+                // Apply reverb to footstep audio (minimal pre-delay to avoid echo)
+                audioComp.SetReverb(wetLevel: -1.0f, dryLevel: 0.0f, decayTime: 0.5f);
                 audioComp.shouldPlay = true;
                 footstepTimer = 0f;
             }
@@ -198,6 +211,7 @@ public class PlayerController2 : MonoBehaviour
     private void HandleInteract()
     {
         if (cam == null) return;
+        if (isPaused) return;
 
         interactTimer += Time.deltaTime;
 
@@ -358,8 +372,11 @@ public class PlayerController2 : MonoBehaviour
                         msg.SetActive(true);
                         hint1.SetActive(false);
                         hint2.SetActive(true);
+                        bgDarken.SetActive(true);
                         activeClueMessage = msg;
                         clueMessageTimer = 0f;
+
+                        isPaused = true;
                     }
 
                     obj.SetActive(false);
@@ -379,8 +396,11 @@ public class PlayerController2 : MonoBehaviour
                         msg.SetActive(true);
                         hint2.SetActive(false);
                         hint3.SetActive(true);
+                        bgDarken.SetActive(true);
                         activeClueMessage = msg;
                         clueMessageTimer = 0f;
+
+                        isPaused = true;
                     }
 
                     obj.SetActive(false);
@@ -396,8 +416,11 @@ public class PlayerController2 : MonoBehaviour
                     if (msg != null)
                     {
                         msg.SetActive(true);
+                        bgDarken.SetActive(true);
                         activeClueMessage = msg;
                         clueMessageTimer = 0f;
+
+                        isPaused = true;
                     }
 
                     obj.SetActive(false);
@@ -413,8 +436,11 @@ public class PlayerController2 : MonoBehaviour
                     if (msg != null)
                     {
                         msg.SetActive(true);
+                        bgDarken.SetActive(true);
                         activeClueMessage = msg;
                         clueMessageTimer = 0f;
+
+                        isPaused = true;
                     }
 
                     obj.SetActive(false);
@@ -431,8 +457,11 @@ public class PlayerController2 : MonoBehaviour
                     if (msg != null)
                     {
                         msg.SetActive(true);
+                        bgDarken.SetActive(true);
                         activeClueMessage = msg;
                         clueMessageTimer = 0f;
+
+                        isPaused = true;
                     }
 
                     obj.SetActive(false);
@@ -562,8 +591,11 @@ public class PlayerController2 : MonoBehaviour
             if (clueMessageTimer >= clueMessageDuration)
             {
                 activeClueMessage.SetActive(false);
+                bgDarken.SetActive(false);
                 activeClueMessage = null;
                 clueMessageTimer = 0f;
+
+                isPaused = false;
             }
         }
     }

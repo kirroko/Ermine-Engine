@@ -280,7 +280,7 @@
           "selfActive": false
         },
         "GlobalAudioComponent": {
-          "masterVolume": 0.4380350112915039,
+          "masterVolume": 0.09506257623434067,
           "musicVolume": 1.0,
           "sfxVolume": 1.0,
           "ambienceVolume": 1.0,
@@ -1183,7 +1183,7 @@
           "trackImage": "./Resources/Textures/UI/Audio_Bar.png",
           "fillImage": "./Resources/Textures/UI/Audio_Fill.png",
           "handleImage": "./Resources/Textures/UI/Audio_Indicator.png",
-          "value": 0.4380350112915039,
+          "value": 0.09506257623434067,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 1,
@@ -2564,8 +2564,8 @@
         "GlobalTransform": {},
         "UISliderComponent": {
           "position": [
-            0.699999988079071,
-            0.5899999737739563,
+            0.7008631825447083,
+            0.7049144506454468,
             0.0
           ],
           "size": [
@@ -2597,20 +2597,20 @@
           "trackImage": ".\\Resources/Textures/UI/Audio_Bar.png",
           "fillImage": ".\\Resources/Textures/UI/Audio_Fill.png",
           "handleImage": ".\\Resources/Textures/UI/Audio_Indicator.png",
-          "value": 0.8702718615531921,
+          "value": 0.0,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 5,
           "customTarget": "Gamma",
-          "label": "Gamma",
+          "label": "GAMMA",
           "labelColor": [
             0.0,
             0.0,
             0.0
           ],
-          "labelScale": 1.0,
+          "labelScale": 0.8999999761581421,
           "labelOffset": [
-            -0.12999999523162843,
+            -0.11999999731779099,
             0.03999999910593033
           ],
           "labelImagePath": "",
@@ -2668,12 +2668,12 @@
           "imagePath": ".\\Resources/Textures/UI/gamma_preview.png",
           "fullscreen": false,
           "position": [
-            0.7012947201728821,
-            0.4142298400402069,
+            0.699999988079071,
+            0.5075468420982361,
             0.0
           ],
-          "width": 0.5597392320632935,
-          "height": 0.27986961603164675,
+          "width": 0.5874490737915039,
+          "height": 0.29372453689575198,
           "tintColor": [
             1.0,
             1.0,
@@ -2691,7 +2691,7 @@
           "captionFontSize": 16.0,
           "captionPosition": [
             0.5899999737739563,
-            0.23999999463558198,
+            0.3199999928474426,
             0.0
           ],
           "renderOrder": 5
@@ -2816,7 +2816,7 @@
     "exposure": 1.0,
     "contrast": 1.0,
     "saturation": 1.0,
-    "gamma": 1.7556736469268799,
+    "gamma": 2.799999952316284,
     "vignetteIntensity": 0.30000001192092898,
     "vignetteRadius": 0.800000011920929,
     "vignetteCoverage": 0.0,

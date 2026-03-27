@@ -268,10 +268,9 @@ namespace Ermine
 
             // Check if this is the gamma preview image
             bool isGammaPreview = false;
-            if (ecs.HasComponent<ObjectMetaData>(entity))
+            if (const auto& meta = ecs.TryGetComponent<ObjectMetaData>(entity))
             {
-                const auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
-                if (meta.name == "Gamma Preview Image")
+                if (meta->name == "Gamma Preview Image")
                     isGammaPreview = true;
             }
 
@@ -398,43 +397,38 @@ namespace Ermine
                 continue;
 
             // Render UIHealthbarComponent
-            if (ecs.HasComponent<UIHealthbarComponent>(entity))
+            if (const auto& healthbar =  ecs.TryGetComponent<UIHealthbarComponent>(entity))
             {
-                const auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entity);
-                if (healthbar.showHealthbar)
-                    RenderHealthBarNew(healthbar);
+                if (healthbar->showHealthbar)
+                    RenderHealthBarNew(*healthbar);
             }
 
             // Render UICrosshairComponent
-            if (ecs.HasComponent<UICrosshairComponent>(entity))
+            if (const auto& crosshair = ecs.TryGetComponent<UICrosshairComponent>(entity))
             {
-                const auto& crosshair = ecs.GetComponent<UICrosshairComponent>(entity);
-                if (crosshair.showCrosshair)
-                    RenderCrosshairNew(crosshair);
+                if (crosshair->showCrosshair)
+                    RenderCrosshairNew(*crosshair);
             }
 
             // Render UISkillsComponent
-            if (ecs.HasComponent<UISkillsComponent>(entity))
+            if (const auto& skills = ecs.TryGetComponent<UISkillsComponent>(entity))
             {
-                const auto& skills = ecs.GetComponent<UISkillsComponent>(entity);
-                if (skills.showSkills)
-                    RenderSkillSlotsNew(skills, entity);
+                if (skills->showSkills)
+                    RenderSkillSlotsNew(*skills, entity);
             }
 
             // Render UIManaBarComponent
-            if (ecs.HasComponent<UIManaBarComponent>(entity))
+            if (const auto& manaBar = ecs.TryGetComponent<UIManaBarComponent>(entity))
             {
-                const auto& manaBar = ecs.GetComponent<UIManaBarComponent>(entity);
-                if (manaBar.showManaBar)
-                    RenderManaBarNew(manaBar);
+                if (manaBar->showManaBar)
+                    RenderManaBarNew(*manaBar);
             }
 
             // Render UIBookCounterComponent
-            if (ecs.HasComponent<UIBookCounterComponent>(entity))
+            if (const auto& bookCounter = ecs.TryGetComponent<UIBookCounterComponent>(entity))
             {
-                const auto& bookCounter = ecs.GetComponent<UIBookCounterComponent>(entity);
-                if (bookCounter.showBookCounter)
-                    RenderBookCounterNew(bookCounter);
+                if (bookCounter->showBookCounter)
+                    RenderBookCounterNew(*bookCounter);
             }
         }
 
@@ -450,9 +444,9 @@ namespace Ermine
                 continue;
             buttonEntities.push_back(entity);
         }
-        std::sort(buttonEntities.begin(), buttonEntities.end(), [&ecs](EntityID a, EntityID b)
+        ranges::sort(buttonEntities, [&ecs](EntityID a, EntityID b)
         {
-            return ecs.GetComponent<UIButtonComponent>(a).renderOrder < ecs.GetComponent<UIButtonComponent>(b).renderOrder;
+	        return ecs.GetComponent<UIButtonComponent>(a).renderOrder < ecs.GetComponent<UIButtonComponent>(b).renderOrder;
         });
 
         for (EntityID entity : buttonEntities)
@@ -473,9 +467,9 @@ namespace Ermine
                 continue;
             sliderEntities.push_back(entity);
         }
-        std::sort(sliderEntities.begin(), sliderEntities.end(), [&ecs](EntityID a, EntityID b)
+        ranges::sort(sliderEntities, [&ecs](EntityID a, EntityID b)
         {
-            return ecs.GetComponent<UISliderComponent>(a).renderOrder < ecs.GetComponent<UISliderComponent>(b).renderOrder;
+	        return ecs.GetComponent<UISliderComponent>(a).renderOrder < ecs.GetComponent<UISliderComponent>(b).renderOrder;
         });
 
         for (EntityID entity : sliderEntities)
@@ -514,23 +508,20 @@ namespace Ermine
             return false;
 
         // Check self active state
-        if (ecs.HasComponent<ObjectMetaData>(entity))
+        if (const auto& meta = ecs.TryGetComponent<ObjectMetaData>(entity))
         {
-            auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
-            if (!meta.selfActive)
+            if (!meta->selfActive)
                 return false;
         }
 
         // Check parent chain via HierarchyComponent
-        if (ecs.HasComponent<HierarchyComponent>(entity))
+        if (const auto& hierarchy = ecs.TryGetComponent<HierarchyComponent>(entity))
         {
-            auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
-
             // If has a valid parent, check if parent is active
-            if (hierarchy.parent != HierarchyComponent::INVALID_PARENT)
+            if (hierarchy->parent != HierarchyComponent::INVALID_PARENT)
             {
                 // Recursively check parent's active state
-                return IsEntityActiveInHierarchy(hierarchy.parent);
+                return IsEntityActiveInHierarchy(hierarchy->parent);
             }
         }
 

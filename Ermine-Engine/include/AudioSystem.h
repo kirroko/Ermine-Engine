@@ -54,7 +54,9 @@ namespace Ermine
         static void UpdateGlobalAudio(GlobalAudioComponent& globalAudio);
         static void PlayGlobalMusic(GlobalAudioComponent& globalAudio, int index);
         static void PlayGlobalSFX(GlobalAudioComponent& globalAudio, int index);
+        static void PlayGlobalSFX(GlobalAudioComponent& globalAudio, int index, bool useReverb, float wetLevel, float dryLevel, float decayTime, float earlyDelay = 0.001f, float lateDelay = 0.001f);
         static void PlayGlobalSFX(GlobalAudioComponent& globalAudio, const std::string& name);
+        static void PlayGlobalSFX(GlobalAudioComponent& globalAudio, const std::string& name, bool useReverb, float wetLevel, float dryLevel, float decayTime, float earlyDelay = 0.001f, float lateDelay = 0.001f);
         static void StopGlobalSFX(GlobalAudioComponent& globalAudio, const std::string& name);
         static void StopGlobalMusic(GlobalAudioComponent& globalAudio);
 
