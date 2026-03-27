@@ -66860,12 +66860,12 @@
         "GlobalTransform": {},
         "UISliderComponent": {
           "position": [
-            0.6800000071525574,
-            0.6399999856948853,
+            0.7008631825447083,
+            0.7049144506454468,
             0.0
           ],
           "size": [
-            0.550000011920929,
+            0.5,
             0.05000000074505806
           ],
           "trackColor": [
@@ -66888,12 +66888,12 @@
             0.8999999761581421,
             0.5
           ],
-          "trackAlpha": 0.8999999761581421,
+          "trackAlpha": 1.0,
           "handleSize": 0.03999999910593033,
           "trackImage": ".\\Resources/Textures/UI/Audio_Bar.png",
           "fillImage": ".\\Resources/Textures/UI/Audio_Fill.png",
           "handleImage": ".\\Resources/Textures/UI/Audio_Indicator.png",
-          "value": 0.5,
+          "value": 0.2598274350166321,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 5,
@@ -66904,7 +66904,7 @@
             0.0,
             0.0
           ],
-          "labelScale": 0.800000011920929,
+          "labelScale": 0.8999999761581421,
           "labelOffset": [
             -0.11999999731779099,
             0.03999999910593033
@@ -66917,13 +66917,13 @@
             0.0,
             0.0
           ],
-          "valueScale": 0.800000011920929,
+          "valueScale": 0.5,
           "valueOffset": [
-            0.12999999523162843,
+            0.10999999940395355,
             0.019999999552965165
           ],
           "valueAsPercentage": true,
-          "renderOrder": 5
+          "renderOrder": 0
         }
       }
     },
@@ -66988,6 +66988,74 @@
           "captionPosition": [
             0.5,
             0.10000000149011612,
+            0.0
+          ],
+          "renderOrder": 5
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1825,
+      "components": {
+        "IDComponent": {
+          "guid": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Gamma Preview Image",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "23fb1ed7fa7a1a4bb23361f77ff91d26",
+          "depth": 2
+        },
+        "UIImageComponent": {
+          "imagePath": ".\\Resources/Textures/UI/gamma_preview.png",
+          "fullscreen": false,
+          "position": [
+            0.699999988079071,
+            0.5075468420982361,
+            0.0
+          ],
+          "width": 0.5874490737915039,
+          "height": 0.29372453689575198,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "Adjust until the logo is barely visible",
+          "showCaption": true,
+          "captionColor": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "captionFontSize": 16.0,
+          "captionPosition": [
+            0.5899999737739563,
+            0.3199999928474426,
             0.0
           ],
           "renderOrder": 5
