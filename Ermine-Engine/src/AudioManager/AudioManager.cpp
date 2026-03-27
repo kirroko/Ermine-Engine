@@ -446,6 +446,47 @@ FMOD::System* CAudioEngine::GetCoreSystem() {
 	return sgpImplementation ? sgpImplementation->mpSystem : nullptr;
 }
 
+// Reverb DSP Functions
+FMOD::DSP* CAudioEngine::CreateReverbDSP() {
+	FMOD::DSP* reverbDSP = nullptr;
+	if (sgpImplementation && sgpImplementation->mpSystem) {
+		CAudioEngine::ErrorCheck(sgpImplementation->mpSystem->createDSPByType(FMOD_DSP_TYPE_SFXREVERB, &reverbDSP));
+	}
+	return reverbDSP;
+}
+
+void CAudioEngine::AddReverbToChannel(int nChannelId, FMOD::DSP* reverbDSP) {
+	auto tFoundIt = sgpImplementation->mChannels.find(nChannelId);
+	if (tFoundIt == sgpImplementation->mChannels.end() || !reverbDSP)
+		return;
+
+	CAudioEngine::ErrorCheck(tFoundIt->second->addDSP(0, reverbDSP));
+}
+
+void CAudioEngine::RemoveReverbFromChannel(int nChannelId) {
+	auto tFoundIt = sgpImplementation->mChannels.find(nChannelId);
+	if (tFoundIt == sgpImplementation->mChannels.end())
+		return;
+
+	// Remove DSP at index 0 (reverb)
+	FMOD::DSP* dsp = nullptr;
+	if (tFoundIt->second->getDSP(0, &dsp) == FMOD_OK && dsp) {
+		tFoundIt->second->removeDSP(dsp);
+	}
+}
+
+void CAudioEngine::SetReverbParameter(FMOD::DSP* reverbDSP, int index, float value) {
+	if (!reverbDSP)
+		return;
+	CAudioEngine::ErrorCheck(reverbDSP->setParameterFloat(index, value));
+}
+
+void CAudioEngine::RemoveReverbDSP(FMOD::DSP* reverbDSP) {
+	if (!reverbDSP)
+		return;
+	reverbDSP->release();
+}
+
 void CAudioEngine::Shutdown() {
 	delete sgpImplementation;
 }
