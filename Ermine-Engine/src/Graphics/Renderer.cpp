@@ -2518,295 +2518,16 @@ void Renderer::RebuildDrawData()
 		}
 	}
 
-	GPUProfiler::SetCulledMeshesCount(culledMeshes);
-
-	// ========== WRITE ALL DRAW DATA TO GPU BUFFERS ==========
-
-	// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
-	m_MeshManager.m_PickingStandardDrawCommandBuffer.WriteCommands(m_PickingStandardCommands, 0);
-	m_MeshManager.m_PickingStandardDrawInfoBuffer.WriteDrawInfos(m_PickingStandardInfos, 0);
-	m_MeshManager.m_PickingSkinnedDrawCommandBuffer.WriteCommands(m_PickingSkinnedCommands, 0);
-	m_MeshManager.m_PickingSkinnedDrawInfoBuffer.WriteDrawInfos(m_PickingSkinnedInfos, 0);
-
-	// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
-	m_MeshManager.m_DepthPrepassStandardDrawCommandBuffer.WriteCommands(m_DepthPrepassStandardCommands, 0);
-	m_MeshManager.m_DepthPrepassStandardDrawInfoBuffer.WriteDrawInfos(m_DepthPrepassStandardInfos, 0);
-	m_MeshManager.m_DepthPrepassSkinnedDrawCommandBuffer.WriteCommands(m_DepthPrepassSkinnedCommands, 0);
-	m_MeshManager.m_DepthPrepassSkinnedDrawInfoBuffer.WriteDrawInfos(m_DepthPrepassSkinnedInfos, 0);
-
-	// PASS 3: GEOMETRY PASS - Opaque default shader only (deferred lighting)
-	// Extract commands and infos from Items
-	std::vector<DrawElementsIndirectCommand> geometryStandardCommands;
-	std::vector<DrawInfo> geometryStandardInfos;
-	geometryStandardCommands.reserve(m_GeometryStandardItems.size());
-	geometryStandardInfos.reserve(m_GeometryStandardItems.size());
-	for (const auto& item : m_GeometryStandardItems) {
-		geometryStandardCommands.push_back(item.command);
-		geometryStandardInfos.push_back(item.info);
-	}
-
-	std::vector<DrawElementsIndirectCommand> geometrySkinnedCommands;
-	std::vector<DrawInfo> geometrySkinnedInfos;
-	geometrySkinnedCommands.reserve(m_GeometrySkinnedItems.size());
-	geometrySkinnedInfos.reserve(m_GeometrySkinnedItems.size());
-	for (const auto& item : m_GeometrySkinnedItems) {
-		geometrySkinnedCommands.push_back(item.command);
-		geometrySkinnedInfos.push_back(item.info);
-	}
-
-	m_MeshManager.m_GeometryStandardDrawCommandBuffer.WriteCommands(geometryStandardCommands, 0);
-	m_MeshManager.m_GeometryStandardDrawInfoBuffer.WriteDrawInfos(geometryStandardInfos, 0);
-	m_MeshManager.m_GeometrySkinnedDrawCommandBuffer.WriteCommands(geometrySkinnedCommands, 0);
-	m_MeshManager.m_GeometrySkinnedDrawInfoBuffer.WriteDrawInfos(geometrySkinnedInfos, 0);
-
-	// PASS 4: FORWARD PASS - Transparent default shaders
-	// Extract commands and infos from Items
-	std::vector<DrawElementsIndirectCommand> forwardTransparentDefaultStandardCommands;
-	std::vector<DrawInfo> forwardTransparentDefaultStandardInfos;
-	forwardTransparentDefaultStandardCommands.reserve(m_ForwardTransparentDefaultStandardItems.size());
-	forwardTransparentDefaultStandardInfos.reserve(m_ForwardTransparentDefaultStandardItems.size());
-	for (const auto& item : m_ForwardTransparentDefaultStandardItems) {
-		forwardTransparentDefaultStandardCommands.push_back(item.command);
-		forwardTransparentDefaultStandardInfos.push_back(item.info);
-	}
-
-	std::vector<DrawElementsIndirectCommand> forwardTransparentDefaultSkinnedCommands;
-	std::vector<DrawInfo> forwardTransparentDefaultSkinnedInfos;
-	forwardTransparentDefaultSkinnedCommands.reserve(m_ForwardTransparentDefaultSkinnedItems.size());
-	forwardTransparentDefaultSkinnedInfos.reserve(m_ForwardTransparentDefaultSkinnedItems.size());
-	for (const auto& item : m_ForwardTransparentDefaultSkinnedItems) {
-		forwardTransparentDefaultSkinnedCommands.push_back(item.command);
-		forwardTransparentDefaultSkinnedInfos.push_back(item.info);
-	}
-
-	m_MeshManager.m_ForwardStandardDrawCommandBuffer.WriteCommands(forwardTransparentDefaultStandardCommands, 0);
-	m_MeshManager.m_ForwardStandardDrawInfoBuffer.WriteDrawInfos(forwardTransparentDefaultStandardInfos, 0);
-	m_MeshManager.m_ForwardSkinnedDrawCommandBuffer.WriteCommands(forwardTransparentDefaultSkinnedCommands, 0);
-	m_MeshManager.m_ForwardSkinnedDrawInfoBuffer.WriteDrawInfos(forwardTransparentDefaultSkinnedInfos, 0);
-
-	// Upload opaque custom shader buffers to GPU
-	// FULL REBUILD: Always use glBufferData (not per-frame, ensures clean state)
-	if (!m_ForwardOpaqueCustomStandardItems.empty()) {
-		// Extract commands and infos from items
-		std::vector<DrawElementsIndirectCommand> commands;
-		std::vector<DrawInfo> infos;
-		commands.reserve(m_ForwardOpaqueCustomStandardItems.size());
-		infos.reserve(m_ForwardOpaqueCustomStandardItems.size());
-
-		for (const auto& item : m_ForwardOpaqueCustomStandardItems) {
-			commands.push_back(item.command);
-			infos.push_back(item.info);
-		}
-
-		// Create buffers if needed
-		if (m_ForwardOpaqueCustomStandardCmdBuffer == 0) {
-			glGenBuffers(1, &m_ForwardOpaqueCustomStandardCmdBuffer);
-			glGenBuffers(1, &m_ForwardOpaqueCustomStandardInfoBuffer);
-		}
-
-		// Upload command buffer - always use glBufferData for full rebuild
-		size_t cmdSize = commands.size();
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomStandardCmdBuffer);
-		glBufferData(GL_DRAW_INDIRECT_BUFFER,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardOpaqueCustomStandardCmdBufferCapacity = cmdSize;
-
-		// Upload draw info buffer - always use glBufferData for full rebuild
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardOpaqueCustomStandardInfoBuffer);
-		glBufferData(GL_SHADER_STORAGE_BUFFER,
-			cmdSize * sizeof(DrawInfo),
-			infos.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardOpaqueCustomStandardInfoBufferCapacity = cmdSize;
-
-		// Track actual uploaded count (what's currently on GPU)
-		m_ForwardOpaqueCustomStandardUploadedCount = cmdSize;
-	}
-	else {
-		// No data to upload - reset uploaded count
-		m_ForwardOpaqueCustomStandardUploadedCount = 0;
-	}
-
-	if (!m_ForwardOpaqueCustomSkinnedItems.empty()) {
-		// Extract commands and infos from items
-		std::vector<DrawElementsIndirectCommand> commands;
-		std::vector<DrawInfo> infos;
-		commands.reserve(m_ForwardOpaqueCustomSkinnedItems.size());
-		infos.reserve(m_ForwardOpaqueCustomSkinnedItems.size());
-
-		for (const auto& item : m_ForwardOpaqueCustomSkinnedItems) {
-			commands.push_back(item.command);
-			infos.push_back(item.info);
-		}
-
-		// Create buffers if needed
-		if (m_ForwardOpaqueCustomSkinnedCmdBuffer == 0) {
-			glGenBuffers(1, &m_ForwardOpaqueCustomSkinnedCmdBuffer);
-			glGenBuffers(1, &m_ForwardOpaqueCustomSkinnedInfoBuffer);
-		}
-
-		// Upload command buffer - always use glBufferData for full rebuild
-		size_t cmdSize = commands.size();
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomSkinnedCmdBuffer);
-		glBufferData(GL_DRAW_INDIRECT_BUFFER,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardOpaqueCustomSkinnedCmdBufferCapacity = cmdSize;
-
-		// Upload draw info buffer - always use glBufferData for full rebuild
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardOpaqueCustomSkinnedInfoBuffer);
-		glBufferData(GL_SHADER_STORAGE_BUFFER,
-			cmdSize * sizeof(DrawInfo),
-			infos.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardOpaqueCustomSkinnedInfoBufferCapacity = cmdSize;
-
-		// Track actual uploaded count (what's currently on GPU)
-		m_ForwardOpaqueCustomSkinnedUploadedCount = cmdSize;
-	}
-	else {
-		// No data to upload - reset uploaded count
-		m_ForwardOpaqueCustomSkinnedUploadedCount = 0;
-	}
-
-	// Upload transparent custom shader buffers to GPU
-	if (!m_ForwardTransparentCustomStandardItems.empty()) {
-		// Extract commands and infos from items
-		std::vector<DrawElementsIndirectCommand> commands;
-		std::vector<DrawInfo> infos;
-		commands.reserve(m_ForwardTransparentCustomStandardItems.size());
-		infos.reserve(m_ForwardTransparentCustomStandardItems.size());
-
-		for (const auto& item : m_ForwardTransparentCustomStandardItems) {
-			commands.push_back(item.command);
-			infos.push_back(item.info);
-		}
-
-		// Create buffers if needed
-		if (m_ForwardTransparentCustomStandardCmdBuffer == 0) {
-			glGenBuffers(1, &m_ForwardTransparentCustomStandardCmdBuffer);
-			glGenBuffers(1, &m_ForwardTransparentCustomStandardInfoBuffer);
-		}
-
-		// Upload command buffer - always use glBufferData for full rebuild
-		size_t cmdSize = commands.size();
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
-		glBufferData(GL_DRAW_INDIRECT_BUFFER,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardTransparentCustomStandardCmdBufferCapacity = cmdSize;
-
-		// Upload draw info buffer - always use glBufferData for full rebuild
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardTransparentCustomStandardInfoBuffer);
-		glBufferData(GL_SHADER_STORAGE_BUFFER,
-			cmdSize * sizeof(DrawInfo),
-			infos.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardTransparentCustomStandardInfoBufferCapacity = cmdSize;
-
-		// Track actual uploaded count (what's currently on GPU)
-		m_ForwardTransparentCustomStandardUploadedCount = cmdSize;
-	}
-	else {
-		// No data to upload - reset uploaded count
-		m_ForwardTransparentCustomStandardUploadedCount = 0;
-	}
-
-	if (!m_ForwardTransparentCustomSkinnedItems.empty()) {
-		// Extract commands and infos from items
-		std::vector<DrawElementsIndirectCommand> commands;
-		std::vector<DrawInfo> infos;
-		commands.reserve(m_ForwardTransparentCustomSkinnedItems.size());
-		infos.reserve(m_ForwardTransparentCustomSkinnedItems.size());
-
-		for (const auto& item : m_ForwardTransparentCustomSkinnedItems) {
-			commands.push_back(item.command);
-			infos.push_back(item.info);
-		}
-
-		// Create buffers if needed
-		if (m_ForwardTransparentCustomSkinnedCmdBuffer == 0) {
-			glGenBuffers(1, &m_ForwardTransparentCustomSkinnedCmdBuffer);
-			glGenBuffers(1, &m_ForwardTransparentCustomSkinnedInfoBuffer);
-		}
-
-		// Upload command buffer - always use glBufferData for full rebuild
-		size_t cmdSize = commands.size();
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
-		glBufferData(GL_DRAW_INDIRECT_BUFFER,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardTransparentCustomSkinnedCmdBufferCapacity = cmdSize;
-
-		// Upload draw info buffer - always use glBufferData for full rebuild
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardTransparentCustomSkinnedInfoBuffer);
-		glBufferData(GL_SHADER_STORAGE_BUFFER,
-			cmdSize * sizeof(DrawInfo),
-			infos.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardTransparentCustomSkinnedInfoBufferCapacity = cmdSize;
-
-		// Track actual uploaded count (what's currently on GPU)
-		m_ForwardTransparentCustomSkinnedUploadedCount = cmdSize;
-	}
-	else {
-		// No data to upload - reset uploaded count
-		m_ForwardTransparentCustomSkinnedUploadedCount = 0;
-	}
-
-	// Unbind buffers
-	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-	// PASS 5: SHADOW PASS - ALL geometry with castsShadows=true (instanced for cascaded shadow maps)
-	//      No need to merge from geometry/forward passes - they're already included
-
-	std::vector<DrawElementsIndirectCommand> shadowStandardCommands;
-	shadowStandardCommands.reserve(m_ShadowStandardCommands.size());
-
-	// Set instance count for cascaded shadow maps
-	for (const auto& cmd : m_ShadowStandardCommands) {
-		DrawElementsIndirectCommand shadowCmd = cmd;
-		shadowCmd.instanceCount = m_TotalShadowInstances;
-		shadowStandardCommands.push_back(shadowCmd);
-	}
-
-	std::vector<DrawElementsIndirectCommand> shadowSkinnedCommands;
-	shadowSkinnedCommands.reserve(m_ShadowSkinnedCommands.size());
-
-	// Set instance count for cascaded shadow maps
-	for (const auto& cmd : m_ShadowSkinnedCommands) {
-		DrawElementsIndirectCommand shadowCmd = cmd;
-		shadowCmd.instanceCount = m_TotalShadowInstances;
-		shadowSkinnedCommands.push_back(shadowCmd);
-	}
-
-	// Write shadow buffers (infos are already correct, just need instanced commands)
-	m_MeshManager.m_ShadowStandardDrawCommandBuffer.WriteCommands(shadowStandardCommands, 0);
-	m_MeshManager.m_ShadowStandardDrawInfoBuffer.WriteDrawInfos(m_ShadowStandardInfos, 0);
-	m_MeshManager.m_ShadowSkinnedDrawCommandBuffer.WriteCommands(shadowSkinnedCommands, 0);
-	m_MeshManager.m_ShadowSkinnedDrawInfoBuffer.WriteDrawInfos(m_ShadowSkinnedInfos, 0);
-
-	// ========== SORTING ==========
-	// Sort opaque custom shaders by shader pointer (for batching, minimize state changes)
-	// NOTE: This doesn't require camera position, only shader pointer comparison
-	SortOpaqueCustomShadersByShader();
-
-	// Transparent sorting happens later during RenderGeometryPass when view matrix is available
-	// (Transparent sorting requires camera position calculated from view matrix)
-
 	// ========== UPDATE DIRTY TRACKING HASHES ==========
 	// Update entity list hash for next frame's comparison
 	m_LastEntityListHash = CalculateEntityListHash();
 
 	// Clear full rebuild flag (will be set again if major change detected)
 	m_DrawDataNeedsFullRebuild = false;
-	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_COMMAND_BARRIER_BIT);
+
+	// Re-run the stable fast path immediately so the rendered frame uses the same
+	// packing/update path as subsequent frames.
+	UpdateDrawData();
 }
 
 /**
@@ -3329,6 +3050,11 @@ void Renderer::UpdateDrawData()
 			infos.push_back(item.info);
 		}
 
+		if (m_ForwardOpaqueCustomStandardCmdBuffer == 0) {
+			glGenBuffers(1, &m_ForwardOpaqueCustomStandardCmdBuffer);
+			glGenBuffers(1, &m_ForwardOpaqueCustomStandardInfoBuffer);
+		}
+
 		size_t cmdSize = commands.size();
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomStandardCmdBuffer);
 		if (cmdSize > m_ForwardOpaqueCustomStandardCmdBufferCapacity) {
@@ -3374,6 +3100,11 @@ void Renderer::UpdateDrawData()
 		for (const auto& item : m_ForwardOpaqueCustomSkinnedItems) {
 			commands.push_back(item.command);
 			infos.push_back(item.info);
+		}
+
+		if (m_ForwardOpaqueCustomSkinnedCmdBuffer == 0) {
+			glGenBuffers(1, &m_ForwardOpaqueCustomSkinnedCmdBuffer);
+			glGenBuffers(1, &m_ForwardOpaqueCustomSkinnedInfoBuffer);
 		}
 
 		size_t cmdSize = commands.size();
@@ -3423,6 +3154,11 @@ void Renderer::UpdateDrawData()
 			infos.push_back(item.info);
 		}
 
+		if (m_ForwardTransparentCustomStandardCmdBuffer == 0) {
+			glGenBuffers(1, &m_ForwardTransparentCustomStandardCmdBuffer);
+			glGenBuffers(1, &m_ForwardTransparentCustomStandardInfoBuffer);
+		}
+
 		size_t cmdSize = commands.size();
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
 		if (cmdSize > m_ForwardTransparentCustomStandardCmdBufferCapacity) {
@@ -3468,6 +3204,11 @@ void Renderer::UpdateDrawData()
 		for (const auto& item : m_ForwardTransparentCustomSkinnedItems) {
 			commands.push_back(item.command);
 			infos.push_back(item.info);
+		}
+
+		if (m_ForwardTransparentCustomSkinnedCmdBuffer == 0) {
+			glGenBuffers(1, &m_ForwardTransparentCustomSkinnedCmdBuffer);
+			glGenBuffers(1, &m_ForwardTransparentCustomSkinnedInfoBuffer);
 		}
 
 		size_t cmdSize = commands.size();
@@ -4636,7 +4377,6 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 	// Upload to SSBO
 	EnsureLightsSSBO(lights.size());
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsSSBO);
-	BindLightsSSBO();
 
 	glm::vec4 count(static_cast<float>(lights.size()), 0.0f, 0.0f, 0.0f);
 	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::vec4), &count);
