@@ -24,7 +24,7 @@ public class Move : MonoBehaviour
     //private bool jumping = false;
     private bool insideJumpArea = false;
     private ulong jumpLinkEntityID = 0;
-    public float jumpCooldown = 3.0f;
+    public float jumpCooldown = 10.0f;
     private float jumpCooldownTimer = 0.0f;
 
     public string playerName = "Player";
@@ -57,6 +57,13 @@ public class Move : MonoBehaviour
     // STUN FEEDBACK
     private GameObject stunVFX;
     private string stunPrefabPath = "../Resources/Prefabs/EnemyStunSpark.prefab";
+
+    private bool isJumpingAnim = false;
+    private bool isResting = false;
+    private float jumpTimer = 0f;
+    public float jumpDuration = 1.2f; // matches your animation
+    public float restDuration = 2.0f;
+    private float restTimer = 0f;
 
     private void CachePlayerIfNeeded()
     {
@@ -237,7 +244,7 @@ public class Move : MonoBehaviour
         if (anim != null)
             anim.SetBool("IsMoving", true);
 
-        if (HasLineOfSightToPlayer())
+        if (!isJumpingAnim && !isResting && HasLineOfSightToPlayer())
         {
             StateMachine.RequestNextState(entityID);
             return;
@@ -245,8 +252,43 @@ public class Move : MonoBehaviour
 
         if (insideJumpArea && jumpCooldownTimer <= 0.0f && turnTimer <= 0f)
         {
+            if (anim != null)
+                anim.SetBool("IsGrounded", false);
+
+            isJumpingAnim = true;
+            jumpTimer = jumpDuration;
             NavAgent.StartJump(entityID, jumpLinkEntityID);
             jumpCooldownTimer = jumpCooldown;
+            return;
+        }
+
+        if (isJumpingAnim)
+        {
+            jumpTimer -= Time.deltaTime;
+
+            if (jumpTimer <= 0f)
+            {
+                if (anim != null)
+                    anim.SetBool("IsGrounded", true); // LAND
+
+                isJumpingAnim = false;
+                restTimer = restDuration;
+                isResting = true;
+            }
+        }
+
+        if (isResting)
+        {
+            if (anim != null)
+                anim.SetBool("IsMoving", false);
+
+            restTimer -= Time.deltaTime;
+
+            if (restTimer <= 0f)
+            {
+                isResting = false;
+            }
+            NavAgent.SetDestination(entityID, transform.position);
             return;
         }
 
