@@ -1554,6 +1554,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 
 	// Pass previous frame's view-projection for velocity buffer computation
 	m_GBufferShader->SetUniformMatrix4fv("u_PreviousViewProjection", glm::value_ptr(m_PreviousViewProjectionMatrix));
+	m_GBufferShader->SetUniform1f("u_Time", m_ElapsedTime);
 
 	// Calculate and pass normal matrix for view (mat3 extracted from view matrix)
 	// Reuse glmView calculated above for camera position
@@ -1948,7 +1949,7 @@ void Renderer::RebuildDrawData()
 			info.materialIndex = materialIndex;
 			info.aabbMax = glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z);
 			info.entityID = static_cast<uint32_t>(entity);
-			info.flags = 0; // Primitives: no skinning, no camera attachment
+			info.flags = materialComponent.flickerEmissive ? FLAG_FLICKER_EMISSIVE : 0; // Primitives: no skinning, no camera attachment
 			info.boneTransformOffset = 0;
 			info._pad0 = 0;
 			info._pad1 = 0;
@@ -1971,6 +1972,8 @@ void Renderer::RebuildDrawData()
 			cacheItem.hasCustomShader = isCustomShader;
 			cacheItem.useSkinning = false; // Primitives never use skinning
 			cacheItem.hasSkinningData = false;
+			cacheItem.isCameraAttached = false;
+			cacheItem.flickerEmissive = materialComponent.flickerEmissive;
 			cacheItem.boneOffset = 0;
 			m_CachedDrawItems.push_back(cacheItem);
 
@@ -2093,6 +2096,11 @@ void Renderer::RebuildDrawData()
 				// Skip this mesh if no material found
 				if (!material) continue;
 
+				bool flickerEmissive = false;
+				if (materialEntity != 0 && ecs.HasComponent<Ermine::Material>(materialEntity)) {
+					flickerEmissive = ecs.GetComponent<Ermine::Material>(materialEntity).flickerEmissive;
+				}
+
 				uint32_t materialIndex = material->GetMaterialIndex();
 
 				// Determine which pass this mesh belongs to
@@ -2177,7 +2185,13 @@ void Renderer::RebuildDrawData()
 				}
 
 				// Build flags for this draw
-				info.flags = isCameraAttached ? FLAG_CAMERA_ATTACHED : 0;
+				info.flags = 0;
+				if (isCameraAttached) {
+					info.flags |= FLAG_CAMERA_ATTACHED;
+				}
+				if (flickerEmissive) {
+					info.flags |= FLAG_FLICKER_EMISSIVE;
+				}
 				info.boneTransformOffset = 0;
 				info._pad0 = 0;
 				info._pad1 = 0;
@@ -2201,6 +2215,7 @@ void Renderer::RebuildDrawData()
 				cacheItem.useSkinning = false; // Static models never use skinning
 				cacheItem.hasSkinningData = false;
 				cacheItem.isCameraAttached = isCameraAttached; // Cache camera-attachment for fast path
+				cacheItem.flickerEmissive = flickerEmissive;
 				cacheItem.boneOffset = 0;
 				m_CachedDrawItems.push_back(cacheItem);
 
@@ -2339,6 +2354,11 @@ void Renderer::RebuildDrawData()
 				// Skip this mesh if no material found
 				if (!meshMaterial) continue;
 
+				bool flickerEmissive = false;
+				if (materialEntity != 0 && ecs.HasComponent<Ermine::Material>(materialEntity)) {
+					flickerEmissive = ecs.GetComponent<Ermine::Material>(materialEntity).flickerEmissive;
+				}
+
 				// Determine material properties for this mesh
 				uint32_t materialIndex = meshMaterial->GetMaterialIndex();
 				bool isTransparent = IsTransparentMaterial(meshMaterial);
@@ -2427,10 +2447,14 @@ void Renderer::RebuildDrawData()
 				{
 					info.flags |= FLAG_CAMERA_ATTACHED;
 				}
+				if (flickerEmissive)
+				{
+					info.flags |= FLAG_FLICKER_EMISSIVE;
+				}
 
 				info.boneTransformOffset = boneOffset;
 				info._pad0 = 0;
-			info._pad1 = 0;
+				info._pad1 = 0;
 
 				// Cache this draw item for fast path updates - store complete material structure
 				CachedDrawItem cacheItem;
@@ -2453,6 +2477,7 @@ void Renderer::RebuildDrawData()
 					mesh.boneAabbValid.begin(), mesh.boneAabbValid.end(),
 					[](uint8_t v) { return v != 0; });
 				cacheItem.isCameraAttached = isCameraAttached; // Cache camera-attachment for fast path
+				cacheItem.flickerEmissive = flickerEmissive;
 				cacheItem.boneOffset = boneOffset;
 				m_CachedDrawItems.push_back(cacheItem);
 
@@ -2771,6 +2796,10 @@ void Renderer::UpdateDrawData()
 		if (cachedItem.isCameraAttached)
 		{
 			info.flags |= FLAG_CAMERA_ATTACHED;
+		}
+		if (cachedItem.flickerEmissive)
+		{
+			info.flags |= FLAG_FLICKER_EMISSIVE;
 		}
 
 		info.boneTransformOffset = cachedItem.boneOffset;

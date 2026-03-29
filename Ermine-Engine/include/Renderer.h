@@ -1306,6 +1306,7 @@ namespace Ermine::graphics
             bool useSkinning;              // Skinning flag (affects VAO selection)
             bool hasSkinningData;          // Mesh has valid bone influences
             bool isCameraAttached;         // Camera-attached flag (no motion blur)
+            bool flickerEmissive;          // Enable emissive flicker in the g-buffer pass
             uint32_t boneOffset;           // Bone transform offset (skinned only)
         };
         std::vector<CachedDrawItem> m_CachedDrawItems; // Cached draw items for fast updates
