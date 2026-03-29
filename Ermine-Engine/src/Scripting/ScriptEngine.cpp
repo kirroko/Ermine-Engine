@@ -2764,7 +2764,7 @@ namespace
 	static void icall_Physics_MoveQuat(uint64_t entityID, Ermine::Vec3 pos, Quaternion q)
 	{
 		auto physics = ECS::GetInstance().GetSystem<Physics>();
-		physics->Move((EntityID)entityID, pos, q);
+		physics->MoveQuat((EntityID)entityID, pos, q);
 	}
 	static void icall_Physics_RemovePhysic(uint64_t entityID)
 	{
@@ -2816,6 +2816,15 @@ namespace
 
 		const auto& lightobj = ecs.GetComponent<Light>(entityID);
 		return lightobj.intensity;
+	}
+
+	static void icall_Physics_IgnoreCollision(uint64_t bodyA, uint64_t bodyB, bool ignore)
+	{
+		auto physics = Ermine::ECS::GetInstance().GetSystem<Ermine::Physics>();
+		if (!physics)
+			return;
+
+		physics->IgnoreCollision(bodyA, bodyB, ignore);
 	}
 
 #pragma endregion
@@ -4345,6 +4354,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.Physics::HasPhysicComp", (const void*)icall_Physics_HasPhysicComp);
 	mono_add_internal_call("ErmineEngine.Physics::Internal_SetLightValue",(const void*)icall_physics_set_light_value);
 	mono_add_internal_call("ErmineEngine.Physics::Internal_GetLightValue",(const void*)icall_physics_get_light_value);
+	mono_add_internal_call("ErmineEngine.Physics::IgnoreCollision", (const void*)icall_Physics_IgnoreCollision);
 #pragma endregion
 
 #pragma region Cursor ICalls

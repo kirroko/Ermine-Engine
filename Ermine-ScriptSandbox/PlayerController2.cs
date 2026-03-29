@@ -18,9 +18,9 @@ public class PlayerController2 : MonoBehaviour
 
     public float crouchLerpSpeed = 6f;
 
-    private bool isGrounded = true;
+    public bool isGrounded = true;
     private bool isCrouching = false;
-    private bool isKeyJump = false;
+    public bool isKeyJump = false;
 
     private float xRotation = 0f;
     public float camDefaultY = 4.5f;
@@ -57,6 +57,10 @@ public class PlayerController2 : MonoBehaviour
 
     private GameObject bgDarken;
     private bool isPaused = false;
+    private ulong playercol;
+    public float gravity = -9;
+    private float verticalVelocity = 0.0f;
+    private float groundedY = 0.0f;
 
     void Start()
     {
@@ -104,36 +108,47 @@ public class PlayerController2 : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.S)) { move += -transform.forward; movementKeyPressed = true; }
         if (Input.GetKeyDown(KeyCode.A)) { move += transform.right; movementKeyPressed = true; }
         if (Input.GetKeyDown(KeyCode.D)) { move += -transform.right; movementKeyPressed = true; }
+
         if (Input.GetKeyDown(KeyCode.LeftShift))
-        {
-            moveSpeed = sprintSpeed; // Sprint while holding
-            //Need to speed up walk animaiton
-        }
+            moveSpeed = sprintSpeed;
         else
-        {
             moveSpeed = walkSpeed;
-        }
 
         if (move.SqrMagnitude > 0f)
             move = move.normalized * moveSpeed * Time.deltaTime;
 
         Vector3 newPos = transform.position + new Vector3(move.x, 0, move.z);
+        Physics.SetPosition((ulong)gameObject.GetInstanceID(), newPos);
+        Physics.SetPosition(playercol, newPos);
 
-        // Request jump
-        if (isGrounded == true && Input.GetKeyDown(KeyCode.Space) && !isKeyJump)
+        if (isGrounded)
+        {
+            groundedY = transform.position.y;
+        }
+
+        if (isGrounded && Input.GetKeyDown(KeyCode.Space) && !isKeyJump)
         {
             isKeyJump = true;
-            isGrounded = false; // prevent double jump
+            isGrounded = false;
+            verticalVelocity = jumpspeed;
             GlobalAudio.PlaySFX("Jump");
-            Physics.Jump((ulong)gameObject.GetInstanceID(), jumpspeed);
+        }
+
+        if (!isGrounded)
+        {
+            verticalVelocity += gravity * Time.deltaTime;
+            newPos.y = transform.position.y + verticalVelocity * Time.deltaTime;
+        }
+        else
+        {
+            verticalVelocity = 0.0f;
+            newPos.y = groundedY;
+            isKeyJump = false;
         }
 
         transform.position = newPos;
-
-        // Sync physics collider
         Physics.SetPosition((ulong)gameObject.GetInstanceID(), newPos);
-
-        
+        Physics.SetPosition(playercol, newPos);
     }
 
     private void HandleLook()
@@ -149,6 +164,7 @@ public class PlayerController2 : MonoBehaviour
         // rotate player horizontally
         transform.Rotate(Vector3.up * mouseX);
         Physics.SetRotationQuat((ulong)gameObject.GetInstanceID(), transform.rotation);
+        Physics.SetRotationQuat(playercol, transform.rotation);
 
         // clamp vertical look
         xRotation -= mouseY;
@@ -631,26 +647,26 @@ public class PlayerController2 : MonoBehaviour
         ShowSubtitle(voiceName, duration);
     }
 
-    void OnCollisionEnter(Collision col)
-    {
-        if (col.gameObject.name.Contains("floor") || col.gameObject.name.Contains("Rotating"))
-        {
-            isGrounded = true;
-            isKeyJump = false;
-        }
-    }
-    void OnCollisionStay(Collision col)
-    {
-        if (col.gameObject.name.Contains("floor") || col.gameObject.name.Contains("Rotating"))
-        {
-            isGrounded = true;
-        }
-    }
-    void OnCollisionExit(Collision col)
-    {
-        if (col.gameObject.name.Contains("floor") || col.gameObject.name.Contains("Rotating"))
-        {
-            isGrounded = false;
-        }
-    }
+    //void OnCollisionEnter(Collision col)
+    //{
+    //    if (col.gameObject.name.Contains("floor") || col.gameObject.name.Contains("Rotating"))
+    //    {
+    //        isGrounded = true;
+    //        isKeyJump = false;
+    //    }
+    //}
+    //void OnCollisionStay(Collision col)
+    //{
+    //    if (col.gameObject.name.Contains("floor") || col.gameObject.name.Contains("Rotating"))
+    //    {
+    //        isGrounded = true;
+    //    }
+    //}
+    //void OnCollisionExit(Collision col)
+    //{
+    //    if (col.gameObject.name.Contains("floor") || col.gameObject.name.Contains("Rotating"))
+    //    {
+    //        isGrounded = false;
+    //    }
+    //}
 }

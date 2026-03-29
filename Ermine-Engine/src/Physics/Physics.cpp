@@ -36,6 +36,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 
 #include "EditorGUI.h"
 #include "HierarchySystem.h"
+#include "FrameController.h"
 
 using namespace std;
 namespace Ermine
@@ -116,7 +117,15 @@ namespace Ermine
 		// Called to validate a potential collision
 		virtual ValidateResult OnContactValidate(const Body& inBody1, const Body& inBody2, RVec3Arg, const CollideShapeResult&) override
 		{
-			(void)inBody1; (void)inBody2;
+			auto physics = ECS::GetInstance().GetSystem<Physics>();
+
+			uint64_t key = physics->MakePairKey(inBody1.GetID(), inBody2.GetID());
+
+			if (physics->mIgnorePairs.find(key) != physics->mIgnorePairs.end())
+			{
+				return ValidateResult::RejectAllContactsForThisBodyPair;
+			}
+
 			return ValidateResult::AcceptAllContactsForThisBodyPair;
 		}
 
@@ -876,10 +885,23 @@ namespace Ermine
 				motionType = JPH::EMotionType::Static;
 			}
 
-			ObjectLayer layer =
-				(motionType == JPH::EMotionType::Dynamic)
-				? Layers::MOVING
-				: Layers::NON_MOVING;
+			ObjectLayer layer;
+
+			switch (motionType)
+			{
+			case JPH::EMotionType::Static:
+				layer = Layers::NON_MOVING;
+				break;
+
+			case JPH::EMotionType::Kinematic:
+			case JPH::EMotionType::Dynamic:
+				layer = Layers::MOVING;
+				break;
+
+			default:
+				layer = Layers::MOVING;
+				break;
+			}
 
 			// ---------- world transform ----------
 			auto hierarchy = ecs.GetSystem<HierarchySystem>();
@@ -1308,15 +1330,53 @@ namespace Ermine
 	***************************************************************************/
 	void Physics::SetPosition(EntityID ID, Ermine::Vec3 position)
 	{
+		auto& ecs = ECS::GetInstance();
+
+		// entity valid?
+		if (!ecs.IsEntityValid(ID))
+		{
+			EE_CORE_WARN("[Physics::SetPosition] Invalid EntityID: {}", ID);
+			return;
+		}
+
+		// has physics component?
+		if (!ecs.HasComponent<PhysicComponent>(ID))
+		{
+			EE_CORE_WARN("[Physics::SetPosition] Entity {} has no PhysicComponent", ID);
+			return;
+		}
+
+		auto bodyID = GetBodyID(ID);
+
+		// valid body?
+		if (bodyID.IsInvalid())
+		{
+			EE_CORE_WARN("[Physics::SetPosition] Entity {} has invalid BodyID", ID);
+			return;
+		}
+
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
 
-		auto bodyPos = ECS::GetInstance().GetComponent<PhysicComponent>(ID).colliderPivot;
+		// body actually exists in physics world?
+		if (!bodyInterface.IsAdded(bodyID))
+		{
+			EE_CORE_WARN("[Physics::SetPosition] Body for Entity {} is not added to physics world", ID);
+			return;
+		}
+
+		auto& phys = ecs.GetComponent<PhysicComponent>(ID);
+		auto bodyPos = phys.colliderPivot;
 
 		bodyInterface.SetPositionAndRotation(
-			GetBodyID(ID),
-			JPH::Vec3(position.x + bodyPos.x, position.y + bodyPos.y, position.z + bodyPos.z),
-			bodyInterface.GetRotation(GetBodyID(ID)),
-			JPH::EActivation::Activate);
+			bodyID,
+			JPH::Vec3(
+				position.x + bodyPos.x,
+				position.y + bodyPos.y,
+				position.z + bodyPos.z
+			),
+			bodyInterface.GetRotation(bodyID),
+			JPH::EActivation::Activate
+		);
 	}
 
 	/*!*************************************************************************
@@ -1364,20 +1424,65 @@ namespace Ermine
 	***************************************************************************/
 	void Physics::SetRotation(EntityID ID, Ermine::Quaternion rotation)
 	{
+		auto& ecs = ECS::GetInstance();
+
+		// entity valid?
+		if (!ecs.IsEntityValid(ID))
+		{
+			EE_CORE_WARN("[Physics::SetRotation] Invalid EntityID: {}", ID);
+			return;
+		}
+
+		// has physics component?
+		if (!ecs.HasComponent<PhysicComponent>(ID))
+		{
+			EE_CORE_WARN("[Physics::SetRotation] Entity {} has no PhysicComponent", ID);
+			return;
+		}
+
+		auto& phys = ecs.GetComponent<PhysicComponent>(ID);
+
+		// dead body?
+		if (phys.isDead)
+		{
+			EE_CORE_WARN("[Physics::SetRotation] Entity {} physics is marked dead", ID);
+			return;
+		}
+
+		auto bodyID = GetBodyID(ID);
+
+		// valid body?
+		if (bodyID.IsInvalid())
+		{
+			EE_CORE_WARN("[Physics::SetRotation] Entity {} has invalid BodyID", ID);
+			return;
+		}
+
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+
+		// body in world?
+		if (!bodyInterface.IsAdded(bodyID))
+		{
+			EE_CORE_WARN("[Physics::SetRotation] Body for Entity {} is not added to physics world", ID);
+			return;
+		}
 
 		Ermine::Quaternion rot = QuaternionNormalize(rotation);
 
-		Ermine::Quaternion offset = QuaternionNormalize(FromEulerDegrees(ECS::GetInstance().GetComponent<PhysicComponent>(ID).colliderRot));
+		Ermine::Quaternion offset =
+			QuaternionNormalize(FromEulerDegrees(phys.colliderRot));
 
-		Ermine::Quaternion finalRot = rot * offset; // rotate input then apply offset
+		// apply collider offset after input rotation
+		Ermine::Quaternion finalRot = QuaternionNormalize(rot * offset);
+
 		JPH::Quat jphQuat(finalRot.x, finalRot.y, finalRot.z, finalRot.w);
 
 		bodyInterface.SetPositionAndRotation(
-			GetBodyID(ID),
-			bodyInterface.GetPosition(GetBodyID(ID)),
+			bodyID,
+			bodyInterface.GetPosition(bodyID),
 			jphQuat,
-			JPH::EActivation::Activate);
+			JPH::EActivation::Activate
+		);
 	}
 
 	/*!***********************************************************************
@@ -1633,6 +1738,63 @@ namespace Ermine
 			if (ecs.IsEntityValid(entB) && (ecs.HasComponent<ScriptsComponent>(entB) || ecs.HasComponent<StateMachine>(entB)))
 				mCollisionEvent.emplace(pp.type, entB, entA, aIsSensor);
 		}
+	}
+
+	void Physics::IgnoreCollision(uint64_t idA, uint64_t idB, bool ignore)
+	{
+		JPH::BodyID bodyA = GetBodyID((EntityID)idA);
+		JPH::BodyID bodyB = GetBodyID((EntityID)idB);
+
+		if (bodyA.IsInvalid() || bodyB.IsInvalid())
+		{
+			EE_CORE_WARN("[Physics] IgnoreCollision failed: invalid body IDs for entities {} and {}", idA, idB);
+			return;
+		}
+
+		uint64_t key = MakePairKey(bodyA, bodyB);
+
+		if (ignore)
+			mIgnorePairs.insert(key);
+		else
+			mIgnorePairs.erase(key);
+
+		EE_CORE_INFO("[Physics] IgnoreCollision: entity {} <-> {} | body {} <-> {} | key {}",
+			idA, idB,
+			bodyA.GetIndexAndSequenceNumber(),
+			bodyB.GetIndexAndSequenceNumber(),
+			key);
+	}
+
+	void Physics::MoveQuat(uint64_t id, Vec3 position, Quaternion rotation)
+	{
+		JPH::BodyID bodyID = GetBodyID((EntityID)id);
+		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
+
+		if (!bodyID.IsInvalid())
+		{
+			
+			const float deltaTime = Ermine::FrameController::GetDeltaTime();
+
+			bodyInterface.MoveKinematic(
+				bodyID,
+				JPH::RVec3(position.x, position.y, position.z),
+				JPH::Quat(rotation.x, rotation.y, rotation.z, rotation.w),
+				deltaTime
+			);
+		}
+	}
+
+	void Physics::MoveEuler(uint64_t id, Vec3 position, Vec3 euler)
+	{
+		JPH::Quat rot = JPH::Quat::sEulerAngles(
+			JPH::Vec3(
+				JPH::DegreesToRadians(euler.x),
+				JPH::DegreesToRadians(euler.y),
+				JPH::DegreesToRadians(euler.z)
+			)
+		);
+
+		MoveQuat(id, position, Quaternion(rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW()));
 	}
 
 }

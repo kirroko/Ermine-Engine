@@ -82,5 +82,8 @@ namespace ErmineEngine
             hitInfo = new RaycastHit();
             return Internal_Raycast(origin, direction, out hitInfo, maxDistance);
         }
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void IgnoreCollision(ulong bodyA, ulong bodyB, bool ignore);
     }
 }

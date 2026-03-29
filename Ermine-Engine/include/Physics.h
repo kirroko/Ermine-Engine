@@ -282,12 +282,29 @@ namespace Ermine
 		void ForceUpdate();
 
 		int GetMotionType(EntityID ID);
+
+		void IgnoreCollision(uint64_t idA, uint64_t idB, bool ignore);
 		
 		// Shared pointer to the debug renderer used for visualizing physics.
 		std::shared_ptr<MyDebugRenderer> mDebugRenderer;
 		
 		// Whether to draw wireframe physics bodies.
 		bool wireframe;
+
+		std::unordered_set<uint64_t> mIgnorePairs;
+
+		static uint64_t MakePairKey(JPH::BodyID a, JPH::BodyID b)
+		{
+			uint64_t idA = (uint64_t)a.GetIndexAndSequenceNumber();
+			uint64_t idB = (uint64_t)b.GetIndexAndSequenceNumber();
+
+			if (idA > idB) std::swap(idA, idB);
+
+			return (idA << 32) | idB;
+		}
+		void MoveQuat(uint64_t id, Vec3 position, Quaternion rotation);
+		void MoveEuler(uint64_t id, Vec3 position, Vec3 euler);
+
 	private:
 
 		/*!***********************************************************************
