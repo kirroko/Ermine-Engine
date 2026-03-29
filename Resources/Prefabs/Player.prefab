@@ -3,24 +3,24 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "15286d320f7fe84983859df93de0cb38"
+          "guid": "79064c545c59f64b99fe00aeb5fb73a9"
         },
         "Transform": {
           "position": [
-            14.784895896911621,
-            1.0499330759048463,
-            22.041173934936525
+            17.5,
+            1.0499999523162842,
+            36.0
           ],
           "rotation": [
             0.0,
-            -0.7860047221183777,
             0.0,
-            0.6182205080986023
+            0.0,
+            1.0
           ],
           "scale": [
-            0.01000000350177288,
             0.009999999776482582,
-            0.01000000350177288
+            0.009999999776482582,
+            0.009999999776482582
           ]
         },
         "ObjectMetaData": {
@@ -53,14 +53,14 @@
           "bodyType": "Rigid",
           "motionType": "Dynamic",
           "mass": 1.0,
-          "shapeType": "Box",
+          "shapeType": "Capsule",
           "colliderpivot": [
             0.0,
-            2.549999952316284,
+            1.5,
             0.0
           ],
           "posx": false,
-          "posy": true,
+          "posy": false,
           "posz": false,
           "colliderrot": [
             0.0,
@@ -71,9 +71,9 @@
           "roty": true,
           "rotz": true,
           "collidersize": [
-            140.0,
-            200.0,
-            500.0
+            50.0,
+            360.0,
+            50.0
           ]
         },
         "HierarchyComponent": {
@@ -95,7 +95,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "f908a0f304b6924b959db469eeffe582"
+          "guid": "ba3b368399bd2f439cb342dcd1bc1cf6"
         },
         "Transform": {
           "position": [
@@ -108,75 +108,6 @@
             0.0,
             0.0,
             1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "player col",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "PhysicComponent": {
-          "bodyType": "Rigid",
-          "motionType": "Dynamic",
-          "mass": 0.0,
-          "shapeType": "Capsule",
-          "colliderpivot": [
-            0.0,
-            1.5,
-            0.0
-          ],
-          "posx": false,
-          "posy": false,
-          "posz": false,
-          "colliderrot": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotx": true,
-          "roty": true,
-          "rotz": true,
-          "collidersize": [
-            2.0,
-            3.0,
-            5.0
-          ]
-        },
-        "HierarchyComponent": {
-          "parentGuid": "15286d320f7fe84983859df93de0cb38",
-          "depth": 1
-        },
-        "GlobalTransform": {},
-        "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "PlayerGunCol"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "components": {
-        "IDComponent": {
-          "guid": "304a71564095bf43b09eedb78fa774d2"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            451.0836486816406,
-            0.0
-          ],
-          "rotation": [
-            0.003799906000494957,
-            0.0,
-            0.0,
-            0.9999927878379822
           ],
           "scale": [
             100.0,
@@ -190,7 +121,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "15286d320f7fe84983859df93de0cb38",
+          "parentGuid": "79064c545c59f64b99fe00aeb5fb73a9",
           "depth": 1
         },
         "GlobalTransform": {},
@@ -207,12 +138,12 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "efe014d7ff968f499ea19a4f30d4b2e0"
+          "guid": "e5640230dce99c499a76856aacddd59e"
         },
         "Transform": {
           "position": [
             0.0,
-            -5.699999809265137,
+            -5.300000190734863,
             0.0
           ],
           "rotation": [
@@ -672,7 +603,7 @@
               {
                 "name": "IsMoving",
                 "type": 0,
-                "boolValue": true,
+                "boolValue": false,
                 "floatValue": 0.0,
                 "intValue": 0,
                 "triggerValue": false
@@ -697,7 +628,7 @@
           }
         },
         "HierarchyComponent": {
-          "parentGuid": "304a71564095bf43b09eedb78fa774d2",
+          "parentGuid": "ba3b368399bd2f439cb342dcd1bc1cf6",
           "depth": 2
         },
         "GlobalTransform": {}
@@ -706,7 +637,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "f01326f3cc97e24086327fff5a225c7d"
+          "guid": "f77aba33fbc2244eba946aee8865e78e"
         },
         "Transform": {
           "position": [
@@ -735,7 +666,7 @@
           "guid": "5c9003a9fc5fba4d8d5c71ddbeea1a2e"
         },
         "HierarchyComponent": {
-          "parentGuid": "efe014d7ff968f499ea19a4f30d4b2e0",
+          "parentGuid": "e5640230dce99c499a76856aacddd59e",
           "depth": 3
         },
         "GlobalTransform": {}
@@ -744,7 +675,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "f7b0a994e4e093438043393b112014b9"
+          "guid": "7b63e3afebf36842b2ecb52d3fcf6e89"
         },
         "Transform": {
           "position": [
@@ -773,23 +704,16 @@
           "guid": "3c724a694cbac9438c9313a76eb05889"
         },
         "HierarchyComponent": {
-          "parentGuid": "efe014d7ff968f499ea19a4f30d4b2e0",
+          "parentGuid": "e5640230dce99c499a76856aacddd59e",
           "depth": 3
         },
-        "GlobalTransform": {},
-        "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "HealthDrivenMaterialFill"
-            }
-          ]
-        }
+        "GlobalTransform": {}
       }
     },
     {
       "components": {
         "IDComponent": {
-          "guid": "77a925460077b94c8f21bff9c8f637fd"
+          "guid": "2cc48d75dae2274db6fa14991c67969d"
         },
         "Transform": {
           "position": [
@@ -818,7 +742,7 @@
           "guid": "5c9003a9fc5fba4d8d5c71ddbeea1a2e"
         },
         "HierarchyComponent": {
-          "parentGuid": "efe014d7ff968f499ea19a4f30d4b2e0",
+          "parentGuid": "e5640230dce99c499a76856aacddd59e",
           "depth": 3
         },
         "GlobalTransform": {}
@@ -827,7 +751,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "e3b3a683cb8670468f1250aed3435ed1"
+          "guid": "980235ee45afdc479ea25bca52718d91"
         },
         "Transform": {
           "position": [
@@ -856,7 +780,7 @@
           "guid": "5c9003a9fc5fba4d8d5c71ddbeea1a2e"
         },
         "HierarchyComponent": {
-          "parentGuid": "efe014d7ff968f499ea19a4f30d4b2e0",
+          "parentGuid": "e5640230dce99c499a76856aacddd59e",
           "depth": 3
         },
         "GlobalTransform": {}
@@ -865,7 +789,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "755a534ec5d58a4cba485ef9dc4117bd"
+          "guid": "785a415a219ec4428e8752d45d2f8d5a"
         },
         "Transform": {
           "position": [
@@ -894,7 +818,7 @@
           "guid": "fd5a36376b7f854ea540c3de12d37e0c"
         },
         "HierarchyComponent": {
-          "parentGuid": "efe014d7ff968f499ea19a4f30d4b2e0",
+          "parentGuid": "e5640230dce99c499a76856aacddd59e",
           "depth": 3
         },
         "GlobalTransform": {}
@@ -903,7 +827,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "f6183c3737146e438c39dfcbd3752618"
+          "guid": "9d84b72e53f7c4438afe966fbfba74cd"
         },
         "Transform": {
           "position": [
@@ -932,7 +856,7 @@
           "guid": "f247a30d543cb84ea5d95db9f13959de"
         },
         "HierarchyComponent": {
-          "parentGuid": "efe014d7ff968f499ea19a4f30d4b2e0",
+          "parentGuid": "e5640230dce99c499a76856aacddd59e",
           "depth": 3
         },
         "GlobalTransform": {}
@@ -941,7 +865,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "4c2ad7dd61bafc499af0dfebd76ec365"
+          "guid": "5aa724b31ff8714fac50787f698f0694"
         },
         "Transform": {
           "position": [
@@ -970,7 +894,7 @@
           "guid": "1b0d4e0fa3306a489349bf72d6e841ca"
         },
         "HierarchyComponent": {
-          "parentGuid": "efe014d7ff968f499ea19a4f30d4b2e0",
+          "parentGuid": "e5640230dce99c499a76856aacddd59e",
           "depth": 3
         },
         "GlobalTransform": {}

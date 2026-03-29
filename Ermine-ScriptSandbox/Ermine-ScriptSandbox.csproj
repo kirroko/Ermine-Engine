@@ -78,7 +78,6 @@
     <Compile Include="GearRotateAnimationTest.cs" />
     <Compile Include="IdleState.cs" />
     <Compile Include="Level2KeySystem\UnlockDoor.cs" />
-    <Compile Include="PlayerGunCol.cs" />
     <Compile Include="SpawnPointController.cs" />
     <Compile Include="SpotLightTrigger.cs" />
     <Compile Include="ChaseState.cs" />
