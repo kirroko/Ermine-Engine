@@ -3837,6 +3837,8 @@ namespace Ermine
 
 		EntityID lastJumpFromNavMesh = 0;
 
+		float postJumpPauseTimer = 0.0f;
+
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {
 			out.SetObject();
