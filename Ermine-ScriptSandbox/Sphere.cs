@@ -43,7 +43,7 @@ public class Sphere : MonoBehaviour
     {
         timeAlive -= Time.deltaTime;
         transform.position -= direction * speed * Time.deltaTime;
-        SetFlicker(timeAlive <= 0.3f);
+        SetFlicker(timeAlive <= 0.5f);
 
         Physics.SetPosition((ulong)gameObject.GetInstanceID(), transform.position);
         if (timeAlive < 0.0f)
