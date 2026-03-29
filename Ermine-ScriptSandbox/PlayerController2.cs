@@ -379,7 +379,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    obj.SetActive(false);
+                    //obj.SetActive(false);
                     interactTimer = 0f;
                 }
                 if (obj.name == "Paper2" && interactTimer > 1f)
@@ -403,7 +403,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    obj.SetActive(false);
+                    //obj.SetActive(false);
                     interactTimer = 0f;
                 }
                 if (obj.name == "Paper3" && interactTimer > 1f)
@@ -423,7 +423,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    obj.SetActive(false);
+                    //obj.SetActive(false);
                     interactTimer = 0f;
                 }
                 if (obj.name == "Paper4" && interactTimer > 1f)
@@ -443,7 +443,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    obj.SetActive(false);
+                    //obj.SetActive(false);
                     interactTimer = 0f;
 
                 }
@@ -464,7 +464,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    obj.SetActive(false);
+                    //obj.SetActive(false);
                     interactTimer = 0f;
 
                 }
@@ -481,7 +481,7 @@ public class PlayerController2 : MonoBehaviour
                         msg.transform.rotation *= Quaternion.Euler(0f, 135f, 0f);
                     }
 
-                    obj.SetActive(false);
+                    //obj.SetActive(false);
                     interactTimer = 0f;
                 }
 
@@ -501,7 +501,7 @@ public class PlayerController2 : MonoBehaviour
                         PlayVoiceWithSubtitle("Key2", 5f);
                     }
 
-                    obj.SetActive(false);
+                    //obj.SetActive(false);
                     interactTimer = 0f;
                 }
 
