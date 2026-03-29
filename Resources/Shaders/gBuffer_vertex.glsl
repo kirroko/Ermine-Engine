@@ -88,7 +88,6 @@ out vec3 ViewTangent;
 out vec3 ViewBitangent;
 flat out uint vMaterialIndex; // Pass material index to fragment shader
 flat out uint vDrawFlags;     // Pass DrawInfo flags to fragment shader
-flat out uint vEntityID;      // Pass DrawInfo entity ID to fragment shader
 
 // ========== MATERIAL DATA OUTPUTS ==========
 // Fetch material data ONCE per vertex and pass to fragment shader
@@ -212,7 +211,6 @@ void main()
 
     // Pass DrawInfo flags to fragment shader
     vDrawFlags = drawInfo.flags;
-    vEntityID = drawInfo.entityID;
 
     // ========== FETCH MATERIAL DATA ONCE PER VERTEX ==========
     // This eliminates millions of SSBO fetches in fragment shader (huge performance win on Intel Arc B580!)

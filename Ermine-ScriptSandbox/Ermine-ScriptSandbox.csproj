@@ -85,7 +85,6 @@
     <Compile Include="CutscenePlayer.cs" />
     <Compile Include="DamagePlayer.cs" />
     <Compile Include="DisableLightCone.cs" />
-    <Compile Include="EnemyFootstep.cs" />
     <Compile Include="EndElevator.cs" />
     <Compile Include="FakePlayer.cs" />
     <Compile Include="GameManager.cs" />

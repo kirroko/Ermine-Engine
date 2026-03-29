@@ -11,7 +11,6 @@ in vec3 ViewTangent;
 in vec3 ViewBitangent;
 flat in uint vMaterialIndex; // Material index from vertex shader
 flat in uint vDrawFlags;     // DrawInfo flags from vertex shader
-flat in uint vEntityID;      // Entity ID from DrawInfo for deterministic flicker seeding
 
 // G-Buffer outputs
 // RT0: RGBA8  - Albedo RGB (albedo is always [0,1], 8bpc sufficient, saves 16 bits vs RGB16F)
@@ -33,12 +32,8 @@ const uint MAT_FLAG_METALLIC_MAP  = 1u << 3u;  // bit 3
 const uint MAT_FLAG_AO_MAP        = 1u << 4u;  // bit 4
 const uint MAT_FLAG_EMISSIVE_MAP  = 1u << 5u;  // bit 5
 const uint FLAG_CAMERA_ATTACHED   = 1u << 1u;  // DrawInfo flag bit 1
-const uint FLAG_FLICKER_EMISSIVE  = 1u << 2u;  // DrawInfo flag bit 2
 const float FILL_FULL_EPSILON     = 0.99;
 const float UV_LOD_GRADIENT_SCALE = 0.5; // Stronger bias toward the sharper mip to avoid 0/1 ping-pong
-const int FLICKER_RATE = 50;
-const float FLICKER_EMISSIVE_VALUE = 1.0;
-uniform float u_Time;
 
 // Bindless texture array SSBO - stores texture handles as uvec2 (64-bit split into two 32-bit values)
 layout(std430, binding = 5) restrict readonly buffer TextureArrayBlock
@@ -133,23 +128,6 @@ vec2 computeVelocity()
     return (currNDC - prevNDC) * vec2(0.5, 0.5);
 }
 
-float hash11(float p)
-{
-    return fract(sin(p) * 43758.5453123);
-}
-
-float computeFlickerEmissiveIntensity(float emissiveIntensity)
-{
-    if ((vDrawFlags & FLAG_FLICKER_EMISSIVE) == 0u) {
-        return emissiveIntensity;
-    }
-
-    float timeBucket = floor(u_Time * float(FLICKER_RATE));
-    float randomValue = hash11(float(vEntityID) * 12.9898 + timeBucket * 78.233);
-    const float FLICKER_THRESHOLD = 0.65;
-    return (randomValue >= FLICKER_THRESHOLD) ? FLICKER_EMISSIVE_VALUE : emissiveIntensity;
-}
-
 void main()
 {
     if (vFillAmount <= FILL_FULL_EPSILON && vFillCoord > vFillAmount) {
@@ -168,9 +146,8 @@ void main()
 
     // Fast path: No textures, pure procedural material
     if (vTextureFlags == 0u) {
-        float finalEmissiveIntensity = computeFlickerEmissiveIntensity(emissiveIntensity);
         writeGBuffer(albedo, ViewNormal, vEmissive,
-                     finalEmissiveIntensity, roughness,
+                     emissiveIntensity, roughness,
                      metallic, ao, computeVelocity());
         return;
     }
@@ -219,8 +196,7 @@ void main()
     float finalMetallic = metallic * metallicSample;
     float finalAO = ao * aoSample;
     vec3 finalEmissive = vEmissive * emissiveSample;
-    float finalEmissiveIntensity = computeFlickerEmissiveIntensity(emissiveIntensity);
 
-    writeGBuffer(finalAlbedo, finalNormal, finalEmissive, finalEmissiveIntensity,
+    writeGBuffer(finalAlbedo, finalNormal, finalEmissive, emissiveIntensity,
                  finalRoughness, finalMetallic, finalAO, computeVelocity());
 }

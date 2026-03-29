@@ -3,15 +3,6 @@ using System;
 
 public class Attack : MonoBehaviour
 {
-    // Global VO lock - prevent multiple guards playing VO simultaneously
-    private static float globalVOLockTime = 0f;
-    private static float globalVOLockDuration = 2.0f;
-    private static ulong lastVOGuardID = 0; // Track which guard played last
-    
-    // Per-guard VO lock - allow this guard to chain VO
-    private float myVOLockTime = 0f;
-    private float myVOLockDuration = 0.5f; // This guard can't play again for 0.5s
-    
     public string playerName = "Player";
 
     public float attackRange = 5.0f;
@@ -71,15 +62,6 @@ public class Attack : MonoBehaviour
     private GameObject stunVFX;
     private string stunPrefabPath = "../Resources/Prefabs/EnemyStunSpark.prefab";
 
-    // VO flags
-    private bool hasPlayedAttackVO = false;
-    private float lastVOTime = 0f;
-    private float voCooldown = 2.0f;
-    private System.Random random = new System.Random();
-    private float voTimeTracker = 0f;
-    private bool isPlayingVO = false;
-    private bool hasPlayedPowerUpSFX = false; // Track EnemyPowerUp SFX
-
     private void UpdateStunVFX(bool recovering, float recoveryProgress)
     {
         if (stunVFX == null) return;
@@ -111,7 +93,6 @@ public class Attack : MonoBehaviour
 
         isStunned = true;
         stunTimer = stunDuration;
-        hasPlayedPowerUpSFX = false; // Reset for next stun
 
         if (stunVFX != null)
         {
@@ -131,10 +112,6 @@ public class Attack : MonoBehaviour
 
         HideEnemyLight();
         GlobalAudio.PlaySFX("LightDisable");
-
-        // Play death VO and shutdown SFX
-        GlobalAudio.PlayVoice("DieHuman");
-        GlobalAudio.PlaySFX("EnemyPowerDown");
     }
 
     private string GetEnemyLightName()
@@ -220,10 +197,6 @@ public class Attack : MonoBehaviour
         }
 
         ShowEnemyLight();
-        
-        // Reset VO flags
-        hasPlayedAttackVO = false;
-        lastVOTime = 0f;
     }
 
     private bool HasLineOfSightToPlayer()
@@ -323,18 +296,11 @@ public class Attack : MonoBehaviour
         {
             HideEnemyLight();
             recoverTimer -= Time.deltaTime;
-
-            // Trigger EnemyPowerUp at the halfway point of recovery
-            if (!hasPlayedPowerUpSFX && recoverTimer <= stunRecoverDelay * 0.5f)
-            {
-                GlobalAudio.PlaySFX("EnemyPowerUp");
-                hasPlayedPowerUpSFX = true;
-            }
-
+            
             // End 6.0s earlier
             float visibleTime = Math.Max(0.0f, stunRecoverDelay - 6.0f);
             float currentVisibleTime = Math.Max(0.0f, recoverTimer - 6.0f);
-
+            
             float ratio = 0.0f;
             if (visibleTime > 0.001f)
                 ratio = currentVisibleTime / visibleTime;
@@ -346,12 +312,11 @@ public class Attack : MonoBehaviour
 
             if (anim != null)
                 anim.SetBool("IsMoving", false);
-
-            if (ratio <= 0.01f && stunVFX != null)
+            
+            if (ratio <= 0.01f && stunVFX != null) 
                  stunVFX.SetActive(false);
 
             NavAgent.SetDestination(entityID, transform.position);
-            
             return;
         }
 
@@ -371,49 +336,10 @@ public class Attack : MonoBehaviour
         else
             loseSightTimer -= Time.deltaTime;
 
-        // Update VO time tracker
-        voTimeTracker += Time.deltaTime;
-        
-        // Check global VO lock (only blocks if OTHER guard played)
-        bool isGlobalVOLocked = (voTimeTracker - globalVOLockTime < globalVOLockDuration) && (lastVOGuardID != entityID);
-        
-        // Check per-guard VO lock (prevent same guard from spamming)
-        bool isMyVOLocked = voTimeTracker - myVOLockTime < myVOLockDuration;
-
-        // Play attack VO when entering attack range (only once per attack session)
-        if (hasLOS && distToPlayer <= attackRange && !hasPlayedAttackVO && !isPlayingVO && !isGlobalVOLocked && !isMyVOLocked && voTimeTracker - lastVOTime >= voCooldown)
-        {
-            double voRoll = random.NextDouble();
-            if (voRoll < 0.5)
-                GlobalAudio.PlayVoice("ActivateInstantKill");
-            else
-                GlobalAudio.PlayVoice("EliminationInProgress");
-            
-            hasPlayedAttackVO = true;
-            lastVOTime = voTimeTracker;
-            globalVOLockTime = voTimeTracker; // Lock out OTHER guards
-            lastVOGuardID = entityID; // Remember which guard played
-            myVOLockTime = voTimeTracker; // Lock out self briefly
-            isPlayingVO = true;
-        }
-        
-        // Reset VO lock after short delay
-        if (isPlayingVO && voTimeTracker - lastVOTime >= 1.0f)
-        {
-            isPlayingVO = false;
-        }
-        
-        // Don't reset hasPlayedAttackVO here - only reset when leaving attack state
-        // This prevents VO spam when player moves in/out of range
-
         if (distToPlayer > disengageDistance || loseSightTimer <= 0f)
         {
             playSFX = false;
             tickTimer = tickInterval;
-            
-            // Reset VO flag when leaving AttackState (going back to Chase)
-            hasPlayedAttackVO = false;
-            
             StateMachine.RequestPreviousState(entityID);
             return;
         }

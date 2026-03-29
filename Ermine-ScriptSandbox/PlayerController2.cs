@@ -131,7 +131,7 @@ public class PlayerController2 : MonoBehaviour
             isKeyJump = true;
             isGrounded = false;
             verticalVelocity = jumpspeed;
-             GlobalAudio.PlaySFXWithReverbSimple("Jump", wetLevel: -6.0f, decayTime: 3.5f, earlyDelay: 0.001f, lateDelay: 0.1f);
+            GlobalAudio.PlaySFX("Jump");
         }
 
         if (!isGrounded)
@@ -212,8 +212,6 @@ public class PlayerController2 : MonoBehaviour
         {
             if (!audioComp.isPlaying)
             {
-                // Apply reverb to footstep audio (minimal pre-delay to avoid echo)
-                audioComp.SetReverb(wetLevel: -1.0f, dryLevel: 0.0f, decayTime: 0.5f);
                 audioComp.shouldPlay = true;
                 footstepTimer = 0f;
             }
@@ -391,7 +389,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    //obj.SetActive(false);
+                    obj.SetActive(false);
                     interactTimer = 0f;
                 }
                 if (obj.name == "Paper2" && interactTimer > 1f)
@@ -415,7 +413,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    //obj.SetActive(false);
+                    obj.SetActive(false);
                     interactTimer = 0f;
                 }
                 if (obj.name == "Paper3" && interactTimer > 1f)
@@ -435,7 +433,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    //obj.SetActive(false);
+                    obj.SetActive(false);
                     interactTimer = 0f;
                 }
                 if (obj.name == "Paper4" && interactTimer > 1f)
@@ -455,7 +453,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    //obj.SetActive(false);
+                    obj.SetActive(false);
                     interactTimer = 0f;
 
                 }
@@ -476,7 +474,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    //obj.SetActive(false);
+                    obj.SetActive(false);
                     interactTimer = 0f;
 
                 }
@@ -493,7 +491,7 @@ public class PlayerController2 : MonoBehaviour
                         msg.transform.rotation *= Quaternion.Euler(0f, 135f, 0f);
                     }
 
-                    //obj.SetActive(false);
+                    obj.SetActive(false);
                     interactTimer = 0f;
                 }
 
@@ -513,7 +511,7 @@ public class PlayerController2 : MonoBehaviour
                         PlayVoiceWithSubtitle("Key2", 5f);
                     }
 
-                    //obj.SetActive(false);
+                    obj.SetActive(false);
                     interactTimer = 0f;
                 }
 

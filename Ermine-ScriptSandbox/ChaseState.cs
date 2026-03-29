@@ -3,15 +3,6 @@ using System;
 
 public class Chase : MonoBehaviour
 {
-    // Global VO lock - prevent multiple guards playing VO simultaneously
-    private static float globalVOLockTime = 0f;
-    private static float globalVOLockDuration = 2.0f; // Lock out OTHER guards for 2 seconds
-    private static ulong lastVOGuardID = 0; // Track which guard played last
-    
-    // Per-guard VO lock - allow this guard to chain VO
-    private float myVOLockTime = 0f;
-    private float myVOLockDuration = 0.5f; // This guard can't play again for 0.5s
-    
     public string playerName = "Player";
 
     // If player is too far, stop chasing and return to previous state
@@ -56,16 +47,6 @@ public class Chase : MonoBehaviour
     private GameObject stunVFX;
     private string stunPrefabPath = "../Resources/Prefabs/EnemyStunSpark.prefab";
 
-    // VO flags to prevent spamming
-    private bool hasPlayedSpotVO = false;
-    private bool hasPlayedEngagementVO = false; // Track engagement VO separately
-    private float lastVOTime = 0f;
-    private float voCooldown = 3.0f; // Minimum time between VO lines
-    private System.Random random = new System.Random();
-    private float voTimeTracker = 0f; // Track time for VO cooldown
-    private bool isPlayingVO = false; // Prevent VO stacking
-    private bool hasPlayedPowerUpSFX = false; // Track EnemyPowerUp SFX
-
     private void CachePlayerIfNeeded()
     {
         if (playerGO == null)
@@ -79,7 +60,6 @@ public class Chase : MonoBehaviour
 
         isStunned = true;
         stunTimer = stunDuration;
-        hasPlayedPowerUpSFX = false; // Reset for next stun
 
         if (stunVFX != null)
         {
@@ -100,10 +80,6 @@ public class Chase : MonoBehaviour
 
         HideEnemyLight();
         GlobalAudio.PlaySFX("LightDisable");
-        
-        // Play death VO and shutdown SFX
-        GlobalAudio.PlayVoice("DieHuman");
-        GlobalAudio.PlaySFX("EnemyPowerDown");
     }
 
     private string GetEnemyLightName()
@@ -171,10 +147,6 @@ public class Chase : MonoBehaviour
         }
 
         ShowEnemyLight();
-        
-        // Reset VO flags
-        hasPlayedSpotVO = false;
-        lastVOTime = 0f;
     }
     
     private void UpdateStunVFX(bool recovering, float recoveryProgress)
@@ -270,7 +242,7 @@ public class Chase : MonoBehaviour
             {
                 isStunned = false;
                 recoverTimer = stunRecoverDelay;
-
+                
                 if (anim != null)
                     anim.SetBool("IsHit", false);
             }
@@ -280,20 +252,13 @@ public class Chase : MonoBehaviour
         if (recoverTimer > 0.0f)
         {
             HideEnemyLight();
-
+            
             recoverTimer -= Time.deltaTime;
-
-            // Trigger EnemyPowerUp at the halfway point of recovery
-            if (!hasPlayedPowerUpSFX && recoverTimer <= stunRecoverDelay * 0.5f)
-            {
-                GlobalAudio.PlaySFX("EnemyPowerUp");
-                hasPlayedPowerUpSFX = true;
-            }
-
+            
             // End 6.0s earlier
             float visibleTime = Math.Max(0.0f, stunRecoverDelay - 6.0f);
             float currentVisibleTime = Math.Max(0.0f, recoverTimer - 6.0f);
-
+            
             float ratio = 0.0f;
             if (visibleTime > 0.001f)
                 ratio = currentVisibleTime / visibleTime;
@@ -302,7 +267,7 @@ public class Chase : MonoBehaviour
             ratio = ratio * ratio;
 
             UpdateStunVFX(true, ratio);
-
+            
             if (ratio <= 0.01f)
             {
                  if (stunVFX != null) stunVFX.SetActive(false);
@@ -312,7 +277,6 @@ public class Chase : MonoBehaviour
                 anim.SetBool("IsMoving", false);
 
             NavAgent.SetDestination(entityID, transform.position);
-            
             return;
         }
         
@@ -337,76 +301,12 @@ public class Chase : MonoBehaviour
         else
             loseSightTimer -= Time.deltaTime;
 
-        // Update VO time tracker
-        voTimeTracker += Time.deltaTime;
-        
-        // Check global VO lock (only blocks if OTHER guard played)
-        bool isGlobalVOLocked = (voTimeTracker - globalVOLockTime < globalVOLockDuration) && (lastVOGuardID != entityID);
-        
-        // Check per-guard VO lock (prevent same guard from spamming)
-        bool isMyVOLocked = voTimeTracker - myVOLockTime < myVOLockDuration;
-
-        // Play VO when first spotting the player
-        if (hasLOS && !hasPlayedSpotVO && !isPlayingVO && !isGlobalVOLocked && !isMyVOLocked && voTimeTracker - lastVOTime >= voCooldown)
-        {
-            // Randomly choose between intruder alert lines
-            double voRoll = random.NextDouble();
-            if (voRoll < 0.5)
-                GlobalAudio.PlayVoice("IntruderAlert");
-            else
-                GlobalAudio.PlayVoice("SecurityBreachConfirmed");
-            
-            hasPlayedSpotVO = true;
-            lastVOTime = voTimeTracker;
-            globalVOLockTime = voTimeTracker; // Lock out OTHER guards
-            lastVOGuardID = entityID; // Remember which guard played
-            myVOLockTime = voTimeTracker; // Lock out self briefly
-            isPlayingVO = true;
-        }
-        
-        // Play engagement VO when chasing but not yet in attack range (ONCE per chase session)
-        if (hasLOS && hasPlayedSpotVO && !hasPlayedEngagementVO && !isPlayingVO && !isGlobalVOLocked && !isMyVOLocked && dist > attackEnterDistance && voTimeTracker - lastVOTime >= voCooldown)
-        {
-            double voRoll = random.NextDouble();
-            if (voRoll < 0.33)
-                GlobalAudio.PlayVoice("EnemySighted");
-            else if (voRoll < 0.66)
-                GlobalAudio.PlayVoice("EngagingTarget");
-            else
-                GlobalAudio.PlayVoice("ThisIsYourFinalWarning");
-
-            hasPlayedEngagementVO = true; // ← Only play once!
-            lastVOTime = voTimeTracker;
-            globalVOLockTime = voTimeTracker; // Lock out OTHER guards
-            lastVOGuardID = entityID; // Remember which guard played
-            myVOLockTime = voTimeTracker; // Lock out self briefly
-            isPlayingVO = true;
-        }
-        
-        // Reset VO lock after cooldown
-        if (isPlayingVO && voTimeTracker - lastVOTime >= 1.5f)
-        {
-            isPlayingVO = false;
-        }
-
-        // Reset VO flags when LOS is lost
-        if (!hasLOS && hasPlayedSpotVO && loseSightTimer <= 0f)
-        {
-            hasPlayedSpotVO = false;
-            hasPlayedEngagementVO = false;
-        }
-
         if (dist > losePlayerDistance || loseSightTimer <= 0f)
         {
             if (anim != null)
                 anim.SetBool("IsMoving", false);
 
             HideEnemyLight();
-            
-            // Reset all VO flags when giving up chase
-            hasPlayedSpotVO = false;
-            hasPlayedEngagementVO = false;
-            
             StateMachine.RequestPreviousState(entityID);
             return;
         }

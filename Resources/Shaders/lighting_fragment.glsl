@@ -312,16 +312,9 @@ float calculateAttenuation(int lightIndex, vec3 fragPosView, out vec3 lightDir)
         lightDir = normalize(dirView4.xyz);
         attenuation = 1.0;
     } else {
-        // Point or spot: reject fragments outside the light radius before the expensive work.
-        vec3 lightToFrag = lightPosView - fragPosView;
-        float distanceSq = dot(lightToFrag, lightToFrag);
-        if (distanceSq > range * range) {
-            lightDir = vec3(0.0);
-            return 0.0;
-        }
-
-        float distance = sqrt(max(distanceSq, 0.0001));
-        lightDir = lightToFrag / distance;
+        // Point or spot: direction from light to fragment (both now in view space)
+        lightDir = normalize(lightPosView - fragPosView);
+        float distance = length(lightPosView - fragPosView);
         distance = max(distance, 0.01); // Prevent division issues
 
         // Attenuation
@@ -781,9 +774,6 @@ void main()
             float shininess = (1.0 - roughness) * 128.0;
             // Compute light contribution
             vec3 lightContrib = calculateBlinnPhong(i, normalView, viewDir, fragPosView, albedo, 1.0, shininess);
-            if (lightContrib == vec3(0.0)) {
-                continue;
-            }
 
             // Shadow factor (1.0 = lit, 0.0 = shadowed)
             float shadowFactor = 1.0;
@@ -874,9 +864,6 @@ void main()
         vec3 F0 = mix(vec3(0.04), albedo, metallic);
         for (int i = 0; i < numLights; ++i) {
             vec3 lightContrib = calculatePBR(i, normalView, viewDir, fragPosView, albedo, metallic, roughness, F0, worldPos);
-            if (lightContrib == vec3(0.0)) {
-                continue;
-            }
 
             float shadowFactor = 1.0;
             int lightType = int(lights[i].position_type.w);

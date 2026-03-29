@@ -255,39 +255,6 @@
             95.06134033203125
           ]
         },
-        "AudioComponent": {
-          "soundName": "",
-          "eventName": "",
-          "useRandomVariation": true,
-          "soundVariations": [
-            "../Resources/Audio/Footsteps_Metal_001.wav",
-            "../Resources/Audio/Footsteps_Metal_002.wav",
-            "../Resources/Audio/Footsteps_Metal_003.wav",
-            "../Resources/Audio/Footsteps_Metal_004.wav",
-            "../Resources/Audio/Footsteps_Metal_005.wav"
-          ],
-          "is3D": true,
-          "isLooping": false,
-          "isStreaming": false,
-          "volume": 1.0,
-          "followTransform": true,
-          "minDistance": 5.0,
-          "maxDistance": 150.0,
-          "playOnStart": false
-        },
-        "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "EnemyFootstep",
-              "fields": {
-                "footstepInterval": {
-                  "t": 0,
-                  "v": 1.1
-                }
-              }
-            }
-          ]
-        },
         "GlobalTransform": {}
       }
     },
