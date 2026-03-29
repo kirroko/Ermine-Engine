@@ -3785,16 +3785,8 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 	// Runs BEFORE depth pre-pass to avoid GL state pollution from depth pre-pass
 	if (frameCounter % SHADOW_MAP_REFRESH_INTERVAL_IN_FRAMES == 0)
 	{
-		// Build shadow light list and layer allocation for this frame's shadow pass
-		UpdateLightsSSBO(editor::EditorCamera::GetInstance().GetViewMatrix());
 		RenderShadowPass();
 	}
-
-	// Re-sync lights UBO after shadow layer allocation/matrix updates
-	UpdateLightsSSBO(editor::EditorCamera::GetInstance().GetViewMatrix());
-
-	// Update light probes UBO
-	UpdateLightProbesUBO();
 
 	// Depth pre-pass - render depth-only to eliminate fragment shader overdraw
 	RenderDepthPrePass(view, projection);
@@ -4166,67 +4158,37 @@ void Renderer::CleanupPostProcessBuffer()
 
 /**
  * @brief Updates the lights' shader storage buffer object (SSBO) with current light data.
- * @param view Legacy caller-provided view matrix. Active camera selection is resolved internally.
+ * @param view Current output-frame view matrix.
+ * @param projection Current output-frame projection matrix.
  */
-void Renderer::UpdateLightsSSBO(const Mtx44& view)
+void Renderer::UpdateLightsSSBO(const Mtx44& view, const Mtx44& projection)
 {
-	(void)view;
 	const auto& ecs = Ermine::ECS::GetInstance();
 	if (!m_LightSystem) {
+		m_VisibleLights.clear();
+		m_ShadowCastingLights.clear();
+		m_TotalShadowInstances = 0;
 		m_LastUploadedLightCount = 0;
 		return;
 	}
 
-	// ========== FRUSTUM CULLING SETUP ==========
-	// Get camera view and projection matrices
-	// Use GameCamera if active (playing), otherwise use EditorCamera
-	Mtx44 viewMtx, projMtx;
+	BuildVisibleLightSet(view, projection);
+	UploadLightsSSBOFromPreparedState();
+}
 
-#if defined(EE_EDITOR)
-	// In editor build, check if playing
-	if (editor::EditorGUI::isPlaying)
-	{
-		auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
-		if (gameCamera && gameCamera->HasValidCamera())
-		{
-			// Use player camera when in play mode
-			viewMtx = gameCamera->GetViewMatrix();
-			projMtx = gameCamera->GetProjectionMatrix();
-		}
-		else
-		{
-			// Fallback to editor camera if no valid game camera
-			const auto& editorCamera = editor::EditorCamera::GetInstance();
-			viewMtx = editorCamera.GetViewMatrix();
-			projMtx = editorCamera.GetProjectionMatrix();
-		}
+void Renderer::BuildVisibleLightSet(const Mtx44& view, const Mtx44& projection)
+{
+	const auto& ecs = Ermine::ECS::GetInstance();
+	if (!m_LightSystem) {
+		m_VisibleLights.clear();
+		m_ShadowCastingLights.clear();
+		m_TotalShadowInstances = 0;
+		return;
 	}
-	else
-	{
-		// Use editor camera when not playing
-		const auto& editorCamera = editor::EditorCamera::GetInstance();
-		viewMtx = editorCamera.GetViewMatrix();
-		projMtx = editorCamera.GetProjectionMatrix();
-	}
-#else
-	// Standalone build - use game camera
-	auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
-	if (gameCamera && gameCamera->HasValidCamera())
-	{
-		viewMtx = gameCamera->GetViewMatrix();
-		projMtx = gameCamera->GetProjectionMatrix();
-	}
-	else
-	{
-		// Fallback if no camera is available
-		viewMtx = Mtx44(); // Identity matrix
-		projMtx = Mtx44(); // Identity matrix
-	}
-#endif
 
-	// Convert to glm for frustum extraction
-	glm::mat4 viewGlm = ToGlm(viewMtx);
-	glm::mat4 projGlm = ToGlm(projMtx);
+	// Convert current output-frame view/projection to glm for frustum extraction
+	glm::mat4 viewGlm = ToGlm(view);
+	glm::mat4 projGlm = ToGlm(projection);
 
 	// Build frustum from view-projection matrix
 	Frustum frustum;
@@ -4243,10 +4205,9 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 	std::vector<SortedLightCandidate> visibleLights;
 	visibleLights.reserve(m_LightSystem->m_Entities.size());
 
-	std::vector<LightGPU> lights;
-	lights.reserve(visibleLights.capacity());
-
 	// Clear and prepare shadow casting light list and layer allocator
+	m_VisibleLights.clear();
+	m_VisibleLights.reserve(visibleLights.capacity());
 	m_ShadowCastingLights.clear();
 	int currentLayer = 0;
 
@@ -4312,12 +4273,7 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 		}
 
 		auto& light = ecs.GetComponent<Light>(e);
-		const glm::mat4 lightWorld = GetEntityWorldMatrix(e);
 		const bool effectiveCastsShadows = light.castsShadows && light.type != LightType::POINT;
-
-		// Derive light transform from world matrix so parenting is respected.
-		const glm::vec3 lightPos = ExtractWorldPosition(lightWorld);
-		const glm::vec3 dirWorld = ExtractWorldForward(lightWorld);
 
 		// Allocate shadow layers for this light (if any)
 		int shadowLayersNeeded = 0;
@@ -4337,7 +4293,27 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 			light.startOffset = -1;
 		}
 
-		// Set spot angles
+		m_VisibleLights.push_back(e);
+	}
+
+	m_TotalShadowInstances = currentLayer;
+}
+
+void Renderer::UploadLightsSSBOFromPreparedState()
+{
+	const auto& ecs = Ermine::ECS::GetInstance();
+	std::vector<LightGPU> lights;
+	lights.reserve(m_VisibleLights.size());
+
+	for (EntityID e : m_VisibleLights)
+	{
+		auto& light = ecs.GetComponent<Light>(e);
+		const glm::mat4 lightWorld = GetEntityWorldMatrix(e);
+		const bool effectiveCastsShadows = light.castsShadows && light.type != LightType::POINT;
+
+		const glm::vec3 lightPos = ExtractWorldPosition(lightWorld);
+		const glm::vec3 dirWorld = ExtractWorldForward(lightWorld);
+
 		float innerCos = 1.0f, outerCos = 1.0f;
 		if (light.type == LightType::SPOT) {
 			float innerAngle = glm::radians(light.innerAngle);
@@ -4346,17 +4322,15 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 			outerCos = glm::cos(outerAngle);
 		}
 
-		// Convert to LightGPU structure - NOW IN WORLD SPACE
 		LightGPU gpu{};
 		gpu.position_type = glm::vec4(lightPos.x, lightPos.y, lightPos.z, static_cast<float>(light.type));
 		gpu.color_intensity = glm::vec4(light.color.x, light.color.y, light.color.z, light.intensity);
 		gpu.direction_range = glm::vec4(dirWorld.x, dirWorld.y, dirWorld.z, light.radius);
 
-		// Pack flags into bitfield: bit 0 = castsShadows, bit 1 = castsRays
 		float flags = 0.0f;
 		bool hasShadowLayers = effectiveCastsShadows && light.startOffset >= 0;
-		if (hasShadowLayers) flags += 1.0f;  // bit 0
-		if (light.castsRays) flags += 2.0f;     // bit 1
+		if (hasShadowLayers) flags += 1.0f;
+		if (light.castsRays) flags += 2.0f;
 
 		gpu.spot_angles_castshadows_startOffset = glm::vec4(innerCos, outerCos, flags, static_cast<float>(light.startOffset));
 
@@ -4370,8 +4344,6 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 		lights.emplace_back(gpu);
 	}
 
-	// Calculate total shadow instances for cascade rendering
-	m_TotalShadowInstances = currentLayer;
 	m_LastUploadedLightCount = lights.size();
 
 	// Upload to SSBO
@@ -5337,11 +5309,8 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 	// Accumulate elapsed time for shader effects
 	m_ElapsedTime += FrameController::GetDeltaTime();
 
-	// Update light SSBO
-	if (!m_UseDeferredRendering) {
-		UpdateLightsSSBO(editor::EditorCamera::GetInstance().GetViewMatrix());
-		UpdateLightProbesUBO();
-	}
+	SyncShadowViewsForOutputFrame(view, projection);
+	UpdateLightProbesUBO();
 
 
 	// Check if new meshes have been registered and need uploading
@@ -7308,19 +7277,16 @@ void Renderer::calculatePointLightShadowMatrices(const glm::vec3& lightPos,
  * @brief Calculates light-space matrices for all shadow-casting lights.
  * Computes cascade splits and shadow matrices for directional and spot lights based on the camera's view and projection.
  * Updates each light's shadow matrix and split depth for use in shadow mapping.
- * @param editorCamera Reference to the editor camera providing view and projection matrices.
+ * @param view Current output-frame view matrix.
+ * @param projection Current output-frame projection matrix.
  */
-void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
+void Renderer::CalculateLightMatrix(const Mtx44& view, const Mtx44& projection)
 {
-	// Convert camera projection/view to glm
-	const Mtx44 proj = editorCamera.GetProjectionMatrix();
-	const Mtx44 view = editorCamera.GetViewMatrix();
-
 	glm::mat4 glmProj = glm::mat4(
-		proj.m00, proj.m01, proj.m02, proj.m03,
-		proj.m10, proj.m11, proj.m12, proj.m13,
-		proj.m20, proj.m21, proj.m22, proj.m23,
-		proj.m30, proj.m31, proj.m32, proj.m33
+		projection.m00, projection.m01, projection.m02, projection.m03,
+		projection.m10, projection.m11, projection.m12, projection.m13,
+		projection.m20, projection.m21, projection.m22, projection.m23,
+		projection.m30, projection.m31, projection.m32, projection.m33
 	);
 	glm::mat4 glmView = glm::mat4(
 		view.m00, view.m01, view.m02, view.m03,
@@ -7586,6 +7552,13 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
+void Renderer::SyncShadowViewsForOutputFrame(const Mtx44& view, const Mtx44& projection)
+{
+	BuildVisibleLightSet(view, projection);
+	CalculateLightMatrix(view, projection);
+	UploadLightsSSBOFromPreparedState();
+}
+
 /**
  * @brief Renders shadow map using indirect rendering and instancing across all shadow layers.
  *
@@ -7685,9 +7658,6 @@ void Renderer::RenderShadowMapInstanced()
  */
 void Renderer::RenderShadowPass()
 {
-	// Calculate directional light matrices
-	CalculateLightMatrix(editor::EditorCamera::GetInstance());
-
 	// Render shadows using instanced rendering
 	RenderShadowMapInstanced();
 }

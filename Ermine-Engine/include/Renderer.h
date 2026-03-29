@@ -683,9 +683,10 @@ namespace Ermine::graphics
         bool GetShadingMode() const { return m_IsBlinnPhong; }
         /**
          * @brief Updates the lights' shader SSBO with the current light and transform data from all living entities.
-         * @param view Legacy caller-provided view matrix. Active camera selection is resolved internally.
+         * @param view Current output-frame view matrix.
+         * @param projection Current output-frame projection matrix.
          */
-        void UpdateLightsSSBO(const Mtx44& view);
+        void UpdateLightsSSBO(const Mtx44& view, const Mtx44& projection);
         size_t GetUploadedLightCount() const { return m_LastUploadedLightCount; }
         size_t GetLightSSBOCapacity() const { return m_LightsSSBOCapacity; }
         
@@ -949,11 +950,17 @@ namespace Ermine::graphics
         bool CreateShadowMapArray();
         /**
          * @brief Calculates light-space matrices for all shadow-casting lights.
-         * Computes cascade splits and shadow matrices for directional and spot lights based on the camera's view and projection.
+         * Computes cascade splits and shadow matrices for directional and spot lights based on the current frame view and projection.
          * Updates each light's shadow matrix and split depth for use in shadow mapping.
-         * @param editorCamera Reference to the editor camera providing view and projection matrices.
+         * @param view Current output-frame view matrix.
+         * @param projection Current output-frame projection matrix.
          */
-        void CalculateLightMatrix(const editor::EditorCamera& editorCamera);
+        void CalculateLightMatrix(const Mtx44& view, const Mtx44& projection);
+        /**
+         * @brief Syncs shadow view state against the current output frame before rendering.
+         * Rebuilds shadow layer allocation, updates light-space matrices, and re-uploads the light SSBO.
+         */
+        void SyncShadowViewsForOutputFrame(const Mtx44& view, const Mtx44& projection);
         /**
          * @brief Renders the shadow map for all shadow-casting lights and cascades.
          * Reuses pre-skinned positions from geometry pass to avoid redundant bone calculations.
@@ -1365,6 +1372,7 @@ namespace Ermine::graphics
         GLuint m_ShadowViewSSBO = 0; // SSBO containing per-layer shadow view matrices
         size_t m_ShadowViewSSBOCapacity = 0;
         std::vector<ShadowViewGPU> m_ShadowViews;
+        std::vector<EntityID> m_VisibleLights;
         std::vector<EntityID> m_ShadowCastingLights;
 
         // Forward rendering shader for transparent objects
@@ -1390,6 +1398,9 @@ namespace Ermine::graphics
 
         std::shared_ptr<PickingBuffer> m_PickingBuffer;
         std::shared_ptr<Shader> m_PickingShader = nullptr; // Legacy picking shader (unused)
+
+        void BuildVisibleLightSet(const Mtx44& view, const Mtx44& projection);
+        void UploadLightsSSBOFromPreparedState();
         std::shared_ptr<Shader> m_PickingIndirectShader = nullptr; // Indirect rendering picking (standard meshes)
         std::shared_ptr<Shader> m_PickingIndirectSkinnedShader = nullptr; // Indirect rendering picking (skinned meshes)
 
