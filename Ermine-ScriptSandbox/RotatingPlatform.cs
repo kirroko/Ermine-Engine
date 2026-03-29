@@ -11,6 +11,8 @@ public class RotatingPlatform : MonoBehaviour
 
     private AudioComponent audioComp;
     private GameObject player;
+    private GameObject playerBody;
+
     private bool warnedMissingAudio = false;
     private bool warnedMissingPlayer = false;
 
@@ -21,6 +23,7 @@ public class RotatingPlatform : MonoBehaviour
 
     void Start()
     {
+        playerBody = GameObject.Find("player col");
         audioComp = GetComponent<AudioComponent>();
         TryResolvePlayer();
 
@@ -81,21 +84,26 @@ public class RotatingPlatform : MonoBehaviour
 
     private void ApplyPlatformMotion(Vector3 deltaPos, Quaternion deltaRot)
     {
+        if (player == null) return;
+
         Transform pt = player.transform;
 
-        // Move with platform translation
         pt.position += deltaPos;
 
-        // Rotate around platform pivot (rectangle-safe)
         Vector3 relative = pt.position - transform.position;
         relative = deltaRot * relative;
         pt.position = transform.position + relative;
 
-        // Sync physics
-        Physics.SetPosition(
-            (ulong)player.GetInstanceID(),
-            pt.position
-        );
+        pt.rotation = deltaRot * pt.rotation;
+
+        Physics.SetPosition((ulong)player.GetInstanceID(), pt.position);
+        Physics.SetRotationQuat((ulong)player.GetInstanceID(), pt.rotation);
+
+        if (playerBody != null)
+        {
+            Physics.SetPosition((ulong)playerBody.GetInstanceID(), pt.position);
+            Physics.SetRotationQuat((ulong)playerBody.GetInstanceID(), pt.rotation);
+        }
     }
 
     private void HandleAudioByDistance()
@@ -199,13 +207,13 @@ public class RotatingPlatform : MonoBehaviour
 
     void OnCollisionStay(Collider other)
     {
-        if (other.gameObject.name == "Player")
+        if (other.gameObject.name == "player col")
             playerOnPlatform = true;
     }
 
     void OnCollisionExit(Collider other)
     {
-        if (other.gameObject.name == "Player")
+        if (other.gameObject.name == "player col")
             playerOnPlatform = false;
     }
 }
