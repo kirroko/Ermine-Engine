@@ -129,7 +129,8 @@ namespace Ermine
                     trans.position = agent.jumpTarget;
 
                     agent.isJumping = false;
-                    agent.navPaused = false;
+                    agent.navPaused = true;
+                    agent.postJumpPauseTimer = 2.0f;
 
                     if (agent.hasPostJumpDestination)
                     {
@@ -142,8 +143,21 @@ namespace Ermine
             }
             // jump
 
-            if (agent.navPaused)
-                continue;
+            //if (agent.navPaused)
+            //    continue;
+
+            // Handle post-jump pause
+            if (agent.navPaused && agent.postJumpPauseTimer > 0.0f)
+            {
+                agent.postJumpPauseTimer -= dt;
+
+                if (agent.postJumpPauseTimer <= 0.0f)
+                {
+                    agent.navPaused = false; // resume movement
+                }
+
+                continue; // skip movement while paused
+            }
 
             // skip if no path
             if (!agent.hasPath)

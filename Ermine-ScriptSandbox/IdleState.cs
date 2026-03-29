@@ -24,6 +24,7 @@ public class Idle : MonoBehaviour
     private float stunTimer = 0.0f;
     public static bool RightClickStunArmed = false;
     private float armTimer = 0.0f;
+    private bool hasPlayedPowerUpSFX = false; // Track EnemyPowerUp SFX
 
     private Animator anim;
     public float stunRecoverDelay = 8.0f;
@@ -46,6 +47,7 @@ public class Idle : MonoBehaviour
 
         isStunned = true;
         stunTimer = stunDuration;
+        hasPlayedPowerUpSFX = false; // Reset for next stun
 
         if (stunVFX != null)
         {
@@ -62,6 +64,10 @@ public class Idle : MonoBehaviour
 
         // stop immediately while stunned
         NavAgent.SetDestination(entityID, transform.position);
+        
+        // Play death VO and shutdown SFX
+        GlobalAudio.PlayVoice("DieHuman");
+        GlobalAudio.PlaySFX("EnemyPowerDown");
     }
 
     private bool HasLineOfSightToPlayer()
@@ -186,11 +192,18 @@ public class Idle : MonoBehaviour
         {
             // RAMP DOWN PHASE
             recoverTimer -= Time.deltaTime;
-            
+
+            // Trigger EnemyPowerUp at the halfway point of recovery
+            if (!hasPlayedPowerUpSFX && recoverTimer <= stunRecoverDelay * 0.5f)
+            {
+                GlobalAudio.PlaySFX("EnemyPowerUp");
+                hasPlayedPowerUpSFX = true;
+            }
+
             // End 6.0s earlier
             float visibleTime = Math.Max(0.0f, stunRecoverDelay - 6.0f);
             float currentVisibleTime = Math.Max(0.0f, recoverTimer - 6.0f);
-            
+
             float ratio = 0.0f;
             if (visibleTime > 0.001f)
                 ratio = currentVisibleTime / visibleTime;
@@ -199,7 +212,7 @@ public class Idle : MonoBehaviour
             ratio = ratio * ratio;
 
             UpdateStunVFX(true, ratio);
-            
+
             if (ratio <= 0.01f)
             {
                  // Recovery complete, ensure VFX is off

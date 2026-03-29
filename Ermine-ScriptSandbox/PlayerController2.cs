@@ -124,7 +124,11 @@ public class PlayerController2 : MonoBehaviour
         {
             isKeyJump = true;
             isGrounded = false; // prevent double jump
-            GlobalAudio.PlaySFX("Jump");
+            
+            // Play jump sound with reverb (zero pre-delay to avoid double sound)
+            GlobalAudio.PlaySFXWithReverbSimple("Jump", wetLevel: -6.0f, decayTime: 3.5f, earlyDelay: 0.001f, lateDelay: 0.1f);
+            //GlobalAudio.PlaySFX("Jump");
+            
             Physics.Jump((ulong)gameObject.GetInstanceID(), jumpspeed);
         }
 
@@ -196,6 +200,8 @@ public class PlayerController2 : MonoBehaviour
         {
             if (!audioComp.isPlaying)
             {
+                // Apply reverb to footstep audio (minimal pre-delay to avoid echo)
+                audioComp.SetReverb(wetLevel: -1.0f, dryLevel: 0.0f, decayTime: 0.5f);
                 audioComp.shouldPlay = true;
                 footstepTimer = 0f;
             }

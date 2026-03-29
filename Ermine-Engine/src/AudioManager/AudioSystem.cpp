@@ -874,6 +874,11 @@ void AudioSystem::PlayGlobalMusic(GlobalAudioComponent& globalAudio, int index)
 
 void AudioSystem::PlayGlobalSFX(GlobalAudioComponent& globalAudio, int index)
 {
+    PlayGlobalSFX(globalAudio, index, false, -12.0f, 0.0f, 1.0f);
+}
+
+void AudioSystem::PlayGlobalSFX(GlobalAudioComponent& globalAudio, int index, bool useReverb, float wetLevel, float dryLevel, float decayTime, float earlyDelay, float lateDelay)
+{
     if (index < 0 || index >= globalAudio.sfx.size())
         return;
 
@@ -891,16 +896,39 @@ void AudioSystem::PlayGlobalSFX(GlobalAudioComponent& globalAudio, int index)
     // so UI sounds will play even if other channels are paused
     int channelId = CAudioEngine::PlaySounds(sfxSource.audioPath, position, finalVolume);
     globalAudio.sfxChannels[sfxSource.audioName] = channelId;
+
+    // Apply reverb if enabled
+    if (useReverb && channelId != -1)
+    {
+        FMOD::DSP* reverbDSP = CAudioEngine::CreateReverbDSP();
+        if (reverbDSP)
+        {
+            CAudioEngine::SetReverbParameter(reverbDSP, FMOD_DSP_SFXREVERB_DECAYTIME, decayTime);
+            CAudioEngine::SetReverbParameter(reverbDSP, FMOD_DSP_SFXREVERB_EARLYDELAY, earlyDelay);
+            CAudioEngine::SetReverbParameter(reverbDSP, FMOD_DSP_SFXREVERB_LATEDELAY, lateDelay);
+            CAudioEngine::SetReverbParameter(reverbDSP, FMOD_DSP_SFXREVERB_WETLEVEL, wetLevel);
+            CAudioEngine::SetReverbParameter(reverbDSP, FMOD_DSP_SFXREVERB_DRYLEVEL, dryLevel);
+            CAudioEngine::AddReverbToChannel(channelId, reverbDSP);
+            
+            // Release our reference - let channel manage DSP lifetime
+            reverbDSP->release();
+        }
+    }
 }
 
 void AudioSystem::PlayGlobalSFX(GlobalAudioComponent& globalAudio, const std::string& name)
+{
+    PlayGlobalSFX(globalAudio, name, false, -12.0f, 0.0f, 1.0f);
+}
+
+void AudioSystem::PlayGlobalSFX(GlobalAudioComponent& globalAudio, const std::string& name, bool useReverb, float wetLevel, float dryLevel, float decayTime, float earlyDelay, float lateDelay)
 {
     // Find the SFX by name
     for (size_t i = 0; i < globalAudio.sfx.size(); ++i)
     {
         if (globalAudio.sfx[i].audioName == name)
         {
-            PlayGlobalSFX(globalAudio, static_cast<int>(i));
+            PlayGlobalSFX(globalAudio, static_cast<int>(i), useReverb, wetLevel, dryLevel, decayTime, earlyDelay, lateDelay);
             return;
         }
     }
@@ -1002,6 +1030,27 @@ void AudioSystem::PlayEntityAudio(AudioComponent& audioComp, const Transform& tr
 
         audioComp.channelId = CAudioEngine::PlaySounds(soundToPlay, position, volumeDB);
         audioComp.isPlaying = (audioComp.channelId != -1);
+
+        // Apply reverb if enabled
+        if (audioComp.useReverb && audioComp.channelId != -1)
+        {
+            FMOD::DSP* reverbDSP = CAudioEngine::CreateReverbDSP();
+            if (reverbDSP)
+            {
+                // Apply reverb settings (minimal early/late delay to avoid double sound)
+                CAudioEngine::SetReverbParameter(reverbDSP, FMOD_DSP_SFXREVERB_DECAYTIME, audioComp.reverbDecayTime);
+                CAudioEngine::SetReverbParameter(reverbDSP, FMOD_DSP_SFXREVERB_EARLYDELAY, 0.001f);
+                CAudioEngine::SetReverbParameter(reverbDSP, FMOD_DSP_SFXREVERB_LATEDELAY, 0.001f);
+                CAudioEngine::SetReverbParameter(reverbDSP, FMOD_DSP_SFXREVERB_WETLEVEL, audioComp.reverbWetLevel);
+                CAudioEngine::SetReverbParameter(reverbDSP, FMOD_DSP_SFXREVERB_DRYLEVEL, audioComp.reverbDryLevel);
+                
+                // Add reverb DSP to the channel
+                CAudioEngine::AddReverbToChannel(audioComp.channelId, reverbDSP);
+                
+                // Release our reference - let channel manage DSP lifetime
+                reverbDSP->release();
+            }
+        }
     }
 }
 
