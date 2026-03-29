@@ -3,6 +3,7 @@ using System;
 
 public class UpwardsPlatform : MonoBehaviour
 {
+    public string parentObjName = "UpwardsPlatform";
     public float yHeight = 27f;
     private bool isMoving = false;
     private Vector3 startPos;
@@ -14,7 +15,7 @@ public class UpwardsPlatform : MonoBehaviour
 
     void Start()
     {
-        target = transform.Find("UpwardsPlatform");
+        target = transform.Find(parentObjName);
         if (target == null) return;
         startPos = target.position;
         endPos = new Vector3(startPos.x, yHeight, startPos.z);

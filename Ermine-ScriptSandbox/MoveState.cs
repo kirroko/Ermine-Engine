@@ -24,7 +24,7 @@ public class Move : MonoBehaviour
     //private bool jumping = false;
     private bool insideJumpArea = false;
     private ulong jumpLinkEntityID = 0;
-    public float jumpCooldown = 3.0f;
+    public float jumpCooldown = 10.0f;
     private float jumpCooldownTimer = 0.0f;
 
     public string playerName = "Player";
@@ -37,6 +37,7 @@ public class Move : MonoBehaviour
     private float stunTimer = 0.0f;
     public static bool RightClickStunArmed = false;
     private float armTimer = 0.0f;
+    private bool hasPlayedPowerUpSFX = false; // Track EnemyPowerUp SFX
 
     public float edgeCheckForward = 1.0f;     // how far ahead to test for ground
     public float edgeCheckUp = 2.0f;          // how high above to start the downward ray
@@ -57,6 +58,13 @@ public class Move : MonoBehaviour
     // STUN FEEDBACK
     private GameObject stunVFX;
     private string stunPrefabPath = "../Resources/Prefabs/EnemyStunSpark.prefab";
+
+    private bool isJumpingAnim = false;
+    private bool isResting = false;
+    private float jumpTimer = 0f;
+    public float jumpDuration = 1.2f; // matches your animation
+    public float restDuration = 2.0f;
+    private float restTimer = 0f;
 
     private void CachePlayerIfNeeded()
     {
@@ -123,6 +131,7 @@ public class Move : MonoBehaviour
 
         isStunned = true;
         stunTimer = stunDuration;
+        hasPlayedPowerUpSFX = false; // Reset for next stun
 
         if (stunVFX != null)
         {
@@ -140,6 +149,10 @@ public class Move : MonoBehaviour
 
         // stop immediately while stunned
         NavAgent.SetDestination(entityID, transform.position);
+        
+        // Play death VO and shutdown SFX
+        GlobalAudio.PlayVoice("DieHuman");
+        GlobalAudio.PlaySFX("EnemyPowerDown");
     }
 
     void Start()
@@ -210,11 +223,18 @@ public class Move : MonoBehaviour
         if (recoverTimer > 0.0f)
         {
             recoverTimer -= Time.deltaTime;
-            
+
+            // Trigger EnemyPowerUp at the halfway point of recovery
+            if (!hasPlayedPowerUpSFX && recoverTimer <= stunRecoverDelay * 0.5f)
+            {
+                GlobalAudio.PlaySFX("EnemyPowerUp");
+                hasPlayedPowerUpSFX = true;
+            }
+
             // End 6.0s earlier
             float visibleTime = Math.Max(0.0f, stunRecoverDelay - 6.0f);
             float currentVisibleTime = Math.Max(0.0f, recoverTimer - 6.0f);
-            
+
             float ratio = 0.0f;
             if (visibleTime > 0.001f)
                 ratio = currentVisibleTime / visibleTime;
@@ -227,7 +247,7 @@ public class Move : MonoBehaviour
             if (anim != null)
                 anim.SetBool("IsMoving", false);
 
-            if (ratio <= 0.01f && stunVFX != null) 
+            if (ratio <= 0.01f && stunVFX != null)
                  stunVFX.SetActive(false);
 
             NavAgent.SetDestination(entityID, transform.position);
@@ -237,7 +257,7 @@ public class Move : MonoBehaviour
         if (anim != null)
             anim.SetBool("IsMoving", true);
 
-        if (HasLineOfSightToPlayer())
+        if (!isJumpingAnim && !isResting && HasLineOfSightToPlayer())
         {
             StateMachine.RequestNextState(entityID);
             return;
@@ -245,8 +265,43 @@ public class Move : MonoBehaviour
 
         if (insideJumpArea && jumpCooldownTimer <= 0.0f && turnTimer <= 0f)
         {
+            if (anim != null)
+                anim.SetBool("IsGrounded", false);
+
+            isJumpingAnim = true;
+            jumpTimer = jumpDuration;
             NavAgent.StartJump(entityID, jumpLinkEntityID);
             jumpCooldownTimer = jumpCooldown;
+            return;
+        }
+
+        if (isJumpingAnim)
+        {
+            jumpTimer -= Time.deltaTime;
+
+            if (jumpTimer <= 0f)
+            {
+                if (anim != null)
+                    anim.SetBool("IsGrounded", true); // LAND
+
+                isJumpingAnim = false;
+                restTimer = restDuration;
+                isResting = true;
+            }
+        }
+
+        if (isResting)
+        {
+            if (anim != null)
+                anim.SetBool("IsMoving", false);
+
+            restTimer -= Time.deltaTime;
+
+            if (restTimer <= 0f)
+            {
+                isResting = false;
+            }
+            NavAgent.SetDestination(entityID, transform.position);
             return;
         }
 

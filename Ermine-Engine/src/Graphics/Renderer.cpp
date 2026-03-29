@@ -1554,6 +1554,7 @@ void Renderer::RenderGeometryPass(const Mtx44& view, const Mtx44& projection)
 
 	// Pass previous frame's view-projection for velocity buffer computation
 	m_GBufferShader->SetUniformMatrix4fv("u_PreviousViewProjection", glm::value_ptr(m_PreviousViewProjectionMatrix));
+	m_GBufferShader->SetUniform1f("u_Time", m_ElapsedTime);
 
 	// Calculate and pass normal matrix for view (mat3 extracted from view matrix)
 	// Reuse glmView calculated above for camera position
@@ -1948,7 +1949,7 @@ void Renderer::RebuildDrawData()
 			info.materialIndex = materialIndex;
 			info.aabbMax = glm::vec3(mesh.aabbMax.x, mesh.aabbMax.y, mesh.aabbMax.z);
 			info.entityID = static_cast<uint32_t>(entity);
-			info.flags = 0; // Primitives: no skinning, no camera attachment
+			info.flags = materialComponent.flickerEmissive ? FLAG_FLICKER_EMISSIVE : 0; // Primitives: no skinning, no camera attachment
 			info.boneTransformOffset = 0;
 			info._pad0 = 0;
 			info._pad1 = 0;
@@ -1971,6 +1972,8 @@ void Renderer::RebuildDrawData()
 			cacheItem.hasCustomShader = isCustomShader;
 			cacheItem.useSkinning = false; // Primitives never use skinning
 			cacheItem.hasSkinningData = false;
+			cacheItem.isCameraAttached = false;
+			cacheItem.flickerEmissive = materialComponent.flickerEmissive;
 			cacheItem.boneOffset = 0;
 			m_CachedDrawItems.push_back(cacheItem);
 
@@ -2093,6 +2096,11 @@ void Renderer::RebuildDrawData()
 				// Skip this mesh if no material found
 				if (!material) continue;
 
+				bool flickerEmissive = false;
+				if (materialEntity != 0 && ecs.HasComponent<Ermine::Material>(materialEntity)) {
+					flickerEmissive = ecs.GetComponent<Ermine::Material>(materialEntity).flickerEmissive;
+				}
+
 				uint32_t materialIndex = material->GetMaterialIndex();
 
 				// Determine which pass this mesh belongs to
@@ -2177,7 +2185,13 @@ void Renderer::RebuildDrawData()
 				}
 
 				// Build flags for this draw
-				info.flags = isCameraAttached ? FLAG_CAMERA_ATTACHED : 0;
+				info.flags = 0;
+				if (isCameraAttached) {
+					info.flags |= FLAG_CAMERA_ATTACHED;
+				}
+				if (flickerEmissive) {
+					info.flags |= FLAG_FLICKER_EMISSIVE;
+				}
 				info.boneTransformOffset = 0;
 				info._pad0 = 0;
 				info._pad1 = 0;
@@ -2201,6 +2215,7 @@ void Renderer::RebuildDrawData()
 				cacheItem.useSkinning = false; // Static models never use skinning
 				cacheItem.hasSkinningData = false;
 				cacheItem.isCameraAttached = isCameraAttached; // Cache camera-attachment for fast path
+				cacheItem.flickerEmissive = flickerEmissive;
 				cacheItem.boneOffset = 0;
 				m_CachedDrawItems.push_back(cacheItem);
 
@@ -2339,6 +2354,11 @@ void Renderer::RebuildDrawData()
 				// Skip this mesh if no material found
 				if (!meshMaterial) continue;
 
+				bool flickerEmissive = false;
+				if (materialEntity != 0 && ecs.HasComponent<Ermine::Material>(materialEntity)) {
+					flickerEmissive = ecs.GetComponent<Ermine::Material>(materialEntity).flickerEmissive;
+				}
+
 				// Determine material properties for this mesh
 				uint32_t materialIndex = meshMaterial->GetMaterialIndex();
 				bool isTransparent = IsTransparentMaterial(meshMaterial);
@@ -2427,10 +2447,14 @@ void Renderer::RebuildDrawData()
 				{
 					info.flags |= FLAG_CAMERA_ATTACHED;
 				}
+				if (flickerEmissive)
+				{
+					info.flags |= FLAG_FLICKER_EMISSIVE;
+				}
 
 				info.boneTransformOffset = boneOffset;
 				info._pad0 = 0;
-			info._pad1 = 0;
+				info._pad1 = 0;
 
 				// Cache this draw item for fast path updates - store complete material structure
 				CachedDrawItem cacheItem;
@@ -2453,6 +2477,7 @@ void Renderer::RebuildDrawData()
 					mesh.boneAabbValid.begin(), mesh.boneAabbValid.end(),
 					[](uint8_t v) { return v != 0; });
 				cacheItem.isCameraAttached = isCameraAttached; // Cache camera-attachment for fast path
+				cacheItem.flickerEmissive = flickerEmissive;
 				cacheItem.boneOffset = boneOffset;
 				m_CachedDrawItems.push_back(cacheItem);
 
@@ -2518,295 +2543,16 @@ void Renderer::RebuildDrawData()
 		}
 	}
 
-	GPUProfiler::SetCulledMeshesCount(culledMeshes);
-
-	// ========== WRITE ALL DRAW DATA TO GPU BUFFERS ==========
-
-	// PASS 1: PICKING PASS - ALL visible geometry (opaque + transparent, for object selection)
-	m_MeshManager.m_PickingStandardDrawCommandBuffer.WriteCommands(m_PickingStandardCommands, 0);
-	m_MeshManager.m_PickingStandardDrawInfoBuffer.WriteDrawInfos(m_PickingStandardInfos, 0);
-	m_MeshManager.m_PickingSkinnedDrawCommandBuffer.WriteCommands(m_PickingSkinnedCommands, 0);
-	m_MeshManager.m_PickingSkinnedDrawInfoBuffer.WriteDrawInfos(m_PickingSkinnedInfos, 0);
-
-	// PASS 2: DEPTH PREPASS - Opaque visible geometry only (for early-z rejection)
-	m_MeshManager.m_DepthPrepassStandardDrawCommandBuffer.WriteCommands(m_DepthPrepassStandardCommands, 0);
-	m_MeshManager.m_DepthPrepassStandardDrawInfoBuffer.WriteDrawInfos(m_DepthPrepassStandardInfos, 0);
-	m_MeshManager.m_DepthPrepassSkinnedDrawCommandBuffer.WriteCommands(m_DepthPrepassSkinnedCommands, 0);
-	m_MeshManager.m_DepthPrepassSkinnedDrawInfoBuffer.WriteDrawInfos(m_DepthPrepassSkinnedInfos, 0);
-
-	// PASS 3: GEOMETRY PASS - Opaque default shader only (deferred lighting)
-	// Extract commands and infos from Items
-	std::vector<DrawElementsIndirectCommand> geometryStandardCommands;
-	std::vector<DrawInfo> geometryStandardInfos;
-	geometryStandardCommands.reserve(m_GeometryStandardItems.size());
-	geometryStandardInfos.reserve(m_GeometryStandardItems.size());
-	for (const auto& item : m_GeometryStandardItems) {
-		geometryStandardCommands.push_back(item.command);
-		geometryStandardInfos.push_back(item.info);
-	}
-
-	std::vector<DrawElementsIndirectCommand> geometrySkinnedCommands;
-	std::vector<DrawInfo> geometrySkinnedInfos;
-	geometrySkinnedCommands.reserve(m_GeometrySkinnedItems.size());
-	geometrySkinnedInfos.reserve(m_GeometrySkinnedItems.size());
-	for (const auto& item : m_GeometrySkinnedItems) {
-		geometrySkinnedCommands.push_back(item.command);
-		geometrySkinnedInfos.push_back(item.info);
-	}
-
-	m_MeshManager.m_GeometryStandardDrawCommandBuffer.WriteCommands(geometryStandardCommands, 0);
-	m_MeshManager.m_GeometryStandardDrawInfoBuffer.WriteDrawInfos(geometryStandardInfos, 0);
-	m_MeshManager.m_GeometrySkinnedDrawCommandBuffer.WriteCommands(geometrySkinnedCommands, 0);
-	m_MeshManager.m_GeometrySkinnedDrawInfoBuffer.WriteDrawInfos(geometrySkinnedInfos, 0);
-
-	// PASS 4: FORWARD PASS - Transparent default shaders
-	// Extract commands and infos from Items
-	std::vector<DrawElementsIndirectCommand> forwardTransparentDefaultStandardCommands;
-	std::vector<DrawInfo> forwardTransparentDefaultStandardInfos;
-	forwardTransparentDefaultStandardCommands.reserve(m_ForwardTransparentDefaultStandardItems.size());
-	forwardTransparentDefaultStandardInfos.reserve(m_ForwardTransparentDefaultStandardItems.size());
-	for (const auto& item : m_ForwardTransparentDefaultStandardItems) {
-		forwardTransparentDefaultStandardCommands.push_back(item.command);
-		forwardTransparentDefaultStandardInfos.push_back(item.info);
-	}
-
-	std::vector<DrawElementsIndirectCommand> forwardTransparentDefaultSkinnedCommands;
-	std::vector<DrawInfo> forwardTransparentDefaultSkinnedInfos;
-	forwardTransparentDefaultSkinnedCommands.reserve(m_ForwardTransparentDefaultSkinnedItems.size());
-	forwardTransparentDefaultSkinnedInfos.reserve(m_ForwardTransparentDefaultSkinnedItems.size());
-	for (const auto& item : m_ForwardTransparentDefaultSkinnedItems) {
-		forwardTransparentDefaultSkinnedCommands.push_back(item.command);
-		forwardTransparentDefaultSkinnedInfos.push_back(item.info);
-	}
-
-	m_MeshManager.m_ForwardStandardDrawCommandBuffer.WriteCommands(forwardTransparentDefaultStandardCommands, 0);
-	m_MeshManager.m_ForwardStandardDrawInfoBuffer.WriteDrawInfos(forwardTransparentDefaultStandardInfos, 0);
-	m_MeshManager.m_ForwardSkinnedDrawCommandBuffer.WriteCommands(forwardTransparentDefaultSkinnedCommands, 0);
-	m_MeshManager.m_ForwardSkinnedDrawInfoBuffer.WriteDrawInfos(forwardTransparentDefaultSkinnedInfos, 0);
-
-	// Upload opaque custom shader buffers to GPU
-	// FULL REBUILD: Always use glBufferData (not per-frame, ensures clean state)
-	if (!m_ForwardOpaqueCustomStandardItems.empty()) {
-		// Extract commands and infos from items
-		std::vector<DrawElementsIndirectCommand> commands;
-		std::vector<DrawInfo> infos;
-		commands.reserve(m_ForwardOpaqueCustomStandardItems.size());
-		infos.reserve(m_ForwardOpaqueCustomStandardItems.size());
-
-		for (const auto& item : m_ForwardOpaqueCustomStandardItems) {
-			commands.push_back(item.command);
-			infos.push_back(item.info);
-		}
-
-		// Create buffers if needed
-		if (m_ForwardOpaqueCustomStandardCmdBuffer == 0) {
-			glGenBuffers(1, &m_ForwardOpaqueCustomStandardCmdBuffer);
-			glGenBuffers(1, &m_ForwardOpaqueCustomStandardInfoBuffer);
-		}
-
-		// Upload command buffer - always use glBufferData for full rebuild
-		size_t cmdSize = commands.size();
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomStandardCmdBuffer);
-		glBufferData(GL_DRAW_INDIRECT_BUFFER,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardOpaqueCustomStandardCmdBufferCapacity = cmdSize;
-
-		// Upload draw info buffer - always use glBufferData for full rebuild
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardOpaqueCustomStandardInfoBuffer);
-		glBufferData(GL_SHADER_STORAGE_BUFFER,
-			cmdSize * sizeof(DrawInfo),
-			infos.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardOpaqueCustomStandardInfoBufferCapacity = cmdSize;
-
-		// Track actual uploaded count (what's currently on GPU)
-		m_ForwardOpaqueCustomStandardUploadedCount = cmdSize;
-	}
-	else {
-		// No data to upload - reset uploaded count
-		m_ForwardOpaqueCustomStandardUploadedCount = 0;
-	}
-
-	if (!m_ForwardOpaqueCustomSkinnedItems.empty()) {
-		// Extract commands and infos from items
-		std::vector<DrawElementsIndirectCommand> commands;
-		std::vector<DrawInfo> infos;
-		commands.reserve(m_ForwardOpaqueCustomSkinnedItems.size());
-		infos.reserve(m_ForwardOpaqueCustomSkinnedItems.size());
-
-		for (const auto& item : m_ForwardOpaqueCustomSkinnedItems) {
-			commands.push_back(item.command);
-			infos.push_back(item.info);
-		}
-
-		// Create buffers if needed
-		if (m_ForwardOpaqueCustomSkinnedCmdBuffer == 0) {
-			glGenBuffers(1, &m_ForwardOpaqueCustomSkinnedCmdBuffer);
-			glGenBuffers(1, &m_ForwardOpaqueCustomSkinnedInfoBuffer);
-		}
-
-		// Upload command buffer - always use glBufferData for full rebuild
-		size_t cmdSize = commands.size();
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomSkinnedCmdBuffer);
-		glBufferData(GL_DRAW_INDIRECT_BUFFER,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardOpaqueCustomSkinnedCmdBufferCapacity = cmdSize;
-
-		// Upload draw info buffer - always use glBufferData for full rebuild
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardOpaqueCustomSkinnedInfoBuffer);
-		glBufferData(GL_SHADER_STORAGE_BUFFER,
-			cmdSize * sizeof(DrawInfo),
-			infos.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardOpaqueCustomSkinnedInfoBufferCapacity = cmdSize;
-
-		// Track actual uploaded count (what's currently on GPU)
-		m_ForwardOpaqueCustomSkinnedUploadedCount = cmdSize;
-	}
-	else {
-		// No data to upload - reset uploaded count
-		m_ForwardOpaqueCustomSkinnedUploadedCount = 0;
-	}
-
-	// Upload transparent custom shader buffers to GPU
-	if (!m_ForwardTransparentCustomStandardItems.empty()) {
-		// Extract commands and infos from items
-		std::vector<DrawElementsIndirectCommand> commands;
-		std::vector<DrawInfo> infos;
-		commands.reserve(m_ForwardTransparentCustomStandardItems.size());
-		infos.reserve(m_ForwardTransparentCustomStandardItems.size());
-
-		for (const auto& item : m_ForwardTransparentCustomStandardItems) {
-			commands.push_back(item.command);
-			infos.push_back(item.info);
-		}
-
-		// Create buffers if needed
-		if (m_ForwardTransparentCustomStandardCmdBuffer == 0) {
-			glGenBuffers(1, &m_ForwardTransparentCustomStandardCmdBuffer);
-			glGenBuffers(1, &m_ForwardTransparentCustomStandardInfoBuffer);
-		}
-
-		// Upload command buffer - always use glBufferData for full rebuild
-		size_t cmdSize = commands.size();
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
-		glBufferData(GL_DRAW_INDIRECT_BUFFER,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardTransparentCustomStandardCmdBufferCapacity = cmdSize;
-
-		// Upload draw info buffer - always use glBufferData for full rebuild
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardTransparentCustomStandardInfoBuffer);
-		glBufferData(GL_SHADER_STORAGE_BUFFER,
-			cmdSize * sizeof(DrawInfo),
-			infos.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardTransparentCustomStandardInfoBufferCapacity = cmdSize;
-
-		// Track actual uploaded count (what's currently on GPU)
-		m_ForwardTransparentCustomStandardUploadedCount = cmdSize;
-	}
-	else {
-		// No data to upload - reset uploaded count
-		m_ForwardTransparentCustomStandardUploadedCount = 0;
-	}
-
-	if (!m_ForwardTransparentCustomSkinnedItems.empty()) {
-		// Extract commands and infos from items
-		std::vector<DrawElementsIndirectCommand> commands;
-		std::vector<DrawInfo> infos;
-		commands.reserve(m_ForwardTransparentCustomSkinnedItems.size());
-		infos.reserve(m_ForwardTransparentCustomSkinnedItems.size());
-
-		for (const auto& item : m_ForwardTransparentCustomSkinnedItems) {
-			commands.push_back(item.command);
-			infos.push_back(item.info);
-		}
-
-		// Create buffers if needed
-		if (m_ForwardTransparentCustomSkinnedCmdBuffer == 0) {
-			glGenBuffers(1, &m_ForwardTransparentCustomSkinnedCmdBuffer);
-			glGenBuffers(1, &m_ForwardTransparentCustomSkinnedInfoBuffer);
-		}
-
-		// Upload command buffer - always use glBufferData for full rebuild
-		size_t cmdSize = commands.size();
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomSkinnedCmdBuffer);
-		glBufferData(GL_DRAW_INDIRECT_BUFFER,
-			cmdSize * sizeof(DrawElementsIndirectCommand),
-			commands.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardTransparentCustomSkinnedCmdBufferCapacity = cmdSize;
-
-		// Upload draw info buffer - always use glBufferData for full rebuild
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ForwardTransparentCustomSkinnedInfoBuffer);
-		glBufferData(GL_SHADER_STORAGE_BUFFER,
-			cmdSize * sizeof(DrawInfo),
-			infos.data(),
-			GL_DYNAMIC_DRAW);
-		m_ForwardTransparentCustomSkinnedInfoBufferCapacity = cmdSize;
-
-		// Track actual uploaded count (what's currently on GPU)
-		m_ForwardTransparentCustomSkinnedUploadedCount = cmdSize;
-	}
-	else {
-		// No data to upload - reset uploaded count
-		m_ForwardTransparentCustomSkinnedUploadedCount = 0;
-	}
-
-	// Unbind buffers
-	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-
-	// PASS 5: SHADOW PASS - ALL geometry with castsShadows=true (instanced for cascaded shadow maps)
-	//      No need to merge from geometry/forward passes - they're already included
-
-	std::vector<DrawElementsIndirectCommand> shadowStandardCommands;
-	shadowStandardCommands.reserve(m_ShadowStandardCommands.size());
-
-	// Set instance count for cascaded shadow maps
-	for (const auto& cmd : m_ShadowStandardCommands) {
-		DrawElementsIndirectCommand shadowCmd = cmd;
-		shadowCmd.instanceCount = m_TotalShadowInstances;
-		shadowStandardCommands.push_back(shadowCmd);
-	}
-
-	std::vector<DrawElementsIndirectCommand> shadowSkinnedCommands;
-	shadowSkinnedCommands.reserve(m_ShadowSkinnedCommands.size());
-
-	// Set instance count for cascaded shadow maps
-	for (const auto& cmd : m_ShadowSkinnedCommands) {
-		DrawElementsIndirectCommand shadowCmd = cmd;
-		shadowCmd.instanceCount = m_TotalShadowInstances;
-		shadowSkinnedCommands.push_back(shadowCmd);
-	}
-
-	// Write shadow buffers (infos are already correct, just need instanced commands)
-	m_MeshManager.m_ShadowStandardDrawCommandBuffer.WriteCommands(shadowStandardCommands, 0);
-	m_MeshManager.m_ShadowStandardDrawInfoBuffer.WriteDrawInfos(m_ShadowStandardInfos, 0);
-	m_MeshManager.m_ShadowSkinnedDrawCommandBuffer.WriteCommands(shadowSkinnedCommands, 0);
-	m_MeshManager.m_ShadowSkinnedDrawInfoBuffer.WriteDrawInfos(m_ShadowSkinnedInfos, 0);
-
-	// ========== SORTING ==========
-	// Sort opaque custom shaders by shader pointer (for batching, minimize state changes)
-	// NOTE: This doesn't require camera position, only shader pointer comparison
-	SortOpaqueCustomShadersByShader();
-
-	// Transparent sorting happens later during RenderGeometryPass when view matrix is available
-	// (Transparent sorting requires camera position calculated from view matrix)
-
 	// ========== UPDATE DIRTY TRACKING HASHES ==========
 	// Update entity list hash for next frame's comparison
 	m_LastEntityListHash = CalculateEntityListHash();
 
 	// Clear full rebuild flag (will be set again if major change detected)
 	m_DrawDataNeedsFullRebuild = false;
-	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_COMMAND_BARRIER_BIT);
+
+	// Re-run the stable fast path immediately so the rendered frame uses the same
+	// packing/update path as subsequent frames.
+	UpdateDrawData();
 }
 
 /**
@@ -3050,6 +2796,10 @@ void Renderer::UpdateDrawData()
 		if (cachedItem.isCameraAttached)
 		{
 			info.flags |= FLAG_CAMERA_ATTACHED;
+		}
+		if (cachedItem.flickerEmissive)
+		{
+			info.flags |= FLAG_FLICKER_EMISSIVE;
 		}
 
 		info.boneTransformOffset = cachedItem.boneOffset;
@@ -3329,6 +3079,11 @@ void Renderer::UpdateDrawData()
 			infos.push_back(item.info);
 		}
 
+		if (m_ForwardOpaqueCustomStandardCmdBuffer == 0) {
+			glGenBuffers(1, &m_ForwardOpaqueCustomStandardCmdBuffer);
+			glGenBuffers(1, &m_ForwardOpaqueCustomStandardInfoBuffer);
+		}
+
 		size_t cmdSize = commands.size();
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardOpaqueCustomStandardCmdBuffer);
 		if (cmdSize > m_ForwardOpaqueCustomStandardCmdBufferCapacity) {
@@ -3374,6 +3129,11 @@ void Renderer::UpdateDrawData()
 		for (const auto& item : m_ForwardOpaqueCustomSkinnedItems) {
 			commands.push_back(item.command);
 			infos.push_back(item.info);
+		}
+
+		if (m_ForwardOpaqueCustomSkinnedCmdBuffer == 0) {
+			glGenBuffers(1, &m_ForwardOpaqueCustomSkinnedCmdBuffer);
+			glGenBuffers(1, &m_ForwardOpaqueCustomSkinnedInfoBuffer);
 		}
 
 		size_t cmdSize = commands.size();
@@ -3423,6 +3183,11 @@ void Renderer::UpdateDrawData()
 			infos.push_back(item.info);
 		}
 
+		if (m_ForwardTransparentCustomStandardCmdBuffer == 0) {
+			glGenBuffers(1, &m_ForwardTransparentCustomStandardCmdBuffer);
+			glGenBuffers(1, &m_ForwardTransparentCustomStandardInfoBuffer);
+		}
+
 		size_t cmdSize = commands.size();
 		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_ForwardTransparentCustomStandardCmdBuffer);
 		if (cmdSize > m_ForwardTransparentCustomStandardCmdBufferCapacity) {
@@ -3468,6 +3233,11 @@ void Renderer::UpdateDrawData()
 		for (const auto& item : m_ForwardTransparentCustomSkinnedItems) {
 			commands.push_back(item.command);
 			infos.push_back(item.info);
+		}
+
+		if (m_ForwardTransparentCustomSkinnedCmdBuffer == 0) {
+			glGenBuffers(1, &m_ForwardTransparentCustomSkinnedCmdBuffer);
+			glGenBuffers(1, &m_ForwardTransparentCustomSkinnedInfoBuffer);
 		}
 
 		size_t cmdSize = commands.size();
@@ -4044,16 +3814,8 @@ void Renderer::RenderDeferredPipeline(const Mtx44& view, const Mtx44& projection
 	// Runs BEFORE depth pre-pass to avoid GL state pollution from depth pre-pass
 	if (frameCounter % SHADOW_MAP_REFRESH_INTERVAL_IN_FRAMES == 0)
 	{
-		// Build shadow light list and layer allocation for this frame's shadow pass
-		UpdateLightsSSBO(editor::EditorCamera::GetInstance().GetViewMatrix());
 		RenderShadowPass();
 	}
-
-	// Re-sync lights UBO after shadow layer allocation/matrix updates
-	UpdateLightsSSBO(editor::EditorCamera::GetInstance().GetViewMatrix());
-
-	// Update light probes UBO
-	UpdateLightProbesUBO();
 
 	// Depth pre-pass - render depth-only to eliminate fragment shader overdraw
 	RenderDepthPrePass(view, projection);
@@ -4425,67 +4187,37 @@ void Renderer::CleanupPostProcessBuffer()
 
 /**
  * @brief Updates the lights' shader storage buffer object (SSBO) with current light data.
- * @param view Legacy caller-provided view matrix. Active camera selection is resolved internally.
+ * @param view Current output-frame view matrix.
+ * @param projection Current output-frame projection matrix.
  */
-void Renderer::UpdateLightsSSBO(const Mtx44& view)
+void Renderer::UpdateLightsSSBO(const Mtx44& view, const Mtx44& projection)
 {
-	(void)view;
 	const auto& ecs = Ermine::ECS::GetInstance();
 	if (!m_LightSystem) {
+		m_VisibleLights.clear();
+		m_ShadowCastingLights.clear();
+		m_TotalShadowInstances = 0;
 		m_LastUploadedLightCount = 0;
 		return;
 	}
 
-	// ========== FRUSTUM CULLING SETUP ==========
-	// Get camera view and projection matrices
-	// Use GameCamera if active (playing), otherwise use EditorCamera
-	Mtx44 viewMtx, projMtx;
+	BuildVisibleLightSet(view, projection);
+	UploadLightsSSBOFromPreparedState();
+}
 
-#if defined(EE_EDITOR)
-	// In editor build, check if playing
-	if (editor::EditorGUI::isPlaying)
-	{
-		auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
-		if (gameCamera && gameCamera->HasValidCamera())
-		{
-			// Use player camera when in play mode
-			viewMtx = gameCamera->GetViewMatrix();
-			projMtx = gameCamera->GetProjectionMatrix();
-		}
-		else
-		{
-			// Fallback to editor camera if no valid game camera
-			const auto& editorCamera = editor::EditorCamera::GetInstance();
-			viewMtx = editorCamera.GetViewMatrix();
-			projMtx = editorCamera.GetProjectionMatrix();
-		}
+void Renderer::BuildVisibleLightSet(const Mtx44& view, const Mtx44& projection)
+{
+	const auto& ecs = Ermine::ECS::GetInstance();
+	if (!m_LightSystem) {
+		m_VisibleLights.clear();
+		m_ShadowCastingLights.clear();
+		m_TotalShadowInstances = 0;
+		return;
 	}
-	else
-	{
-		// Use editor camera when not playing
-		const auto& editorCamera = editor::EditorCamera::GetInstance();
-		viewMtx = editorCamera.GetViewMatrix();
-		projMtx = editorCamera.GetProjectionMatrix();
-	}
-#else
-	// Standalone build - use game camera
-	auto gameCamera = ecs.GetSystem<graphics::CameraSystem>();
-	if (gameCamera && gameCamera->HasValidCamera())
-	{
-		viewMtx = gameCamera->GetViewMatrix();
-		projMtx = gameCamera->GetProjectionMatrix();
-	}
-	else
-	{
-		// Fallback if no camera is available
-		viewMtx = Mtx44(); // Identity matrix
-		projMtx = Mtx44(); // Identity matrix
-	}
-#endif
 
-	// Convert to glm for frustum extraction
-	glm::mat4 viewGlm = ToGlm(viewMtx);
-	glm::mat4 projGlm = ToGlm(projMtx);
+	// Convert current output-frame view/projection to glm for frustum extraction
+	glm::mat4 viewGlm = ToGlm(view);
+	glm::mat4 projGlm = ToGlm(projection);
 
 	// Build frustum from view-projection matrix
 	Frustum frustum;
@@ -4502,10 +4234,9 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 	std::vector<SortedLightCandidate> visibleLights;
 	visibleLights.reserve(m_LightSystem->m_Entities.size());
 
-	std::vector<LightGPU> lights;
-	lights.reserve(visibleLights.capacity());
-
 	// Clear and prepare shadow casting light list and layer allocator
+	m_VisibleLights.clear();
+	m_VisibleLights.reserve(visibleLights.capacity());
 	m_ShadowCastingLights.clear();
 	int currentLayer = 0;
 
@@ -4571,12 +4302,7 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 		}
 
 		auto& light = ecs.GetComponent<Light>(e);
-		const glm::mat4 lightWorld = GetEntityWorldMatrix(e);
 		const bool effectiveCastsShadows = light.castsShadows && light.type != LightType::POINT;
-
-		// Derive light transform from world matrix so parenting is respected.
-		const glm::vec3 lightPos = ExtractWorldPosition(lightWorld);
-		const glm::vec3 dirWorld = ExtractWorldForward(lightWorld);
 
 		// Allocate shadow layers for this light (if any)
 		int shadowLayersNeeded = 0;
@@ -4596,7 +4322,27 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 			light.startOffset = -1;
 		}
 
-		// Set spot angles
+		m_VisibleLights.push_back(e);
+	}
+
+	m_TotalShadowInstances = currentLayer;
+}
+
+void Renderer::UploadLightsSSBOFromPreparedState()
+{
+	const auto& ecs = Ermine::ECS::GetInstance();
+	std::vector<LightGPU> lights;
+	lights.reserve(m_VisibleLights.size());
+
+	for (EntityID e : m_VisibleLights)
+	{
+		auto& light = ecs.GetComponent<Light>(e);
+		const glm::mat4 lightWorld = GetEntityWorldMatrix(e);
+		const bool effectiveCastsShadows = light.castsShadows && light.type != LightType::POINT;
+
+		const glm::vec3 lightPos = ExtractWorldPosition(lightWorld);
+		const glm::vec3 dirWorld = ExtractWorldForward(lightWorld);
+
 		float innerCos = 1.0f, outerCos = 1.0f;
 		if (light.type == LightType::SPOT) {
 			float innerAngle = glm::radians(light.innerAngle);
@@ -4605,17 +4351,15 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 			outerCos = glm::cos(outerAngle);
 		}
 
-		// Convert to LightGPU structure - NOW IN WORLD SPACE
 		LightGPU gpu{};
 		gpu.position_type = glm::vec4(lightPos.x, lightPos.y, lightPos.z, static_cast<float>(light.type));
 		gpu.color_intensity = glm::vec4(light.color.x, light.color.y, light.color.z, light.intensity);
 		gpu.direction_range = glm::vec4(dirWorld.x, dirWorld.y, dirWorld.z, light.radius);
 
-		// Pack flags into bitfield: bit 0 = castsShadows, bit 1 = castsRays
 		float flags = 0.0f;
 		bool hasShadowLayers = effectiveCastsShadows && light.startOffset >= 0;
-		if (hasShadowLayers) flags += 1.0f;  // bit 0
-		if (light.castsRays) flags += 2.0f;     // bit 1
+		if (hasShadowLayers) flags += 1.0f;
+		if (light.castsRays) flags += 2.0f;
 
 		gpu.spot_angles_castshadows_startOffset = glm::vec4(innerCos, outerCos, flags, static_cast<float>(light.startOffset));
 
@@ -4629,14 +4373,11 @@ void Renderer::UpdateLightsSSBO(const Mtx44& view)
 		lights.emplace_back(gpu);
 	}
 
-	// Calculate total shadow instances for cascade rendering
-	m_TotalShadowInstances = currentLayer;
 	m_LastUploadedLightCount = lights.size();
 
 	// Upload to SSBO
 	EnsureLightsSSBO(lights.size());
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_LightsSSBO);
-	BindLightsSSBO();
 
 	glm::vec4 count(static_cast<float>(lights.size()), 0.0f, 0.0f, 0.0f);
 	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(glm::vec4), &count);
@@ -5597,11 +5338,8 @@ void Renderer::Update(const Mtx44& view, const Mtx44& projection)
 	// Accumulate elapsed time for shader effects
 	m_ElapsedTime += FrameController::GetDeltaTime();
 
-	// Update light SSBO
-	if (!m_UseDeferredRendering) {
-		UpdateLightsSSBO(editor::EditorCamera::GetInstance().GetViewMatrix());
-		UpdateLightProbesUBO();
-	}
+	SyncShadowViewsForOutputFrame(view, projection);
+	UpdateLightProbesUBO();
 
 
 	// Check if new meshes have been registered and need uploading
@@ -7568,19 +7306,16 @@ void Renderer::calculatePointLightShadowMatrices(const glm::vec3& lightPos,
  * @brief Calculates light-space matrices for all shadow-casting lights.
  * Computes cascade splits and shadow matrices for directional and spot lights based on the camera's view and projection.
  * Updates each light's shadow matrix and split depth for use in shadow mapping.
- * @param editorCamera Reference to the editor camera providing view and projection matrices.
+ * @param view Current output-frame view matrix.
+ * @param projection Current output-frame projection matrix.
  */
-void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
+void Renderer::CalculateLightMatrix(const Mtx44& view, const Mtx44& projection)
 {
-	// Convert camera projection/view to glm
-	const Mtx44 proj = editorCamera.GetProjectionMatrix();
-	const Mtx44 view = editorCamera.GetViewMatrix();
-
 	glm::mat4 glmProj = glm::mat4(
-		proj.m00, proj.m01, proj.m02, proj.m03,
-		proj.m10, proj.m11, proj.m12, proj.m13,
-		proj.m20, proj.m21, proj.m22, proj.m23,
-		proj.m30, proj.m31, proj.m32, proj.m33
+		projection.m00, projection.m01, projection.m02, projection.m03,
+		projection.m10, projection.m11, projection.m12, projection.m13,
+		projection.m20, projection.m21, projection.m22, projection.m23,
+		projection.m30, projection.m31, projection.m32, projection.m33
 	);
 	glm::mat4 glmView = glm::mat4(
 		view.m00, view.m01, view.m02, view.m03,
@@ -7846,6 +7581,13 @@ void Renderer::CalculateLightMatrix(const editor::EditorCamera& editorCamera)
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
+void Renderer::SyncShadowViewsForOutputFrame(const Mtx44& view, const Mtx44& projection)
+{
+	BuildVisibleLightSet(view, projection);
+	CalculateLightMatrix(view, projection);
+	UploadLightsSSBOFromPreparedState();
+}
+
 /**
  * @brief Renders shadow map using indirect rendering and instancing across all shadow layers.
  *
@@ -7945,9 +7687,6 @@ void Renderer::RenderShadowMapInstanced()
  */
 void Renderer::RenderShadowPass()
 {
-	// Calculate directional light matrices
-	CalculateLightMatrix(editor::EditorCamera::GetInstance());
-
 	// Render shadows using instanced rendering
 	RenderShadowMapInstanced();
 }
