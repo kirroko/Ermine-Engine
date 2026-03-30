@@ -12,6 +12,7 @@ public class Sphere : MonoBehaviour
     private Material materialComponent;
     private bool flickerEnabled;
 
+
     private void Start()
     {
         ResolveMaterial();
