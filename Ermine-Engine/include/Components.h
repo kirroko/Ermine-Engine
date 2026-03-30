@@ -1190,6 +1190,7 @@ namespace Ermine
 		float cacheEmissiveIntensity = 1.0f;
 		std::string customFragmentShader = "";   // Custom fragment shader path (empty = use standard PBR)
 		bool cacheCastsShadows = true;           // Whether this material casts shadows
+		bool flickerEmissive = false;            // Upload via DrawInfo flags, not material SSBO
 
 		//// Cached texture paths (only what we set by path)
 		//bool hasAlbedoMapPath = false;   std::string albedoMapPath;
@@ -1323,6 +1324,7 @@ namespace Ermine
 			cacheEmissiveIntensity = other.cacheEmissiveIntensity;
 			customFragmentShader = other.customFragmentShader;
 			cacheCastsShadows = other.cacheCastsShadows;
+			flickerEmissive = other.flickerEmissive;
 		}
 
 		void MoveCachedAuthoringState(Material&& other) noexcept
@@ -1339,6 +1341,7 @@ namespace Ermine
 			cacheEmissiveIntensity = other.cacheEmissiveIntensity;
 			customFragmentShader = std::move(other.customFragmentShader);
 			cacheCastsShadows = other.cacheCastsShadows;
+			flickerEmissive = other.flickerEmissive;
 		}
 
 		void SyncCustomFragmentShaderCache()
@@ -1501,10 +1504,14 @@ namespace Ermine
 			out.AddMember("guid",
 				rapidjson::Value(guidStr.c_str(), (rapidjson::SizeType)guidStr.size(), alloc),
 				alloc);
+			out.AddMember("flickerEmissive", flickerEmissive, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
 			if (!in.IsObject()) return;
+			flickerEmissive = (in.HasMember("flickerEmissive") && in["flickerEmissive"].IsBool())
+				? in["flickerEmissive"].GetBool()
+				: false;
 			if (in.HasMember("guid") && in["guid"].IsString()) {
 				std::string guidStr = in["guid"].GetString();
 				if (!guidStr.empty()) {
@@ -1767,7 +1774,8 @@ namespace Ermine
 
 			xproperty::obj_member<"hasEmiss", &Material::hasEmiss>,
 			xproperty::obj_member<"emissive", &Material::cacheEmissive>,
-			xproperty::obj_member<"emissiveIntensity", &Material::cacheEmissiveIntensity>
+			xproperty::obj_member<"emissiveIntensity", &Material::cacheEmissiveIntensity>,
+			xproperty::obj_member<"flickerEmissive", &Material::flickerEmissive>
 		)
 	};
 
@@ -2351,6 +2359,13 @@ namespace Ermine
 		float minDistance{ 1.0f }; // 3D audio rolloff settings
 		float maxDistance{ 100.0f };
 
+		// Reverb settings
+		bool useReverb{ false }; // Enable/disable reverb for this sound
+		int reverbPreset{ 0 };   // Index to ReverbPresets (0=None, 1=SmallRoom, etc.)
+		float reverbWetLevel{ -12.0f }; // Reverb wet level in dB (-80 to 20)
+		float reverbDryLevel{ 0.0f };   // Reverb dry level in dB (-80 to 20)
+		float reverbDecayTime{ 1.0f };  // Reverb decay time (0.1 to 20)
+
 		// FMOD Studio event parameters (optional)
 		std::map<std::string, float> eventParameters{};
 
@@ -2397,7 +2412,7 @@ namespace Ermine
 		XPROPERTY_DEF(
 			"AudioComponent", AudioComponent,
 			xproperty::obj_member<"soundName", &AudioComponent::soundName>,
-			xproperty::obj_member<"eventName", &AudioComponent::eventName>,   
+			xproperty::obj_member<"eventName", &AudioComponent::eventName>,
 			xproperty::obj_member<"useRandomVariation", &AudioComponent::useRandomVariation>,
 			xproperty::obj_member<"is3D", &AudioComponent::is3D>,
 			xproperty::obj_member<"isLooping", &AudioComponent::isLooping>,
@@ -2406,7 +2421,11 @@ namespace Ermine
 			xproperty::obj_member<"followTransform", &AudioComponent::followTransform>,
 			xproperty::obj_member<"minDistance", &AudioComponent::minDistance>,
 			xproperty::obj_member<"maxDistance", &AudioComponent::maxDistance>,
-			xproperty::obj_member<"playOnStart", &AudioComponent::playOnStart>
+			xproperty::obj_member<"playOnStart", &AudioComponent::playOnStart>,
+			xproperty::obj_member<"useReverb", &AudioComponent::useReverb>,
+			xproperty::obj_member<"reverbWetLevel", &AudioComponent::reverbWetLevel>,
+			xproperty::obj_member<"reverbDryLevel", &AudioComponent::reverbDryLevel>,
+			xproperty::obj_member<"reverbDecayTime", &AudioComponent::reverbDecayTime>
 		)
 	};
 
@@ -3825,6 +3844,8 @@ namespace Ermine
 		bool hasPostJumpDestination = false;
 
 		EntityID lastJumpFromNavMesh = 0;
+
+		float postJumpPauseTimer = 0.0f;
 
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {

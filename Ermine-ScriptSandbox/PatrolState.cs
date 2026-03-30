@@ -3,6 +3,22 @@ using System;
 
 public class Patrol : MonoBehaviour
 {
+    // Global VO lock - prevent multiple guards playing VO simultaneously (combat/death VOs)
+    private static float globalVOLockTime = 0f;
+    private static float globalVOLockDuration = 2.0f;
+    private static ulong lastVOGuardID = 0;
+    
+    // ScanningArea VO lock - separate lock for patrol VO (longer, less urgent)
+    private static float scanVOLockTime = 0f;
+    private static float scanVOLockDuration = 4.0f;
+    private static ulong lastScanVOGuardID = 0;
+    
+    // ScanningArea VO - plays when arriving at patrol points
+    private float lastScanVOTime = 0f;
+    private float scanVOCooldown = 10.0f; // Min seconds between scan lines per guard
+    private float scanTimeTracker = 0f; // Track time for ScanningArea VO
+    private float scanVOMaxDistance = 30.0f; // Only play if player within this distance
+    
     public float radius = 30f;
     public int pointCount = 16;
     public float reachDist = 0.5f;
@@ -36,6 +52,7 @@ public class Patrol : MonoBehaviour
     private float stunTimer = 0.0f;
     public static bool RightClickStunArmed = false;
     private float armTimer = 0.0f;
+    private bool hasPlayedPowerUpSFX = false; // Track EnemyPowerUp SFX
 
     public float viewDistance = 15.0f;
     public float rayHeight = 5.5f;
@@ -112,6 +129,19 @@ public class Patrol : MonoBehaviour
         stuckTimer = 0f;
         lastDist = float.MaxValue;
 
+        // Play ScanningArea VO occasionally when arriving at a patrol point
+        // Only play if player is within range (so player can actually hear it)
+        float distToPlayer = (playerGO.transform.position - transform.position).Magnitude;
+        bool isScanVOLocked = (scanTimeTracker - scanVOLockTime < scanVOLockDuration) && (lastScanVOGuardID != entityID);
+
+        if (!isScanVOLocked && scanTimeTracker - lastScanVOTime >= scanVOCooldown && distToPlayer <= scanVOMaxDistance)
+        {
+            GlobalAudio.PlayVoice("ScanningArea");
+            lastScanVOTime = scanTimeTracker;
+            scanVOLockTime = scanTimeTracker;
+            lastScanVOGuardID = entityID;
+        }
+
         NavAgent.SetDestination(entityID, patrolPoints[currentIndex]);
     }
 
@@ -168,6 +198,8 @@ public class Patrol : MonoBehaviour
 
         isStunned = true;
         stunTimer = stunDuration;
+        hasPlayedPowerUpSFX = false; // Reset for next stun
+        lastScanVOTime = 0f; // Reset ScanningArea VO
 
         if (stunVFX != null)
         {
@@ -185,6 +217,10 @@ public class Patrol : MonoBehaviour
 
         // stop immediately while stunned
         NavAgent.SetDestination(entityID, transform.position);
+        
+        // Play death VO and shutdown SFX
+        GlobalAudio.PlayVoice("DieHuman");
+        GlobalAudio.PlaySFX("EnemyPowerDown");
     }
 
     void Start()
@@ -207,6 +243,9 @@ public class Patrol : MonoBehaviour
 
     void Update()
     {
+        // Update ScanningArea time tracker
+        scanTimeTracker += Time.deltaTime;
+    
         if (Input.GetMouseButtonDown(1))
             armTimer = 0.3f;
 
@@ -235,7 +274,7 @@ public class Patrol : MonoBehaviour
             {
                 isStunned = false;
                 recoverTimer = stunRecoverDelay;
-                
+
                 if (anim != null) anim.SetBool("IsHit", false);
 
                 // Resume the current target after stun ends
@@ -247,15 +286,22 @@ public class Patrol : MonoBehaviour
         if (recoverTimer > 0.0f)
         {
             recoverTimer -= Time.deltaTime;
-            
+
+            // Trigger EnemyPowerUp at the halfway point of recovery
+            if (!hasPlayedPowerUpSFX && recoverTimer <= stunRecoverDelay * 0.5f)
+            {
+                GlobalAudio.PlaySFX("EnemyPowerUp");
+                hasPlayedPowerUpSFX = true;
+            }
+
             // End 6.0s earlier to avoid lingering effect
             float visibleTime = Math.Max(0.0f, stunRecoverDelay - 6.0f);
             float currentVisibleTime = Math.Max(0.0f, recoverTimer - 6.0f);
-            
+
             float ratio = 0.0f;
             if (visibleTime > 0.001f)
                 ratio = currentVisibleTime / visibleTime;
-            
+
             // Aggressive ramp down (squared)
             ratio = ratio * ratio;
 
@@ -263,11 +309,12 @@ public class Patrol : MonoBehaviour
 
             if (anim != null)
                 anim.SetBool("IsMoving", false);
-            
-            if (ratio <= 0.01f && stunVFX != null) 
+
+            if (ratio <= 0.01f && stunVFX != null)
                  stunVFX.SetActive(false);
 
             NavAgent.SetDestination(entityID, transform.position);
+
             return;
         }
 
