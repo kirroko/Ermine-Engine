@@ -36,7 +36,7 @@ const uint FLAG_CAMERA_ATTACHED   = 1u << 1u;  // DrawInfo flag bit 1
 const uint FLAG_FLICKER_EMISSIVE  = 1u << 2u;  // DrawInfo flag bit 2
 const float FILL_FULL_EPSILON     = 0.99;
 const float UV_LOD_GRADIENT_SCALE = 0.5; // Stronger bias toward the sharper mip to avoid 0/1 ping-pong
-const int FLICKER_RATE = 50;
+const int FLICKER_RATE = 25;
 const float FLICKER_EMISSIVE_VALUE = 1.0;
 uniform float u_Time;
 
