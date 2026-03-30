@@ -128,13 +128,13 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.1289999932050705,
-            0.4300000071525574,
+            0.13115796446800233,
+            0.4401874542236328,
             0.0
           ],
           "size": [
-            0.25,
-            0.09000000357627869
+            0.183170348405838,
+            0.07451508194208145
           ],
           "normalColor": [
             1.0,
@@ -207,13 +207,13 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.16500000655651093,
-            0.17000000178813935,
+            0.1708265244960785,
+            0.2290872037410736,
             0.0
           ],
           "size": [
-            0.3799999952316284,
-            0.09000000357627869
+            0.3188753128051758,
+            0.07125510275363922
           ],
           "normalColor": [
             1.0,
@@ -280,7 +280,7 @@
           "selfActive": false
         },
         "GlobalAudioComponent": {
-          "masterVolume": 0.4380350112915039,
+          "masterVolume": 0.09506257623434067,
           "musicVolume": 1.0,
           "sfxVolume": 1.0,
           "ambienceVolume": 1.0,
@@ -399,12 +399,12 @@
           "imagePath": "C:\\Users\\Kean\\Desktop\\Personal\\Ermine Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Game_Title.png",
           "fullscreen": false,
           "position": [
-            0.22499999403953553,
-            0.800000011920929,
+            0.24012736976146699,
+            0.7299103140830994,
             0.0
           ],
-          "width": 1.0,
-          "height": 0.4099999964237213,
+          "width": 0.7429999709129334,
+          "height": 0.38499999046325686,
           "tintColor": [
             1.0,
             1.0,
@@ -1183,7 +1183,7 @@
           "trackImage": "./Resources/Textures/UI/Audio_Bar.png",
           "fillImage": "./Resources/Textures/UI/Audio_Fill.png",
           "handleImage": "./Resources/Textures/UI/Audio_Indicator.png",
-          "value": 0.4380350112915039,
+          "value": 0.09506257623434067,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 1,
@@ -1607,13 +1607,13 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.1599999964237213,
-            0.30000001192092898,
+            0.16280534863471986,
+            0.33504486083984377,
             0.0
           ],
           "size": [
-            0.3700000047683716,
-            0.09000000357627869
+            0.2909453809261322,
+            0.07044009864330292
           ],
           "normalColor": [
             0.30000001192092898,
@@ -2597,7 +2597,7 @@
           "trackImage": ".\\Resources/Textures/UI/Audio_Bar.png",
           "fillImage": ".\\Resources/Textures/UI/Audio_Fill.png",
           "handleImage": ".\\Resources/Textures/UI/Audio_Indicator.png",
-          "value": 0.8702718615531921,
+          "value": 0.8978939056396484,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 5,
@@ -2816,7 +2816,7 @@
     "exposure": 1.0,
     "contrast": 1.0,
     "saturation": 1.0,
-    "gamma": 1.7556736469268799,
+    "gamma": 1.722527265548706,
     "vignetteIntensity": 0.30000001192092898,
     "vignetteRadius": 0.800000011920929,
     "vignetteCoverage": 0.0,
