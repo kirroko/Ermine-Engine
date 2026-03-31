@@ -319,6 +319,7 @@ namespace Ermine::graphics
         glm::vec3 m_OutlineColor = glm::vec3(1.0, 0.4f, 0.0f);
         float m_OutlineThickness = 2.5f;
         float m_OutlineIntensity = 1.5f;
+        EntityID outlineId = 0;
 
         // Sync helpers
         void SyncToGlobalGraphics();    // copy class -> m_GlobalGraphics
@@ -1081,6 +1082,24 @@ namespace Ermine::graphics
          * @param height New window height
 		 */
 		void OnWindowResize(const int& width, const int& height);
+
+		/**
+		 * @brief Sets whether an outline should be rendered for a specific entity.
+		 * @param entity The entity for which to enable or disable the outline.
+		 */
+		void SetEntityOutlineEnabled(EntityID entity);
+
+		/**
+		 * @brief Is the outline enabled for a specific entity?
+		 * @param entity The entity to check for outline state.
+		 * @return 
+		 */
+		bool IsEntityOutlineEnabled(EntityID entity) const;
+
+		/**
+		 * @brief Clear all entity outlines, disabling outlines for all entities in the scene.
+		 */
+		void ClearAllEntityOutlines();
 
     protected:
 		/**

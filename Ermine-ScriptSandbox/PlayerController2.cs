@@ -211,6 +211,40 @@ public class PlayerController2 : MonoBehaviour
 
         interactTimer += Time.deltaTime;
 
+        RaycastHit hithit;
+        bool hitOutline = Physics.Raycast(
+            gameObject.transform.position + new Vector3(0, cam.position.y * 0.01f, 0),
+            cam.forward,
+            out hithit,
+            interactRange
+        );
+        if (hitOutline)
+        {
+            Debug.LogError("Poi!");
+            GameObject objobj = hithit.transform.gameObject;
+            if (objobj != null)
+            {
+                if (objobj.name == "Switch" ||
+                    objobj.name == "Switch (1)" ||
+                    objobj.name == "Switch (2)" ||
+                    objobj.name == "Switch1" ||
+                    objobj.name == "Switch2" ||
+                    objobj.name == "Paper1" ||
+                    objobj.name == "Paper2" ||
+                    objobj.name == "Paper3" ||
+                    objobj.name == "Paper4" ||
+                    objobj.name == "Book" ||
+                    objobj.name == "GearKeyPrefab" ||
+                    objobj.name == "ComputerDoorUnlock1" ||
+                    objobj.name == "ComputerDoorUnlock2")
+                {
+                    SceneManager.SetEntityOutline(objobj.GetInstanceID());
+                }
+            }
+        }
+        else
+            SceneManager.SetEntityOutline(0);
+
         if (Input.GetKeyDown(KeyCode.E))
         {
             RaycastHit hit;
@@ -226,11 +260,8 @@ public class PlayerController2 : MonoBehaviour
 
             GameObject obj = hit.transform.gameObject;
             Debug.LogError("hit");
-            if (obj!=null)
+            if (obj != null)
             {
-                //GameObject obj = GameObject.FromEntityID(id);
-                //Debug.Log("You are looking at: " + obj.name);
-
                 // Switch -> ElectricFence 1
                 if (obj.name == "Switch" && interactTimer >= 1f)
                 {

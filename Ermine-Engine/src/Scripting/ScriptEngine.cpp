@@ -1766,6 +1766,12 @@ namespace
 			EE_CORE_ERROR("SceneManager: Scene path is empty!");
 		}
 	}
+
+	void icall_scenemanager_setoutline(uint64_t id)
+	{
+		auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+		renderer->SetEntityOutlineEnabled(id);
+	}
 #pragma endregion
 
 #pragma region Application ICalls
@@ -4391,6 +4397,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 
 #pragma region SceneManager ICalls
 	mono_add_internal_call("ErmineEngine.SceneManager::LoadSceneInternal", (const void*)icall_scenemanager_loadscene);
+	mono_add_internal_call("ErmineEngine.SceneManager::EntityOutlineInternal", (const void*)icall_scenemanager_setoutline);
 #pragma endregion
 
 #pragma region Application ICalls
