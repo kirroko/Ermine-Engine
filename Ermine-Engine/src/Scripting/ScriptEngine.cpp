@@ -2126,6 +2126,40 @@ namespace
 		}
 	}
 
+	mono_bool icall_material_get_flicker_emissive(MonoObject* thisObj)
+	{
+		auto* matComp = GetMaterialComponentFromManaged(thisObj);
+		if (!matComp)
+			return 0;
+
+		return matComp->flickerEmissive ? 1 : 0;
+	}
+
+	void icall_material_set_flicker_emissive(MonoObject* thisObj, mono_bool value)
+	{
+		using namespace Ermine;
+		const EntityID id = GetEntityIDFromManaged(thisObj);
+
+		auto* matComp = GetMaterialComponentFromManaged(thisObj);
+		if (!matComp)
+		{
+			EE_CORE_WARN("[Material.FlickerEmissive] Entity {0}: Material component missing", id);
+			return;
+		}
+
+		const bool enabled = (value != 0);
+		if (matComp->flickerEmissive == enabled)
+			return;
+
+		matComp->flickerEmissive = enabled;
+
+		auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
+		if (renderer)
+		{
+			renderer->MarkDrawDataForRebuild();
+		}
+	}
+
 	mono_bool icall_audiocomponent_get_shouldplay(MonoObject* thisObj)
 	{
 		if (auto* ac = GetAudioComponentFromManaged(thisObj))
@@ -4345,6 +4379,8 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 #pragma region Material ICalls
 	mono_add_internal_call("ErmineEngine.Material::Internal_GetFill", (const void*)icall_material_get_fill);
 	mono_add_internal_call("ErmineEngine.Material::Internal_SetFill", (const void*)icall_material_set_fill);
+	mono_add_internal_call("ErmineEngine.Material::Internal_GetFlickerEmissive", (const void*)icall_material_get_flicker_emissive);
+	mono_add_internal_call("ErmineEngine.Material::Internal_SetFlickerEmissive", (const void*)icall_material_set_flicker_emissive);
 #pragma endregion
 
 #pragma region Debug ICalls

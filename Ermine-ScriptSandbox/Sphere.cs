@@ -9,18 +9,23 @@ public class Sphere : MonoBehaviour
     public float speed = 20.0f;
 
     private float timeAlive = 1.0f;
+    private Material materialComponent;
+    private bool flickerEnabled;
 
     private void Start()
     {
+        ResolveMaterial();
     }
 
     public void Launch(Vector3 spawnPosition, Quaternion spawnRotation, Vector3 shootDirection)
     {
+        ResolveMaterial();
         gameObject.SetActive(true);
         transform.position = spawnPosition;
         transform.rotation = spawnRotation;
         direction = shootDirection;
         timeAlive = 1.0f;
+        SetFlicker(false);
         Physics.SetPosition((ulong)gameObject.GetInstanceID(), transform.position);
     }
 
@@ -28,6 +33,7 @@ public class Sphere : MonoBehaviour
     {
         timeAlive = 0.0f;
         direction = Vector3.zero;
+        SetFlicker(false);
         transform.position = ParkedPosition;
         Physics.SetPosition((ulong)gameObject.GetInstanceID(), transform.position);
         gameObject.SetActive(false);
@@ -37,6 +43,7 @@ public class Sphere : MonoBehaviour
     {
         timeAlive -= Time.deltaTime;
         transform.position -= direction * speed * Time.deltaTime;
+        SetFlicker(timeAlive <= 0.5f);
 
         Physics.SetPosition((ulong)gameObject.GetInstanceID(), transform.position);
         if (timeAlive < 0.0f)
@@ -97,5 +104,25 @@ public class Sphere : MonoBehaviour
         {
             smokeExplosion.transform.position = position;
         }
+    }
+
+    private void ResolveMaterial()
+    {
+        if (materialComponent == null && gameObject != null)
+        {
+            materialComponent = gameObject.GetComponent<Material>();
+        }
+    }
+
+    private void SetFlicker(bool enabled)
+    {
+        ResolveMaterial();
+        if (materialComponent == null || flickerEnabled == enabled)
+        {
+            return;
+        }
+
+        materialComponent.flickerEmissive = enabled;
+        flickerEnabled = enabled;
     }
 }

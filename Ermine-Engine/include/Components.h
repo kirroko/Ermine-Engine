@@ -1190,6 +1190,7 @@ namespace Ermine
 		float cacheEmissiveIntensity = 1.0f;
 		std::string customFragmentShader = "";   // Custom fragment shader path (empty = use standard PBR)
 		bool cacheCastsShadows = true;           // Whether this material casts shadows
+		bool flickerEmissive = false;            // Upload via DrawInfo flags, not material SSBO
 
 		//// Cached texture paths (only what we set by path)
 		//bool hasAlbedoMapPath = false;   std::string albedoMapPath;
@@ -1323,6 +1324,7 @@ namespace Ermine
 			cacheEmissiveIntensity = other.cacheEmissiveIntensity;
 			customFragmentShader = other.customFragmentShader;
 			cacheCastsShadows = other.cacheCastsShadows;
+			flickerEmissive = other.flickerEmissive;
 		}
 
 		void MoveCachedAuthoringState(Material&& other) noexcept
@@ -1339,6 +1341,7 @@ namespace Ermine
 			cacheEmissiveIntensity = other.cacheEmissiveIntensity;
 			customFragmentShader = std::move(other.customFragmentShader);
 			cacheCastsShadows = other.cacheCastsShadows;
+			flickerEmissive = other.flickerEmissive;
 		}
 
 		void SyncCustomFragmentShaderCache()
@@ -1501,10 +1504,14 @@ namespace Ermine
 			out.AddMember("guid",
 				rapidjson::Value(guidStr.c_str(), (rapidjson::SizeType)guidStr.size(), alloc),
 				alloc);
+			out.AddMember("flickerEmissive", flickerEmissive, alloc);
 		}
 
 		void Deserialize(const rapidjson::Value& in) {
 			if (!in.IsObject()) return;
+			flickerEmissive = (in.HasMember("flickerEmissive") && in["flickerEmissive"].IsBool())
+				? in["flickerEmissive"].GetBool()
+				: false;
 			if (in.HasMember("guid") && in["guid"].IsString()) {
 				std::string guidStr = in["guid"].GetString();
 				if (!guidStr.empty()) {
@@ -1767,7 +1774,8 @@ namespace Ermine
 
 			xproperty::obj_member<"hasEmiss", &Material::hasEmiss>,
 			xproperty::obj_member<"emissive", &Material::cacheEmissive>,
-			xproperty::obj_member<"emissiveIntensity", &Material::cacheEmissiveIntensity>
+			xproperty::obj_member<"emissiveIntensity", &Material::cacheEmissiveIntensity>,
+			xproperty::obj_member<"flickerEmissive", &Material::flickerEmissive>
 		)
 	};
 
@@ -3836,6 +3844,8 @@ namespace Ermine
 		bool hasPostJumpDestination = false;
 
 		EntityID lastJumpFromNavMesh = 0;
+
+		float postJumpPauseTimer = 0.0f;
 
 		template<typename Alloc>
 		void Serialize(rapidjson::Value& out, Alloc& alloc) const {

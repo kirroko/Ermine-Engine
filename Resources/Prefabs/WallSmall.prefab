@@ -1,0 +1,81 @@
+{
+  "entities": [
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "0338fb5e3bc2b544ab16c73a79462b03"
+        },
+        "Transform": {
+          "position": [
+            -59.238399505615237,
+            9.978487014770508,
+            19.997072219848634
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.03969000279903412,
+            0.03969000279903412,
+            0.03969000279903412
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "WallSmall",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_wall_new_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "fc303ad7f27c0d4ea6dc1497ea7a3a5a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "70e78d85217a10418d6981d4cfbc774b",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "0338fb5e3bc2b544ab16c73a79462b03",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    }
+  ]
+}
