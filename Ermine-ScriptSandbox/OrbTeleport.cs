@@ -51,7 +51,7 @@ public class OrbTeleport : MonoBehaviour
     private int dashEndPrevRadialBlurSamples = 12; // cached radial blur sample count before dash
     private Vector2 dashEndPrevRadialBlurCenter = new Vector2(0.5f, 0.5f); // cached radial blur center before dash
                                                                            
-    private float teleportChromaticAberrationIntensity = 0.02f;// Chromatic aberration (teleport FX)
+    public float teleportChromaticAberrationIntensity = 0.03f;// Chromatic aberration (teleport FX)
     private bool dashEndPrevChromaticAberrationEnabled = false;// Cache previous values
     private float dashEndPrevChromaticAberrationIntensity = 0.003f;
 
@@ -272,7 +272,7 @@ public class OrbTeleport : MonoBehaviour
         dashEndPrevRadialBlurCenter = PostEffects.RadialBlurCenter;
         dashEndRadialBlurRestoreActive = false;
         dashEndRadialBlurRestoreElapsed = 0f;
-
+        
         PostEffects.EnableRadialBlur = true;
         PostEffects.RadialBlurSamples = teleportDashRadialBlurSamples;
         PostEffects.RadialBlurCenter = new Vector2(0.5f, 0.5f);
@@ -280,6 +280,11 @@ public class OrbTeleport : MonoBehaviour
 
         dashEndPrevChromaticAberrationEnabled = PostEffects.EnableChromaticAberration;
         dashEndPrevChromaticAberrationIntensity = 0.003f;
+
+        PostEffects.EnableChromaticAberration = true;
+        PostEffects.ChromaticAberrationIntensity = teleportChromaticAberrationIntensity;
+
+
 
         // Park orb for reuse instead of destroying and recreating it.
         Debug.Log("OrbTeleport: Deactivating orb after teleport: " + orbProjectile.GetInstanceID());
@@ -399,6 +404,13 @@ public class OrbTeleport : MonoBehaviour
         float currentStrength = PostEffects.RadialBlurStrength;
         PostEffects.RadialBlurStrength = currentStrength + (dashEndPrevRadialBlurStrength - currentStrength) * t;
 
+        PostEffects.ChromaticAberrationIntensity = Mathf.Lerp(
+        teleportChromaticAberrationIntensity,
+        dashEndPrevChromaticAberrationIntensity,
+        t
+    );
+
+
         if (t >= 1.0f)
         {
             PostEffects.EnableRadialBlur = dashEndPrevRadialBlurEnabled;
@@ -406,6 +418,10 @@ public class OrbTeleport : MonoBehaviour
             PostEffects.RadialBlurSamples = dashEndPrevRadialBlurSamples;
             PostEffects.RadialBlurCenter = dashEndPrevRadialBlurCenter;
             dashEndRadialBlurRestoreActive = false;
+
+            PostEffects.EnableChromaticAberration = dashEndPrevChromaticAberrationEnabled;
+            PostEffects.ChromaticAberrationIntensity = dashEndPrevChromaticAberrationIntensity;
+            
         }
     }
 
