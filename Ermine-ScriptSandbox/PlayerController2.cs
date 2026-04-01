@@ -83,6 +83,9 @@ public class PlayerController2 : MonoBehaviour
 
     void Update()
     {
+        // Hard reset vignette if not being damaged
+        DamageVignetteHelper.UpdateVignette();
+        
         HandleInput();
         HandleLook();
         HandleCameraLerp();

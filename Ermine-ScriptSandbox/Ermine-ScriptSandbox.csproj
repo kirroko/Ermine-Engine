@@ -72,24 +72,23 @@
   <ItemGroup>
     <Compile Include="AnimationExample.cs" />
     <Compile Include="AttackState.cs" />
-    <Compile Include="Credits.cs" />
-    <Compile Include="CutsceneVideo.cs" />
-    <Compile Include="GearRotateAnimationTest2.cs" />
-    <Compile Include="GearRotateAnimationTest.cs" />
-    <Compile Include="IdleState.cs" />
-    <Compile Include="Level2KeySystem\UnlockDoor.cs" />
-    <Compile Include="SpawnPointController.cs" />
-    <Compile Include="SpotLightTrigger.cs" />
     <Compile Include="ChaseState.cs" />
+    <Compile Include="Credits.cs" />
     <Compile Include="CutscenePlayer.cs" />
+    <Compile Include="CutsceneVideo.cs" />
     <Compile Include="DamagePlayer.cs" />
+    <Compile Include="DamageVignetteHelper.cs" />
     <Compile Include="DisableLightCone.cs" />
-    <Compile Include="EnemyFootstep.cs" />
     <Compile Include="EndElevator.cs" />
+    <Compile Include="EnemyFootstep.cs" />
     <Compile Include="FakePlayer.cs" />
     <Compile Include="GameManager.cs" />
     <Compile Include="GearRotateAnimation.cs" />
+    <Compile Include="GearRotateAnimationTest.cs" />
+    <Compile Include="GearRotateAnimationTest2.cs" />
     <Compile Include="HealthDrivenMaterialFill.cs" />
+    <Compile Include="IdleState.cs" />
+    <Compile Include="Level2KeySystem\UnlockDoor.cs" />
     <Compile Include="LifeEssenceSkillController.cs" />
     <Compile Include="LoadingScreen.cs" />
     <Compile Include="MainMenu.cs" />
@@ -102,7 +101,9 @@
     <Compile Include="RotatingPlatform.cs" />
     <Compile Include="Sandbox.cs" />
     <Compile Include="Sandbox2.cs" />
+    <Compile Include="SpawnPointController.cs" />
     <Compile Include="Sphere.cs" />
+    <Compile Include="SpotLightTrigger.cs" />
     <Compile Include="Switch.cs" />
     <Compile Include="TemplateScript.cs" />
     <Compile Include="Test1.cs" />
@@ -119,7 +120,6 @@
       <Name>Ermine-ScriptAssembly</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
