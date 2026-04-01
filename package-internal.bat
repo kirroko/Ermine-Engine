@@ -70,7 +70,10 @@ REM Clean previous build
 echo Cleaning previous build artifacts for configuration: %BUILD_CONFIG%
 if exist "%DIST_SUBDIR%" rmdir /S /Q "%DIST_SUBDIR%"
 mkdir "%DIST_SUBDIR%"
-if exist "Build" rmdir /S /Q "Build"
+
+REM Clean only this configuration's build output (not entire Build)
+if exist "Build\bin\%BUILD_CONFIG%-windows-x86_64" rmdir /S /Q "Build\bin\%BUILD_CONFIG%-windows-x86_64"
+if exist "Build\obj\%BUILD_CONFIG%-windows-x86_64" rmdir /S /Q "Build\obj\%BUILD_CONFIG%-windows-x86_64"
 
 REM Build the solution
 echo Building solution with MSBuild for configuration: %BUILD_CONFIG%
@@ -150,7 +153,6 @@ exit /b 0
 REM End of build_and_copy
 
 :success
-rmdir /S /Q "%DIST_DIR%"
 echo.
 echo ========================================
 echo ALL PACKAGES CREATED SUCCESSFULLY

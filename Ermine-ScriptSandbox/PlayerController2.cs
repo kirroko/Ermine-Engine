@@ -220,7 +220,6 @@ public class PlayerController2 : MonoBehaviour
         );
         if (hitOutline)
         {
-            Debug.LogError("Poi!");
             GameObject objobj = hithit.transform.gameObject;
             if (objobj != null)
             {
