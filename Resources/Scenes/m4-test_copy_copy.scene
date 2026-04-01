@@ -93009,6 +93009,74 @@
         }
       },
       "id": 1931
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "dcb3fd08f8a74be89130c67e69921765"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "BlackOverlay",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "UIImageComponent": {
+          "imagePath": "Resources/Textures/UI/UI UPDATED/Black Overlay.png",
+          "fullscreen": true,
+          "position": [
+            0.5,
+            0.5,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 1.0,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 0.6,
+          "maintainAspectRatio": false,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.1,
+            0.0
+          ],
+          "renderOrder": 0
+        }
+      },
+      "id": 1932
     }
   ],
   "globalGraphics": {
