@@ -7,6 +7,9 @@ namespace ErmineEngine
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void LoadSceneInternal(string scenePath);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private static extern void EntityOutlineInternal(long id);
+
         /// <summary>
         /// Loads a scene by file path.
         /// </summary>
@@ -21,6 +24,11 @@ namespace ErmineEngine
 
             Debug.Log($"SceneManager: Loading scene '{scenePath}'");
             LoadSceneInternal(scenePath);
+        }
+
+        public static void SetEntityOutline(long id)
+        {
+            EntityOutlineInternal(id);
         }
     }
 }
