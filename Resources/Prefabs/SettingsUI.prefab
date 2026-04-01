@@ -1,595 +1,6 @@
 {
   "entities": [
     {
-      "id": 1,
-      "components": {
-        "IDComponent": {
-          "guid": "2d99c6da3c671d498f8a35224b23e67b"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            5.0,
-            0.0
-          ],
-          "rotation": [
-            0.4082179069519043,
-            -0.23456971347332,
-            0.10938165336847305,
-            0.8754260540008545
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "Light": {
-          "color": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "intensity": 1.0,
-          "type": "Directional",
-          "castsShadows": true,
-          "castsRays": false,
-          "innerAngle": -1.0,
-          "outerAngle": -1.0,
-          "radius": 3.0
-        },
-        "ObjectMetaData": {
-          "name": "Main Light",
-          "tag": "Light",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 2,
-      "components": {
-        "IDComponent": {
-          "guid": "3273fc96f845494b9f48dedc9eed8ae3"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            5.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "MainMenuCamera",
-          "tag": "MainCamera",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {},
-        "CameraComponent": {
-          "fov": 60.0,
-          "aspect": 1.7777777910232545,
-          "near": 0.10000000149011612,
-          "far": 100.0,
-          "primary": false,
-          "isGameCamera": false
-        }
-      }
-    },
-    {
-      "id": 3,
-      "components": {
-        "IDComponent": {
-          "guid": "1857c55b8e3e0e419cbbb8141fffcac5"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Play Button",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {},
-        "UIButtonComponent": {
-          "text": "",
-          "position": [
-            0.15877988934516908,
-            0.4226650297641754,
-            0.0
-          ],
-          "size": [
-            0.2141401767730713,
-            0.08674001693725586
-          ],
-          "normalColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "hoverColor": [
-            1.0,
-            1.0,
-            0.9882352948188782
-          ],
-          "pressedColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "textColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "textScale": 1.0,
-          "backgroundAlpha": 1.0,
-          "normalImage": "Resources/Textures/UI/MainMenu/Play_Unselected.png",
-          "hoverImage": "Resources/Textures/UI/MainMenu/Play_Selected.png",
-          "pressedImage": "Resources/Textures/UI/MainMenu/Play_Selected.png",
-          "action": 1,
-          "actionData": "../Resources/Scenes/cutscene_intro.scene",
-          "hoverSoundName": "",
-          "clickSoundName": "",
-          "soundVolume": 0.0,
-          "renderOrder": 0,
-          "disabled": false
-        }
-      }
-    },
-    {
-      "id": 4,
-      "components": {
-        "IDComponent": {
-          "guid": "5776777148716e4986537dbb3cd416ec"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Quit Button",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {},
-        "UIButtonComponent": {
-          "text": "",
-          "position": [
-            0.20815926790237428,
-            0.19078239798545838,
-            0.0
-          ],
-          "size": [
-            0.3799999952316284,
-            0.08429503440856934
-          ],
-          "normalColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "hoverColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "pressedColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "textColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "textScale": 1.0,
-          "backgroundAlpha": 1.0,
-          "normalImage": "Resources/Textures/UI/MainMenu/Exit_Unselected.png",
-          "hoverImage": "Resources/Textures/UI/MainMenu/Exit_Selected.png",
-          "pressedImage": "",
-          "action": 2,
-          "actionData": "",
-          "hoverSoundName": "",
-          "clickSoundName": "",
-          "soundVolume": 0.0,
-          "renderOrder": 0,
-          "disabled": false
-        }
-      }
-    },
-    {
-      "id": 5,
-      "components": {
-        "IDComponent": {
-          "guid": "e35b3131e00f0e4991e7c9cb075d8ebb"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "GlobalAudio",
-          "tag": "Audio",
-          "selfActive": false
-        },
-        "GlobalAudioComponent": {
-          "masterVolume": 0.2515869140625,
-          "musicVolume": 1.0,
-          "sfxVolume": 0.8826786875724793,
-          "ambienceVolume": 1.0,
-          "voiceVolume": 1.0,
-          "autoPlay": true,
-          "music": [
-            {
-              "name": "Main_MenuBGM",
-              "path": "../Resources/Audio/Machina - Menu_Music_1_Vers1.wav",
-              "volume": 1.0
-            }
-          ],
-          "sfx": [
-            {
-              "name": "UIHover",
-              "path": "../Resources/Audio/UI_Hover 5.wav",
-              "volume": 0.550000011920929
-            },
-            {
-              "name": "UIClick",
-              "path": "../Resources/Audio/UI_Confirm_Smaller.wav",
-              "volume": 0.6000000238418579
-            },
-            {
-              "name": "UIClickPlay",
-              "path": "../Resources/Audio/UI_Confirm.wav",
-              "volume": 0.75
-            }
-          ],
-          "ambience": [],
-          "voice": []
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 6,
-      "components": {
-        "IDComponent": {
-          "guid": "c6f0f8f84ef2ea419ee465b96b53f8be"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Main Menu Background Video",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {},
-        "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "MainMenuVideo",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
-        }
-      }
-    },
-    {
-      "id": 7,
-      "components": {
-        "IDComponent": {
-          "guid": "4c0a03fa2b6b904fae68658872e19484"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Title",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "UIImageComponent": {
-          "imagePath": "C:\\Users\\Kean\\Desktop\\Personal\\Ermine Engine\\Build\\bin\\Editor-Debug-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\UI\\Game_Title.png",
-          "fullscreen": false,
-          "position": [
-            0.26772767305374148,
-            0.7527302503585815,
-            0.0
-          ],
-          "width": 1.0,
-          "height": 0.4099999964237213,
-          "tintColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "alpha": 1.0,
-          "maintainAspectRatio": true,
-          "caption": "",
-          "showCaption": false,
-          "captionColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "captionFontSize": 24.0,
-          "captionPosition": [
-            0.5,
-            0.10000000149011612,
-            0.0
-          ],
-          "renderOrder": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 8,
-      "components": {
-        "IDComponent": {
-          "guid": "78b5df70ac6acc4191bc115fb49e73a9"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Audio",
-          "tag": "Untagged",
-          "selfActive": false
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {},
-        "UIButtonComponent": {
-          "text": "",
-          "position": [
-            0.550000011920929,
-            0.2849999964237213,
-            0.0
-          ],
-          "size": [
-            0.20999999344348908,
-            0.09000000357627869
-          ],
-          "normalColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "hoverColor": [
-            1.0,
-            1.0,
-            0.9960784316062927
-          ],
-          "pressedColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "textColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "textScale": 1.0,
-          "backgroundAlpha": 1.0,
-          "normalImage": "Resources/Textures/UI/MainMenu/Audio_Unselected.png",
-          "hoverImage": "Resources/Textures/UI/MainMenu/Audio_Selected.png",
-          "pressedImage": "",
-          "action": 3,
-          "actionData": "OpenSettings",
-          "hoverSoundName": "",
-          "clickSoundName": "",
-          "soundVolume": 0.0,
-          "renderOrder": 0,
-          "disabled": false
-        }
-      }
-    },
-    {
-      "id": 9,
-      "components": {
-        "IDComponent": {
-          "guid": "5bd1bcae6e044e449d2c08c236bc9bbc"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Controls",
-          "tag": "Untagged",
-          "selfActive": false
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {},
-        "UIButtonComponent": {
-          "text": "",
-          "position": [
-            0.16500000655651093,
-            0.38999998569488528,
-            0.0
-          ],
-          "size": [
-            0.38999998569488528,
-            0.10000000149011612
-          ],
-          "normalColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "hoverColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "pressedColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "textColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "textScale": 1.0,
-          "backgroundAlpha": 1.0,
-          "normalImage": "Resources/Textures/UI/MainMenu/Controls_Unselected.png",
-          "hoverImage": "Resources/Textures/UI/MainMenu/Controls_Selected.png",
-          "pressedImage": "",
-          "action": 3,
-          "actionData": "OpenControls",
-          "hoverSoundName": "",
-          "clickSoundName": "",
-          "soundVolume": 0.0,
-          "renderOrder": 0,
-          "disabled": false
-        }
-      }
-    },
-    {
-      "id": 10,
       "components": {
         "IDComponent": {
           "guid": "7093cee4580290408114a4a705f9abde"
@@ -624,7 +35,6 @@
       }
     },
     {
-      "id": 11,
       "components": {
         "IDComponent": {
           "guid": "2ba3765b521ba24fbfde0e0d5af269bf"
@@ -660,7 +70,7 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.27000001072883608,
+            0.27000001072883606,
             0.6399999856948853,
             0.0
           ],
@@ -704,7 +114,6 @@
       }
     },
     {
-      "id": 12,
       "components": {
         "IDComponent": {
           "guid": "3ed681a799964041b5443c41ca25cc89"
@@ -740,7 +149,7 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.28999999165534975,
+            0.28999999165534973,
             0.5199999809265137,
             0.0
           ],
@@ -784,7 +193,6 @@
       }
     },
     {
-      "id": 13,
       "components": {
         "IDComponent": {
           "guid": "a5cd534bad38dd42bcacd6434a0111bd"
@@ -852,7 +260,6 @@
       }
     },
     {
-      "id": 14,
       "components": {
         "IDComponent": {
           "guid": "ed37397de32db54fabbc28d3d0544b98"
@@ -888,7 +295,7 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.14763057231903077,
+            0.14763057231903076,
             0.8458027243614197,
             0.0
           ],
@@ -897,9 +304,9 @@
             0.1338549256324768
           ],
           "normalColor": [
-            0.30000001192092898,
-            0.30000001192092898,
-            0.30000001192092898
+            0.30000001192092896,
+            0.30000001192092896,
+            0.30000001192092896
           ],
           "hoverColor": [
             0.5,
@@ -932,7 +339,6 @@
       }
     },
     {
-      "id": 15,
       "components": {
         "IDComponent": {
           "guid": "14e608b3467d3f4585595a5ff90c831f"
@@ -974,12 +380,12 @@
           ],
           "size": [
             0.5278646945953369,
-            0.21698451042175294
+            0.21698451042175293
           ],
           "normalColor": [
-            0.30000001192092898,
-            0.30000001192092898,
-            0.30000001192092898
+            0.30000001192092896,
+            0.30000001192092896,
+            0.30000001192092896
           ],
           "hoverColor": [
             0.5,
@@ -1012,7 +418,6 @@
       }
     },
     {
-      "id": 16,
       "components": {
         "IDComponent": {
           "guid": "ca16bf44239b2b4db4fdeee9ab5fd92b"
@@ -1047,7 +452,6 @@
       }
     },
     {
-      "id": 17,
       "components": {
         "IDComponent": {
           "guid": "01bbff40fe314340aeb4d0f8bb5f8355"
@@ -1105,7 +509,7 @@
           ],
           "captionFontSize": 48.0,
           "captionPosition": [
-            0.6100000143051148,
+            0.6100000143051147,
             0.75,
             0.0
           ],
@@ -1115,7 +519,6 @@
       }
     },
     {
-      "id": 18,
       "components": {
         "IDComponent": {
           "guid": "02f3417890c10743b8787168b379aa57"
@@ -1155,7 +558,7 @@
             0.0
           ],
           "size": [
-            0.30000001192092898,
+            0.30000001192092896,
             0.05000000074505806
           ],
           "trackColor": [
@@ -1194,9 +597,9 @@
             0.0,
             0.0
           ],
-          "labelScale": 0.33000001311302187,
+          "labelScale": 0.33000001311302185,
           "labelOffset": [
-            -0.17000000178813935,
+            -0.17000000178813934,
             0.0
           ],
           "labelImagePath": "Resources/Textures/UI/UI UPDATED/MasterVolume_Unselected.png",
@@ -1210,7 +613,7 @@
           "valueScale": 0.5,
           "valueOffset": [
             0.05999999865889549,
-            0.019999999552965165
+            0.019999999552965164
           ],
           "valueAsPercentage": true,
           "renderOrder": 0
@@ -1218,7 +621,6 @@
       }
     },
     {
-      "id": 19,
       "components": {
         "IDComponent": {
           "guid": "494e236414f4554e9f4aef9b74db9777"
@@ -1258,13 +660,13 @@
             0.0
           ],
           "size": [
-            0.30000001192092898,
+            0.30000001192092896,
             0.05000000074505806
           ],
           "trackColor": [
-            0.20000000298023225,
-            0.20000000298023225,
-            0.20000000298023225
+            0.20000000298023224,
+            0.20000000298023224,
+            0.20000000298023224
           ],
           "fillColor": [
             0.8999999761581421,
@@ -1297,9 +699,9 @@
             0.0,
             0.0
           ],
-          "labelScale": 0.33500000834465029,
+          "labelScale": 0.33500000834465027,
           "labelOffset": [
-            -0.17800000309944154,
+            -0.17800000309944153,
             0.0
           ],
           "labelImagePath": "Resources/Textures/UI/UI UPDATED/MusicVolume_Unselected.png",
@@ -1313,7 +715,7 @@
           "valueScale": 0.5,
           "valueOffset": [
             0.05999999865889549,
-            0.019999999552965165
+            0.019999999552965164
           ],
           "valueAsPercentage": true,
           "renderOrder": 0
@@ -1321,7 +723,6 @@
       }
     },
     {
-      "id": 20,
       "components": {
         "IDComponent": {
           "guid": "b3aa12512e177947a5d2fb95a4974262"
@@ -1361,13 +762,13 @@
             0.0
           ],
           "size": [
-            0.30000001192092898,
+            0.30000001192092896,
             0.05000000074505806
           ],
           "trackColor": [
-            0.20000000298023225,
-            0.20000000298023225,
-            0.20000000298023225
+            0.20000000298023224,
+            0.20000000298023224,
+            0.20000000298023224
           ],
           "fillColor": [
             0.5578108429908752,
@@ -1389,7 +790,7 @@
           "trackImage": "./Resources/Textures/UI/Audio_Bar.png",
           "fillImage": "./Resources/Textures/UI/Audio_Fill.png",
           "handleImage": "./Resources/Textures/UI/Audio_Indicator.png",
-          "value": 0.8826786875724793,
+          "value": 0.8826786875724792,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 3,
@@ -1402,7 +803,7 @@
           ],
           "labelScale": 0.3400000035762787,
           "labelOffset": [
-            -0.17800000309944154,
+            -0.17800000309944153,
             -0.004999999888241291
           ],
           "labelImagePath": "Resources/Textures/UI/UI UPDATED/SFXVolume_Unselected.png",
@@ -1416,7 +817,7 @@
           "valueScale": 0.5,
           "valueOffset": [
             0.05999999865889549,
-            0.019999999552965165
+            0.019999999552965164
           ],
           "valueAsPercentage": true,
           "renderOrder": 0
@@ -1424,7 +825,6 @@
       }
     },
     {
-      "id": 21,
       "components": {
         "IDComponent": {
           "guid": "ace3617ceb104a4f965920f5f2b0d62a"
@@ -1460,18 +860,18 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.14800000190734864,
+            0.14800000190734863,
             0.8460000157356262,
             0.0
           ],
           "size": [
-            0.19200000166893006,
+            0.19200000166893005,
             0.1340000033378601
           ],
           "normalColor": [
-            0.30000001192092898,
-            0.30000001192092898,
-            0.30000001192092898
+            0.30000001192092896,
+            0.30000001192092896,
+            0.30000001192092896
           ],
           "hoverColor": [
             0.5,
@@ -1504,7 +904,6 @@
       }
     },
     {
-      "id": 22,
       "components": {
         "IDComponent": {
           "guid": "6c2af57615bf924ea91fe4d8afdeb977"
@@ -1545,7 +944,7 @@
             0.0
           ],
           "width": 0.414017915725708,
-          "height": 0.07000000029802323,
+          "height": 0.07000000029802322,
           "tintColor": [
             1.0,
             1.0,
@@ -1572,86 +971,6 @@
       }
     },
     {
-      "id": 23,
-      "components": {
-        "IDComponent": {
-          "guid": "6ac6d4116f3f2349a1626f28824ee6fb"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Settings Button",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {},
-        "UIButtonComponent": {
-          "text": "",
-          "position": [
-            0.2070435881614685,
-            0.30896496772766116,
-            0.0
-          ],
-          "size": [
-            0.3700000047683716,
-            0.0802200511097908
-          ],
-          "normalColor": [
-            0.30000001192092898,
-            0.30000001192092898,
-            0.30000001192092898
-          ],
-          "hoverColor": [
-            0.5,
-            0.5,
-            0.5
-          ],
-          "pressedColor": [
-            0.699999988079071,
-            0.699999988079071,
-            0.699999988079071
-          ],
-          "textColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "textScale": 1.0,
-          "backgroundAlpha": 1.0,
-          "normalImage": "./Resources/Textures/UI/Settings_Unselected_v2.png",
-          "hoverImage": "./Resources/Textures/UI/Settings_Selected_v2.png",
-          "pressedImage": "",
-          "action": 3,
-          "actionData": "OpenSettingsPage",
-          "hoverSoundName": "",
-          "clickSoundName": "",
-          "soundVolume": 1.0,
-          "renderOrder": 0,
-          "disabled": false
-        }
-      }
-    },
-    {
-      "id": 24,
       "components": {
         "IDComponent": {
           "guid": "361cb962fc75f04baed34282b1e3a76a"
@@ -1686,7 +1005,6 @@
       }
     },
     {
-      "id": 25,
       "components": {
         "IDComponent": {
           "guid": "88ce05c1678bba4495c9a1f4bc597b4d"
@@ -1754,7 +1072,6 @@
       }
     },
     {
-      "id": 26,
       "components": {
         "IDComponent": {
           "guid": "701e5031e956194a9e12f4a6a1c01f12"
@@ -1790,18 +1107,18 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.40280964970588686,
+            0.40280964970588684,
             0.6281499862670898,
             0.0
           ],
           "size": [
             0.4699999988079071,
-            0.18000000715255738
+            0.18000000715255737
           ],
           "normalColor": [
-            0.30000001192092898,
-            0.30000001192092898,
-            0.30000001192092898
+            0.30000001192092896,
+            0.30000001192092896,
+            0.30000001192092896
           ],
           "hoverColor": [
             0.5,
@@ -1834,7 +1151,6 @@
       }
     },
     {
-      "id": 27,
       "components": {
         "IDComponent": {
           "guid": "7913adc8d5428544b12448c969705438"
@@ -1876,12 +1192,12 @@
           ],
           "size": [
             0.4699999988079071,
-            0.18000000715255738
+            0.18000000715255737
           ],
           "normalColor": [
-            0.30000001192092898,
-            0.30000001192092898,
-            0.30000001192092898
+            0.30000001192092896,
+            0.30000001192092896,
+            0.30000001192092896
           ],
           "hoverColor": [
             0.5,
@@ -1914,7 +1230,6 @@
       }
     },
     {
-      "id": 28,
       "components": {
         "IDComponent": {
           "guid": "cc7eb9d4601f79439f0e7daee2d2f27b"
@@ -1951,17 +1266,17 @@
           "text": "",
           "position": [
             0.4060833156108856,
-            0.44444984197616579,
+            0.44444984197616577,
             0.0
           ],
           "size": [
             0.4699999988079071,
-            0.18000000715255738
+            0.18000000715255737
           ],
           "normalColor": [
-            0.30000001192092898,
-            0.30000001192092898,
-            0.30000001192092898
+            0.30000001192092896,
+            0.30000001192092896,
+            0.30000001192092896
           ],
           "hoverColor": [
             0.5,
@@ -1994,7 +1309,6 @@
       }
     },
     {
-      "id": 29,
       "components": {
         "IDComponent": {
           "guid": "4440ea5ea32fb64d9380a74953de17f2"
@@ -2031,17 +1345,17 @@
           "text": "",
           "position": [
             0.4043569266796112,
-            0.26118987798690798,
+            0.26118987798690796,
             0.0
           ],
           "size": [
             0.4699999988079071,
-            0.18000000715255738
+            0.18000000715255737
           ],
           "normalColor": [
-            0.30000001192092898,
-            0.30000001192092898,
-            0.30000001192092898
+            0.30000001192092896,
+            0.30000001192092896,
+            0.30000001192092896
           ],
           "hoverColor": [
             0.5,
@@ -2074,7 +1388,6 @@
       }
     },
     {
-      "id": 30,
       "components": {
         "IDComponent": {
           "guid": "2c03a2169e3256489a04dffeb2b493c2"
@@ -2116,12 +1429,12 @@
           ],
           "size": [
             0.11348003149032593,
-            0.14607985317707063
+            0.14607985317707062
           ],
           "normalColor": [
-            0.30000001192092898,
-            0.30000001192092898,
-            0.30000001192092898
+            0.30000001192092896,
+            0.30000001192092896,
+            0.30000001192092896
           ],
           "hoverColor": [
             0.5,
@@ -2154,7 +1467,6 @@
       }
     },
     {
-      "id": 31,
       "components": {
         "IDComponent": {
           "guid": "e35dd96a6fa9c74b87a408714d607992"
@@ -2222,7 +1534,6 @@
       }
     },
     {
-      "id": 32,
       "components": {
         "IDComponent": {
           "guid": "587289e4e63251408f0f598a8db7bf58"
@@ -2290,7 +1601,6 @@
       }
     },
     {
-      "id": 33,
       "components": {
         "IDComponent": {
           "guid": "ca1278c0c9f0dd429783988f70c352f0"
@@ -2358,7 +1668,6 @@
       }
     },
     {
-      "id": 34,
       "components": {
         "IDComponent": {
           "guid": "a009851bf5a457448282c94755dff678"
@@ -2426,7 +1735,6 @@
       }
     },
     {
-      "id": 35,
       "components": {
         "IDComponent": {
           "guid": "d8628cb2bb0642459fea2558ce4f72af"
@@ -2461,7 +1769,6 @@
       }
     },
     {
-      "id": 36,
       "components": {
         "IDComponent": {
           "guid": "079c9929646cd247952efc6306ac0ca4"
@@ -2529,7 +1836,6 @@
       }
     },
     {
-      "id": 37,
       "components": {
         "IDComponent": {
           "guid": "dc6c4e6ec52897429f22267008fc62b7"
@@ -2573,9 +1879,9 @@
             0.05000000074505806
           ],
           "trackColor": [
-            0.20000000298023225,
-            0.20000000298023225,
-            0.20000000298023225
+            0.20000000298023224,
+            0.20000000298023224,
+            0.20000000298023224
           ],
           "fillColor": [
             0.4000000059604645,
@@ -2632,7 +1938,6 @@
       }
     },
     {
-      "id": 38,
       "components": {
         "IDComponent": {
           "guid": "f239b7ee31b58c4ea1b6b9e7da3977b6"
@@ -2673,7 +1978,7 @@
             0.0
           ],
           "width": 0.5874490737915039,
-          "height": 0.29372453689575198,
+          "height": 0.29372453689575195,
           "tintColor": [
             1.0,
             1.0,
@@ -2691,7 +1996,7 @@
           "captionFontSize": 16.0,
           "captionPosition": [
             0.5899999737739563,
-            0.28999999165534975,
+            0.28999999165534973,
             0.0
           ],
           "renderOrder": 5
@@ -2700,7 +2005,6 @@
       }
     },
     {
-      "id": 39,
       "components": {
         "IDComponent": {
           "guid": "6dc3edadca30df4981ce68e1830928d8"
@@ -2736,18 +2040,18 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.14800000190734864,
+            0.14800000190734863,
             0.8460000157356262,
             0.0
           ],
           "size": [
-            0.19200000166893006,
+            0.19200000166893005,
             0.1340000033378601
           ],
           "normalColor": [
-            0.30000001192092898,
-            0.30000001192092898,
-            0.30000001192092898
+            0.30000001192092896,
+            0.30000001192092896,
+            0.30000001192092896
           ],
           "hoverColor": [
             0.5,
@@ -2780,7 +2084,6 @@
       }
     },
     {
-      "id": 40,
       "components": {
         "IDComponent": {
           "guid": "e9b331a3b5d13344b8fd11e4e389b10a"
@@ -2821,13 +2124,13 @@
             0.0
           ],
           "size": [
-            0.11185003817081452,
-            0.14852485060691834
+            0.11185003817081451,
+            0.14852485060691833
           ],
           "normalColor": [
-            0.30000001192092898,
-            0.30000001192092898,
-            0.30000001192092898
+            0.30000001192092896,
+            0.30000001192092896,
+            0.30000001192092896
           ],
           "hoverColor": [
             0.5,
@@ -2860,7 +2163,6 @@
       }
     },
     {
-      "id": 41,
       "components": {
         "IDComponent": {
           "guid": "5cc779475142eb4291fa72d3e6a82798"
@@ -2901,13 +2203,13 @@
             0.0
           ],
           "size": [
-            0.11185003817081452,
-            0.14852485060691834
+            0.11185003817081451,
+            0.14852485060691833
           ],
           "normalColor": [
-            0.30000001192092898,
-            0.30000001192092898,
-            0.30000001192092898
+            0.30000001192092896,
+            0.30000001192092896,
+            0.30000001192092896
           ],
           "hoverColor": [
             0.5,
@@ -2940,7 +2242,6 @@
       }
     },
     {
-      "id": 42,
       "components": {
         "IDComponent": {
           "guid": "352dbc1b8c8c6e4ba3513af672f84cfd"
@@ -2981,13 +2282,13 @@
             0.0
           ],
           "size": [
-            0.11185003817081452,
-            0.14852485060691834
+            0.11185003817081451,
+            0.14852485060691833
           ],
           "normalColor": [
-            0.30000001192092898,
-            0.30000001192092898,
-            0.30000001192092898
+            0.30000001192092896,
+            0.30000001192092896,
+            0.30000001192092896
           ],
           "hoverColor": [
             0.5,
@@ -3019,77 +2320,5 @@
         }
       }
     }
-  ],
-  "globalGraphics": {
-    "ambientColor": [
-      1.0,
-      1.0,
-      1.0
-    ],
-    "ambientIntensity": 0.07999999821186066,
-    "ssaoEnabled": false,
-    "ssaoSamples": 16,
-    "ssaoRadius": 10.0,
-    "ssaoBias": 0.009999999776482582,
-    "ssaoIntensity": 1.0,
-    "ssaoFadeout": 0.10000000149011612,
-    "ssaoMaxDistance": 100.0,
-    "fogEnabled": false,
-    "fogMode": 0,
-    "fogColor": [
-      0.5,
-      0.6000000238418579,
-      0.699999988079071
-    ],
-    "fogDensity": 0.019999999552965165,
-    "fogStart": 50.0,
-    "fogEnd": 200.0,
-    "fogHeightCoefficient": 0.10000000149011612,
-    "fogHeightFalloff": 10.0,
-    "vignetteEnabled": false,
-    "fxaaEnabled": true,
-    "toneMappingEnabled": true,
-    "gammaCorrectionEnabled": true,
-    "bloomEnabled": true,
-    "skyboxIsHDR": false,
-    "showSkybox": true,
-    "exposure": 1.0,
-    "contrast": 1.0,
-    "saturation": 1.0,
-    "gamma": 1.7440725564956666,
-    "vignetteIntensity": 0.30000001192092898,
-    "vignetteRadius": 0.800000011920929,
-    "vignetteCoverage": 0.0,
-    "vignetteFalloff": 0.20000000298023225,
-    "vignetteMapStrength": 1.0,
-    "vignetteMapRGBModifier": [
-      0.0,
-      0.0,
-      0.0
-    ],
-    "vignetteMapPath": "",
-    "bloomStrength": 0.03999999910593033,
-    "filmGrainEnabled": false,
-    "grainIntensity": 0.014999999664723874,
-    "grainScale": 1.5,
-    "chromaticAberrationEnabled": false,
-    "chromaticAmount": 0.003000000026077032,
-    "radialBlurEnabled": false,
-    "radialBlurStrength": 0.0,
-    "radialBlurSamples": 12,
-    "radialBlurCenterX": 0.5,
-    "radialBlurCenterY": 0.5,
-    "fxaaSpanMax": 8.0,
-    "fxaaReduceMin": 0.0078125,
-    "fxaaReduceMul": 0.125,
-    "bloomThreshold": 1.0,
-    "bloomIntensity": 2.0,
-    "bloomRadius": 1.0,
-    "spotlightRaysEnabled": true,
-    "spotlightRayIntensity": 0.30000001192092898,
-    "spotlightRayFalloff": 2.0,
-    "motionBlurEnabled": true,
-    "motionBlurStrength": 1.0,
-    "motionBlurSamples": 8
-  }
+  ]
 }
