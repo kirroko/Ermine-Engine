@@ -266263,6 +266263,74 @@
           "disabled": false
         }
       }
+    },
+    {
+      "id": 6290,
+      "components": {
+        "IDComponent": {
+          "guid": "db793c27ef2f4deeb07c8da691a6c9e5"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "BlackOverlay",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d9495b659a540745b340d0625be4d531",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "Resources/Textures/UI/UI UPDATED/Black Overlay.png",
+          "fullscreen": true,
+          "position": [
+            0.5,
+            0.5,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 1.0,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 0.6,
+          "maintainAspectRatio": false,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.1,
+            0.0
+          ],
+          "renderOrder": 0
+        },
+        "GlobalTransform": {}
+      }
     }
   ],
   "globalGraphics": {
