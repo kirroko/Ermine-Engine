@@ -4426,6 +4426,7 @@ namespace Ermine::editor {
 			"OpenSettingsControls",
 			"OpenSettingsVideo",
 			"BackToSettingsPage",
+			"ExitToMenu",
 			"Resume",
 			"ShowTeleportInfo",
 			"ShowShootingInfo",
