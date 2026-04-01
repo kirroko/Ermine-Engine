@@ -21,10 +21,10 @@
           "selfActive": false
         },
         "GlobalAudioComponent": {
-          "masterVolume": 1.0,
-          "musicVolume": 0.23999999463558197,
-          "sfxVolume": 1.0,
-          "ambienceVolume": 0.10000000149011612,
+          "masterVolume": 0.8523635864257812,
+          "musicVolume": 1.0,
+          "sfxVolume": 0.8826786875724792,
+          "ambienceVolume": 1.0,
           "voiceVolume": 1.0,
           "autoPlay": true,
           "music": [
@@ -3750,10 +3750,10 @@
             -8.211677551269531
           ],
           "rotation": [
-            0.6408493518829346,
-            0.29885104298591614,
-            0.2988511025905609,
-            0.640849232673645
+            0.3744937777519226,
+            -0.599791944026947,
+            -0.5997920632362366,
+            0.3744937777519226
           ],
           "scale": [
             0.15000000596046448,
@@ -3924,10 +3924,10 @@
             -8.118584632873535
           ],
           "rotation": [
-            0.6408493518829346,
-            -0.29885104298591614,
-            -0.2988511025905609,
-            0.640849232673645
+            0.3744937777519226,
+            0.599791944026947,
+            0.5997920632362366,
+            0.3744937777519226
           ],
           "scale": [
             0.10000000149011612,
@@ -4098,10 +4098,10 @@
             -7.903934478759766
           ],
           "rotation": [
-            0.6408493518829346,
-            0.29885104298591614,
-            0.2988511025905609,
-            0.640849232673645
+            0.3744937777519226,
+            -0.599791944026947,
+            -0.5997920632362366,
+            0.3744937777519226
           ],
           "scale": [
             0.15000000596046448,
@@ -5904,9 +5904,9 @@
           ],
           "rotation": [
             0.0,
-            0.8870378732681274,
+            0.7515645027160645,
             0.0,
-            0.46169644594192505
+            0.6596586108207703
           ],
           "scale": [
             1.0,
@@ -6166,9 +6166,9 @@
           ],
           "rotation": [
             0.0,
-            0.5187985897064209,
+            0.30028048157691956,
             0.0,
-            0.8548972606658936
+            0.9538520574569702
           ],
           "scale": [
             1.0,
@@ -7041,10 +7041,10 @@
             -9.674206733703613
           ],
           "rotation": [
-            0.6644685864448547,
-            0.6644690632820129,
-            -0.24182909727096558,
-            0.2418292760848999
+            -0.1593102067708969,
+            -0.1593105047941208,
+            -0.6889265179634094,
+            0.6889274716377258
           ],
           "scale": [
             0.15000000596046448,
@@ -7130,10 +7130,10 @@
             -7.693473815917969
           ],
           "rotation": [
-            0.6644685864448547,
-            0.6644690632820129,
-            -0.24182909727096558,
-            0.2418292760848999
+            -0.1593102067708969,
+            -0.1593105047941208,
+            -0.6889265179634094,
+            0.6889274716377258
           ],
           "scale": [
             0.10000000149011612,
@@ -7219,10 +7219,10 @@
             -11.557196617126465
           ],
           "rotation": [
-            0.6644685864448547,
-            0.6644690632820129,
-            -0.24182909727096558,
-            0.2418292760848999
+            -0.1593102067708969,
+            -0.1593105047941208,
+            -0.6889265179634094,
+            0.6889274716377258
           ],
           "scale": [
             0.10000000149011612,
@@ -8798,9 +8798,9 @@
           ],
           "rotation": [
             0.0,
-            0.8870378732681274,
+            -0.35050851106643677,
             0.0,
-            0.46169644594192505
+            0.9365589022636414
           ],
           "scale": [
             1.5,
@@ -9186,9 +9186,9 @@
           ],
           "rotation": [
             0.0,
-            0.8870378732681274,
+            -0.35050851106643677,
             0.0,
-            0.46169644594192505
+            0.9365589022636414
           ],
           "scale": [
             1.5,
@@ -11024,9 +11024,9 @@
           ],
           "rotation": [
             0.0,
-            0.8870378732681274,
+            -0.35050851106643677,
             0.0,
-            0.46169644594192505
+            0.9365589022636414
           ],
           "scale": [
             2.0,
@@ -11403,13 +11403,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -11568,13 +11568,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -12870,7 +12870,7 @@
         "Transform": {
           "position": [
             35.43168640136719,
-            7.698905944824219,
+            7.5101823806762695,
             -223.41209411621094
           ],
           "rotation": [
@@ -12928,11 +12928,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -13704,7 +13704,7 @@
         "Transform": {
           "position": [
             49.6786994934082,
-            2.8223798274993896,
+            3.011096715927124,
             -218.70953369140625
           ],
           "rotation": [
@@ -13762,11 +13762,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -14538,7 +14538,7 @@
         "Transform": {
           "position": [
             40.63077163696289,
-            3.434229850769043,
+            3.622958183288574,
             -213.59352111816406
           ],
           "rotation": [
@@ -14596,11 +14596,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -15372,7 +15372,7 @@
         "Transform": {
           "position": [
             40.64946746826172,
-            5.945228576660156,
+            5.756503105163574,
             -193.76815795898438
           ],
           "rotation": [
@@ -15430,11 +15430,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -16206,7 +16206,7 @@
         "Transform": {
           "position": [
             25.467544555664062,
-            6.038189888000488,
+            6.22690486907959,
             -210.71484375
           ],
           "rotation": [
@@ -16264,11 +16264,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -17040,7 +17040,7 @@
         "Transform": {
           "position": [
             18.880647659301758,
-            5.666199684143066,
+            5.854928016662598,
             -228.0310516357422
           ],
           "rotation": [
@@ -17098,11 +17098,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -17874,7 +17874,7 @@
         "Transform": {
           "position": [
             18.847026824951172,
-            6.266556262969971,
+            6.077831745147705,
             -196.3971710205078
           ],
           "rotation": [
@@ -17932,11 +17932,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -18708,7 +18708,7 @@
         "Transform": {
           "position": [
             47.30696487426758,
-            4.185367584228516,
+            4.313610076904297,
             -176.23220825195312
           ],
           "rotation": [
@@ -18766,11 +18766,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -19542,7 +19542,7 @@
         "Transform": {
           "position": [
             32.28816223144531,
-            4.900876522064209,
+            5.08960485458374,
             -181.49838256835938
           ],
           "rotation": [
@@ -19600,11 +19600,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -20376,7 +20376,7 @@
         "Transform": {
           "position": [
             16.248126983642578,
-            4.185367584228516,
+            3.9966421127319336,
             -181.49838256835938
           ],
           "rotation": [
@@ -20434,11 +20434,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -21453,13 +21453,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -21618,13 +21618,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -21783,13 +21783,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -21948,13 +21948,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -22113,13 +22113,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -22278,13 +22278,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -22443,13 +22443,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -23457,10 +23457,10 @@
             -5.374000072479248
           ],
           "rotation": [
-            0.49979686737060547,
-            0.4998578429222107,
-            -0.5001420974731445,
-            0.5002030730247498
+            -0.4357151687145233,
+            -0.43576785922050476,
+            -0.5568567514419556,
+            0.5569257140159607
           ],
           "scale": [
             0.1300000101327896,
@@ -23551,10 +23551,10 @@
             -8.267000198364258
           ],
           "rotation": [
-            5.26835597369768e-09,
-            5.26835597369768e-09,
-            -0.7071068286895752,
-            0.7071067094802856
+            -0.7018687129020691,
+            -0.7018685936927795,
+            -0.08590719848871231,
+            0.08590725064277649
           ],
           "scale": [
             0.19999641180038452,
@@ -31511,15 +31511,15 @@
         },
         "Transform": {
           "position": [
-            9.524097442626953,
-            1.0499330759048462,
-            43.741310119628906
+            5.387310981750488,
+            1.519761085510254,
+            33.51890182495117
           ],
           "rotation": [
             0.0,
-            -0.7860047221183777,
+            0.9747001528739929,
             0.0,
-            0.6182205080986023
+            -0.22351646423339844
           ],
           "scale": [
             0.01000000350177288,
@@ -31594,13 +31594,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "jumpHeight": {
-                  "t": 0,
-                  "v": 2.0
-                },
                 "mouseHorSens": {
                   "t": 0,
                   "v": 0.10000000149011612
+                },
+                "jumpHeight": {
+                  "t": 0,
+                  "v": 2.0
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -31610,13 +31610,13 @@
                   "t": 0,
                   "v": 8.0
                 },
-                "camDefaultY": {
-                  "t": 0,
-                  "v": 4.5
-                },
                 "jumpspeed": {
                   "t": 0,
                   "v": 5.0
+                },
+                "camDefaultY": {
+                  "t": 0,
+                  "v": 4.5
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -31636,17 +31636,17 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "teleportChromaticAberrationIntensity": {
+                "damage": {
                   "t": 0,
-                  "v": 0.07999999821186066
+                  "v": 10.0
                 },
                 "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
-                "damage": {
+                "teleportChromaticAberrationIntensity": {
                   "t": 0,
-                  "v": 10.0
+                  "v": 0.07999999821186066
                 },
                 "regenDelay": {
                   "t": 0,
@@ -31679,14 +31679,14 @@
         "Transform": {
           "position": [
             0.0,
-            451.0836486816406,
+            450.00006103515625,
             0.0
           ],
           "rotation": [
-            0.003799906000494957,
+            -0.020543813705444336,
             0.0,
             0.0,
-            0.9999927878379822
+            0.9997889399528503
           ],
           "scale": [
             100.0,
@@ -32183,7 +32183,7 @@
               {
                 "name": "IsMoving",
                 "type": 0,
-                "boolValue": true,
+                "boolValue": false,
                 "floatValue": 0.0,
                 "intValue": 0,
                 "triggerValue": false
@@ -32568,10 +32568,10 @@
             63.79701232910156
           ],
           "rotation": [
-            0.24160157144069672,
-            -0.24159805476665497,
-            0.6645572185516357,
-            0.6645470261573792
+            0.6889871954917908,
+            -0.6889755725860596,
+            -0.15907390415668488,
+            -0.15907181799411774
           ],
           "scale": [
             0.15000002086162567,
@@ -33882,7 +33882,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f34b87924507c847bd6bf14038599810",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -33962,7 +33962,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f34b87924507c847bd6bf14038599810",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -34202,7 +34202,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f34b87924507c847bd6bf14038599810",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -34282,7 +34282,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f34b87924507c847bd6bf14038599810",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -34362,7 +34362,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f34b87924507c847bd6bf14038599810",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -34442,7 +34442,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f34b87924507c847bd6bf14038599810",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -34522,7 +34522,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f34b87924507c847bd6bf14038599810",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -34602,7 +34602,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f34b87924507c847bd6bf14038599810",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -35136,7 +35136,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f34b87924507c847bd6bf14038599810",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -35321,7 +35321,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "f34b87924507c847bd6bf14038599810",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -46560,13 +46560,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -47030,13 +47030,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -47230,13 +47230,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -47545,13 +47545,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "radius": {
-                  "t": 0,
-                  "v": 18.09000015258789
-                },
                 "healthBarName": {
                   "t": 3,
                   "v": "Healthbar"
+                },
+                "radius": {
+                  "t": 0,
+                  "v": 18.09000015258789
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -48070,7 +48070,7 @@
             0.0,
             0.7071068286895752,
             0.0,
-            0.7071067094802856
+            0.7071067690849304
           ],
           "scale": [
             0.9999480247497559,
@@ -48124,13 +48124,13 @@
                   "t": 0,
                   "v": 2.0
                 },
-                "sceneName": {
-                  "t": 3,
-                  "v": "LevelTransitionCutscene.scene"
-                },
                 "eDuration": {
                   "t": 0,
                   "v": 3.0
+                },
+                "sceneName": {
+                  "t": 3,
+                  "v": "LevelTransitionCutscene.scene"
                 },
                 "dSpeed": {
                   "t": 0,
@@ -48836,7 +48836,7 @@
         },
         "Transform": {
           "position": [
-            0.0,
+            -6.0,
             0.06639766693115234,
             -0.480499267578125
           ],
@@ -48983,7 +48983,7 @@
         },
         "Transform": {
           "position": [
-            0.0,
+            6.0,
             0.06639766693115234,
             -0.480499267578125
           ],
@@ -50915,9 +50915,9 @@
           ],
           "textScale": 1.0,
           "backgroundAlpha": 1.0,
-          "normalImage": "Resources/Textures/UI/Settings_Unselected.png",
-          "hoverImage": "Resources/Textures/UI/Settings_Selected.png",
-          "pressedImage": "Resources/Textures/UI/Settings_Selected.png",
+          "normalImage": "Resources/Textures/UI/UI UPDATED/Settings_Unselected.png",
+          "hoverImage": "Resources/Textures/UI/UI UPDATED/Settings_Selected.png",
+          "pressedImage": "",
           "action": 3,
           "actionData": "OpenSettingsPage",
           "hoverSoundName": "",
@@ -51042,15 +51042,15 @@
           "depth": 1
         },
         "UIImageComponent": {
-          "imagePath": "..Resources/Textures/UI/Book_Pause_Menu_BG.png",
+          "imagePath": "Resources/Textures/UI/UI UPDATED/Book_Pause_Menu_3DBG.png",
           "fullscreen": true,
           "position": [
             0.5,
             0.5,
             0.0
           ],
-          "width": 1.0,
-          "height": 1.0,
+          "width": 0.8870000243186951,
+          "height": 0.8870000243186951,
           "tintColor": [
             1.0,
             1.0,
@@ -51488,7 +51488,7 @@
           ]
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -51599,7 +51599,7 @@
           ]
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -51710,7 +51710,7 @@
           ]
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -51821,7 +51821,7 @@
           ]
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -52381,7 +52381,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -52421,7 +52421,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -52461,7 +52461,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -52501,7 +52501,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -52541,7 +52541,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -52581,7 +52581,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -52621,7 +52621,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -52661,7 +52661,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -52701,7 +52701,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -52741,7 +52741,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -52781,7 +52781,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -52821,7 +52821,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -52861,7 +52861,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -58778,7 +58778,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -59044,7 +59044,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -59150,7 +59150,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -59732,7 +59732,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -65107,7 +65107,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "51afae3478d1a746ad2360d56ef11f40",
+          "guid": "e419888de02c69428277380710752ae7",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -65186,7 +65186,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "51afae3478d1a746ad2360d56ef11f40",
+          "guid": "e419888de02c69428277380710752ae7",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -65739,7 +65739,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "51afae3478d1a746ad2360d56ef11f40",
+          "guid": "e419888de02c69428277380710752ae7",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -65818,7 +65818,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "51afae3478d1a746ad2360d56ef11f40",
+          "guid": "e419888de02c69428277380710752ae7",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -65897,7 +65897,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "51afae3478d1a746ad2360d56ef11f40",
+          "guid": "e419888de02c69428277380710752ae7",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -66161,7 +66161,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -66240,7 +66240,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -66319,7 +66319,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -66398,7 +66398,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -66477,7 +66477,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -66556,7 +66556,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -66635,7 +66635,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -66714,7 +66714,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -66793,7 +66793,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -66872,7 +66872,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -66951,7 +66951,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -67030,7 +67030,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -67109,7 +67109,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -67188,7 +67188,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -67622,7 +67622,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -67702,7 +67702,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -67817,7 +67817,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -68110,7 +68110,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -68189,7 +68189,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -68518,7 +68518,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -68888,7 +68888,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -69760,8 +69760,8 @@
           "rotation": [
             0.0,
             0.0,
-            0.0,
-            1.0
+            -0.9925909042358398,
+            0.12149076163768768
           ],
           "scale": [
             0.03500000014901161,
@@ -70276,7 +70276,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -70382,7 +70382,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -70676,7 +70676,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "369cdd416b6bc9489dfd7c5bf80ab00b",
+          "guid": "92d3692cb270254b8383e43392ad325e",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -71039,7 +71039,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "acd05d15ccee4145a8e9c034750ab31c",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -73901,7 +73901,7 @@
           }
         },
         "Material": {
-          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "guid": "6df60099538cd4448f2aec3f0ede4555",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -74135,10 +74135,10 @@
             -9.674206733703613
           ],
           "rotation": [
-            0.6644685864448547,
-            0.6644690632820129,
-            -0.24182909727096558,
-            0.2418292760848999
+            -0.1593102067708969,
+            -0.1593105047941208,
+            -0.6889265179634094,
+            0.6889274716377258
           ],
           "scale": [
             0.15000000596046448,
@@ -90655,6 +90655,7 @@
       }
     },
     {
+      "id": 1900,
       "components": {
         "IDComponent": {
           "guid": "50fc8e0ac9d0462293ee7463a8fca47c"
@@ -90683,14 +90684,14 @@
           "selfActive": false
         },
         "HierarchyComponent": {
-          "depth": 1,
-          "parentGuid": "123191140fec544a9c118b6b5e9cb958"
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
+          "depth": 1
         },
         "GlobalTransform": {}
-      },
-      "id": 1900
+      }
     },
     {
+      "id": 1901,
       "components": {
         "IDComponent": {
           "guid": "487346475d964a239676355d60cf0494"
@@ -90767,10 +90768,10 @@
           "renderOrder": 0,
           "disabled": false
         }
-      },
-      "id": 1901
+      }
     },
     {
+      "id": 1902,
       "components": {
         "IDComponent": {
           "guid": "7cebba5e003847f9aa4bd2ffab88d4a5"
@@ -90847,10 +90848,10 @@
           "renderOrder": 0,
           "disabled": false
         }
-      },
-      "id": 1902
+      }
     },
     {
+      "id": 1903,
       "components": {
         "IDComponent": {
           "guid": "9c1a08d83ead4601bed2039ed23c9f53"
@@ -90915,10 +90916,10 @@
           "renderOrder": 0
         },
         "GlobalTransform": {}
-      },
-      "id": 1903
+      }
     },
     {
+      "id": 1904,
       "components": {
         "IDComponent": {
           "guid": "a90be292bf284e519863f2a9e490f728"
@@ -90995,10 +90996,10 @@
           "renderOrder": 0,
           "disabled": false
         }
-      },
-      "id": 1904
+      }
     },
     {
+      "id": 1905,
       "components": {
         "IDComponent": {
           "guid": "dc2d975492b846e5b226f899d95d2392"
@@ -91075,10 +91076,10 @@
           "renderOrder": 0,
           "disabled": false
         }
-      },
-      "id": 1905
+      }
     },
     {
+      "id": 1906,
       "components": {
         "IDComponent": {
           "guid": "f40b9799ef8c4340b41c924e6835399c"
@@ -91107,14 +91108,14 @@
           "selfActive": false
         },
         "HierarchyComponent": {
-          "depth": 1,
-          "parentGuid": "123191140fec544a9c118b6b5e9cb958"
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
+          "depth": 1
         },
         "GlobalTransform": {}
-      },
-      "id": 1906
+      }
     },
     {
+      "id": 1907,
       "components": {
         "IDComponent": {
           "guid": "3ff5a1a64beb45c9ba2dba8729d28fdf"
@@ -91179,10 +91180,10 @@
           "renderOrder": 0
         },
         "GlobalTransform": {}
-      },
-      "id": 1907
+      }
     },
     {
+      "id": 1908,
       "components": {
         "IDComponent": {
           "guid": "312f8564de79440dbac471cd9b8b9d22"
@@ -91250,7 +91251,7 @@
           "trackImage": "Resources/Textures/UI/UI UPDATED/Audio_Bar.png",
           "fillImage": "Resources/Textures/UI/UI UPDATED/Audio_Fill.png",
           "handleImage": "Resources/Textures/UI/UI UPDATED/Audio_Indicator.png",
-          "value": 0.2515869140625,
+          "value": 0.8523635864257812,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 1,
@@ -91282,10 +91283,10 @@
           "valueAsPercentage": true,
           "renderOrder": 0
         }
-      },
-      "id": 1908
+      }
     },
     {
+      "id": 1909,
       "components": {
         "IDComponent": {
           "guid": "0e07a674bf544c2fb7fbdfb7426d5993"
@@ -91385,10 +91386,10 @@
           "valueAsPercentage": true,
           "renderOrder": 0
         }
-      },
-      "id": 1909
+      }
     },
     {
+      "id": 1910,
       "components": {
         "IDComponent": {
           "guid": "5855f61b582b41ba9b40c5b24df07d9c"
@@ -91488,10 +91489,10 @@
           "valueAsPercentage": true,
           "renderOrder": 0
         }
-      },
-      "id": 1910
+      }
     },
     {
+      "id": 1911,
       "components": {
         "IDComponent": {
           "guid": "2aa0d948cda042ccbe88f318eb517167"
@@ -91568,10 +91569,10 @@
           "renderOrder": 0,
           "disabled": false
         }
-      },
-      "id": 1911
+      }
     },
     {
+      "id": 1912,
       "components": {
         "IDComponent": {
           "guid": "824bcdbd2673458f8e7f1f84f167600b"
@@ -91636,10 +91637,10 @@
           "renderOrder": 0
         },
         "GlobalTransform": {}
-      },
-      "id": 1912
+      }
     },
     {
+      "id": 1913,
       "components": {
         "IDComponent": {
           "guid": "fbeeed24bc684fc49fe83016784bf3ca"
@@ -91668,14 +91669,14 @@
           "selfActive": false
         },
         "HierarchyComponent": {
-          "depth": 1,
-          "parentGuid": "123191140fec544a9c118b6b5e9cb958"
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
+          "depth": 1
         },
         "GlobalTransform": {}
-      },
-      "id": 1913
+      }
     },
     {
+      "id": 1914,
       "components": {
         "IDComponent": {
           "guid": "3241c579b2c24370af619559853dad07"
@@ -91740,10 +91741,10 @@
           "renderOrder": 0
         },
         "GlobalTransform": {}
-      },
-      "id": 1914
+      }
     },
     {
+      "id": 1915,
       "components": {
         "IDComponent": {
           "guid": "b6a0fbf6d7e549fca50cc9feaa743e48"
@@ -91820,10 +91821,10 @@
           "renderOrder": 0,
           "disabled": false
         }
-      },
-      "id": 1915
+      }
     },
     {
+      "id": 1916,
       "components": {
         "IDComponent": {
           "guid": "5a0c71239fe54d98b3aa665f69c1845d"
@@ -91900,10 +91901,10 @@
           "renderOrder": 0,
           "disabled": false
         }
-      },
-      "id": 1916
+      }
     },
     {
+      "id": 1917,
       "components": {
         "IDComponent": {
           "guid": "6d6531037c0f40b598d27391766079cf"
@@ -91980,10 +91981,10 @@
           "renderOrder": 0,
           "disabled": false
         }
-      },
-      "id": 1917
+      }
     },
     {
+      "id": 1918,
       "components": {
         "IDComponent": {
           "guid": "fcd9dd14ee444e19b50c8738ed5da090"
@@ -92060,10 +92061,10 @@
           "renderOrder": 0,
           "disabled": false
         }
-      },
-      "id": 1918
+      }
     },
     {
+      "id": 1919,
       "components": {
         "IDComponent": {
           "guid": "137c8413c71b44a4ad54206d8a6253a5"
@@ -92140,10 +92141,10 @@
           "renderOrder": 0,
           "disabled": false
         }
-      },
-      "id": 1919
+      }
     },
     {
+      "id": 1920,
       "components": {
         "IDComponent": {
           "guid": "92dbbfdd40864463817272d2fc12fe2b"
@@ -92208,10 +92209,10 @@
           "renderOrder": 0
         },
         "GlobalTransform": {}
-      },
-      "id": 1920
+      }
     },
     {
+      "id": 1921,
       "components": {
         "IDComponent": {
           "guid": "26849f128218404a865034936ab8f92e"
@@ -92276,10 +92277,10 @@
           "renderOrder": 0
         },
         "GlobalTransform": {}
-      },
-      "id": 1921
+      }
     },
     {
+      "id": 1922,
       "components": {
         "IDComponent": {
           "guid": "cf68665492974257ad6264069641662a"
@@ -92344,10 +92345,10 @@
           "renderOrder": 0
         },
         "GlobalTransform": {}
-      },
-      "id": 1922
+      }
     },
     {
+      "id": 1923,
       "components": {
         "IDComponent": {
           "guid": "740c40f2fd1f4e7b9607c1c4a1e592ae"
@@ -92412,10 +92413,10 @@
           "renderOrder": 0
         },
         "GlobalTransform": {}
-      },
-      "id": 1923
+      }
     },
     {
+      "id": 1924,
       "components": {
         "IDComponent": {
           "guid": "e582f8ecb8f14a29aba0a23c40e01763"
@@ -92444,14 +92445,14 @@
           "selfActive": false
         },
         "HierarchyComponent": {
-          "depth": 1,
-          "parentGuid": "123191140fec544a9c118b6b5e9cb958"
+          "parentGuid": "123191140fec544a9c118b6b5e9cb958",
+          "depth": 1
         },
         "GlobalTransform": {}
-      },
-      "id": 1924
+      }
     },
     {
+      "id": 1925,
       "components": {
         "IDComponent": {
           "guid": "6bec842dd91e4c809852c0cd2f0f00d5"
@@ -92516,10 +92517,10 @@
           "renderOrder": 0
         },
         "GlobalTransform": {}
-      },
-      "id": 1925
+      }
     },
     {
+      "id": 1926,
       "components": {
         "IDComponent": {
           "guid": "98afc3e77e074cb1b068bc5277b1524d"
@@ -92587,7 +92588,7 @@
           "trackImage": "Resources/Textures/UI/UI UPDATED/Audio_Bar.png",
           "fillImage": "Resources/Textures/UI/UI UPDATED/Audio_Fill.png",
           "handleImage": "Resources/Textures/UI/UI UPDATED/Audio_Indicator.png",
-          "value": 0.8799394369125366,
+          "value": 0.15072079002857208,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 5,
@@ -92619,10 +92620,10 @@
           "valueAsPercentage": true,
           "renderOrder": 0
         }
-      },
-      "id": 1926
+      }
     },
     {
+      "id": 1927,
       "components": {
         "IDComponent": {
           "guid": "c87dd6b1806e4e41b1e341e2988660f9"
@@ -92687,10 +92688,10 @@
           "renderOrder": 5
         },
         "GlobalTransform": {}
-      },
-      "id": 1927
+      }
     },
     {
+      "id": 1928,
       "components": {
         "IDComponent": {
           "guid": "b1df718fb8984175ace2edc1bd85ca20"
@@ -92767,10 +92768,10 @@
           "renderOrder": 0,
           "disabled": false
         }
-      },
-      "id": 1928
+      }
     },
     {
+      "id": 1929,
       "components": {
         "IDComponent": {
           "guid": "2ff6bfd4dbc54010bb60fb8fcc066bf6"
@@ -92847,10 +92848,10 @@
           "renderOrder": 0,
           "disabled": false
         }
-      },
-      "id": 1929
+      }
     },
     {
+      "id": 1930,
       "components": {
         "IDComponent": {
           "guid": "c32b773bedba4e35a6677433626eab9b"
@@ -92927,10 +92928,10 @@
           "renderOrder": 0,
           "disabled": false
         }
-      },
-      "id": 1930
+      }
     },
     {
+      "id": 1931,
       "components": {
         "IDComponent": {
           "guid": "2f076bb1f8e346f692cc23583e6b71bb"
@@ -93007,10 +93008,10 @@
           "renderOrder": 0,
           "disabled": false
         }
-      },
-      "id": 1931
+      }
     },
     {
+      "id": 1932,
       "components": {
         "IDComponent": {
           "guid": "dcb3fd08f8a74be89130c67e69921765"
@@ -93042,7 +93043,6 @@
           "parentGuid": "123191140fec544a9c118b6b5e9cb958",
           "depth": 1
         },
-        "GlobalTransform": {},
         "UIImageComponent": {
           "imagePath": "Resources/Textures/UI/UI UPDATED/Black Overlay.png",
           "fullscreen": true,
@@ -93058,7 +93058,7 @@
             1.0,
             1.0
           ],
-          "alpha": 0.6,
+          "alpha": 0.6000000238418579,
           "maintainAspectRatio": false,
           "caption": "",
           "showCaption": false,
@@ -93070,13 +93070,385 @@
           "captionFontSize": 24.0,
           "captionPosition": [
             0.5,
-            0.1,
+            0.10000000149011612,
             0.0
           ],
-          "renderOrder": 0
+          "renderOrder": -2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1933,
+      "components": {
+        "IDComponent": {
+          "guid": "27958576ae8f4e48b73c4b51a8e8970e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -1000.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.25,
+            0.25,
+            0.25
+          ]
+        },
+        "GPUParticleEmitter": {
+          "active": true,
+          "maxParticles": 500,
+          "emissionShape": 1,
+          "localPositionOffset": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "overallScale": 1.0,
+          "spawnBoxExtents": [
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612
+          ],
+          "spawnRadius": 0.6499999761581421,
+          "spawnRadiusInner": 0.550000011920929,
+          "spawnRate": 40.0,
+          "burstCountMin": 0,
+          "burstCountMax": 0,
+          "burstInterval": 0.0,
+          "burstOnStart": false,
+          "directionMode": 2,
+          "direction": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "coneAngle": 180.0,
+          "coneInnerAngle": 0.0,
+          "speedMin": 2.5,
+          "speedMax": 6.5,
+          "gravity": [
+            0.0,
+            -6.0,
+            0.0
+          ],
+          "drag": 3.5,
+          "turbulenceStrength": 0.5,
+          "turbulenceScale": 1.0,
+          "boundsMode": 0,
+          "boundsShape": 0,
+          "boundsBoxExtents": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "boundsRadius": 2.0,
+          "boundsRadiusInner": 0.0,
+          "renderMode": 0,
+          "smokeOpacity": 0.6000000238418579,
+          "smokeSoftness": 0.5,
+          "smokeNoiseScale": 0.15000000596046448,
+          "smokeDistortScale": 0.25,
+          "smokeDistortStrength": 0.3499999940395355,
+          "smokePuffScale": 0.3499999940395355,
+          "smokePuffStrength": 0.6000000238418579,
+          "smokeStretch": 0.5,
+          "smokeUpBias": 0.20000000298023224,
+          "smokeDepthFade": 6.0,
+          "electricIntensity": 1.0,
+          "electricFrequency": 8.0,
+          "electricBoltThickness": 0.07999999821186066,
+          "electricBoltVariation": 1.5,
+          "electricGlow": 0.5,
+          "electricBoltCount": 3,
+          "colorStart": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "colorEnd": [
+            0.0,
+            0.4000000059604645,
+            1.399999976158142
+          ],
+          "alphaStart": 1.0,
+          "alphaEnd": 0.0,
+          "sizeStartMin": 0.03999999910593033,
+          "sizeStartMax": 0.11999999731779099,
+          "sizeEndMin": 0.0,
+          "sizeEndMax": 0.019999999552965164,
+          "lifetimeMin": 0.20000000298023224,
+          "lifetimeMax": 0.550000011920929,
+          "sparkleShape": 1
+        },
+        "Light": {
+          "color": [
+            0.0,
+            0.5590777397155762,
+            1.0
+          ],
+          "intensity": 5.0,
+          "type": "Point",
+          "castsShadows": false,
+          "castsRays": false,
+          "innerAngle": -1.0,
+          "outerAngle": -1.0,
+          "radius": 3.0
+        },
+        "ObjectMetaData": {
+          "name": "Sphere",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Sphere",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Dynamic",
+          "mass": 1.0,
+          "shapeType": "Sphere",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": true,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            0.5,
+            0.5,
+            0.5
+          ]
+        },
+        "Material": {
+          "guid": "6a4a6d1a5d3f4b26b9f8c0a1e2d7f314",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "Sphere",
+              "enabled": true,
+              "fields": {}
+            }
+          ]
         }
-      },
-      "id": 1932
+      }
+    },
+    {
+      "id": 1934,
+      "components": {
+        "IDComponent": {
+          "guid": "bfdeb5b2f6515d4585753d141ce16168"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -1000.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.25,
+            0.25,
+            0.25
+          ]
+        },
+        "GPUParticleEmitter": {
+          "active": true,
+          "maxParticles": 500,
+          "emissionShape": 1,
+          "localPositionOffset": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "overallScale": 1.0,
+          "spawnBoxExtents": [
+            0.10000000149011612,
+            0.10000000149011612,
+            0.10000000149011612
+          ],
+          "spawnRadius": 0.6499999761581421,
+          "spawnRadiusInner": 0.550000011920929,
+          "spawnRate": 40.0,
+          "burstCountMin": 0,
+          "burstCountMax": 0,
+          "burstInterval": 0.0,
+          "burstOnStart": false,
+          "directionMode": 2,
+          "direction": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "coneAngle": 180.0,
+          "coneInnerAngle": 0.0,
+          "speedMin": 2.5,
+          "speedMax": 6.5,
+          "gravity": [
+            0.0,
+            -6.0,
+            0.0
+          ],
+          "drag": 3.5,
+          "turbulenceStrength": 0.5,
+          "turbulenceScale": 1.0,
+          "boundsMode": 0,
+          "boundsShape": 0,
+          "boundsBoxExtents": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "boundsRadius": 2.0,
+          "boundsRadiusInner": 0.0,
+          "renderMode": 0,
+          "smokeOpacity": 0.6000000238418579,
+          "smokeSoftness": 0.5,
+          "smokeNoiseScale": 0.15000000596046448,
+          "smokeDistortScale": 0.25,
+          "smokeDistortStrength": 0.3499999940395355,
+          "smokePuffScale": 0.3499999940395355,
+          "smokePuffStrength": 0.6000000238418579,
+          "smokeStretch": 0.5,
+          "smokeUpBias": 0.20000000298023224,
+          "smokeDepthFade": 6.0,
+          "electricIntensity": 1.0,
+          "electricFrequency": 8.0,
+          "electricBoltThickness": 0.07999999821186066,
+          "electricBoltVariation": 1.5,
+          "electricGlow": 0.5,
+          "electricBoltCount": 3,
+          "colorStart": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "colorEnd": [
+            0.0,
+            0.4000000059604645,
+            1.399999976158142
+          ],
+          "alphaStart": 1.0,
+          "alphaEnd": 0.0,
+          "sizeStartMin": 0.03999999910593033,
+          "sizeStartMax": 0.11999999731779099,
+          "sizeEndMin": 0.0,
+          "sizeEndMax": 0.019999999552965164,
+          "lifetimeMin": 0.20000000298023224,
+          "lifetimeMax": 0.550000011920929,
+          "sparkleShape": 1
+        },
+        "Light": {
+          "color": [
+            0.0,
+            0.5590777397155762,
+            1.0
+          ],
+          "intensity": 5.0,
+          "type": "Point",
+          "castsShadows": false,
+          "castsRays": false,
+          "innerAngle": -1.0,
+          "outerAngle": -1.0,
+          "radius": 3.0
+        },
+        "ObjectMetaData": {
+          "name": "Sphere",
+          "tag": "Untagged",
+          "selfActive": false
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Sphere",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Dynamic",
+          "mass": 1.0,
+          "shapeType": "Sphere",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": true,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            0.5,
+            0.5,
+            0.5
+          ]
+        },
+        "Material": {
+          "guid": "6a4a6d1a5d3f4b26b9f8c0a1e2d7f314",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "Sphere",
+              "enabled": true,
+              "fields": {}
+            }
+          ]
+        }
+      }
     }
   ],
   "globalGraphics": {
@@ -93115,7 +93487,7 @@
     "exposure": 1.003999948501587,
     "contrast": 1.093000054359436,
     "saturation": 1.1030000448226929,
-    "gamma": 2.1999998092651367,
+    "gamma": 2.6191349029541016,
     "vignetteIntensity": 0.30000001192092896,
     "vignetteRadius": 0.800000011920929,
     "vignetteCoverage": 0.0,
@@ -93131,11 +93503,11 @@
     "filmGrainEnabled": false,
     "grainIntensity": 0.014999999664723873,
     "grainScale": 1.5,
-    "chromaticAberrationEnabled": false,
-    "chromaticAmount": 0.003000000026077032,
-    "radialBlurEnabled": false,
-    "radialBlurStrength": 0.0,
-    "radialBlurSamples": 12,
+    "chromaticAberrationEnabled": true,
+    "chromaticAmount": 0.06485209614038467,
+    "radialBlurEnabled": true,
+    "radialBlurStrength": 2.3285379029402975e-06,
+    "radialBlurSamples": 14,
     "radialBlurCenterX": 0.5,
     "radialBlurCenterY": 0.5,
     "fxaaSpanMax": 8.0,
