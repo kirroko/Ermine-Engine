@@ -33,7 +33,7 @@ set "RELEASE_TAG=%~1"
 
 echo.
 echo Uploading "%INSTALLER_FILE%" to release %RELEASE_TAG%...
-gh release upload "%RELEASE_TAG%" "%INSTALLER_FILE%"
+gh release upload "%RELEASE_TAG%" "%INSTALLER_FILE%" --clobber
 
 if errorlevel 1 (
     echo [ERROR] Failed to upload to GitHub release.
