@@ -1,16 +1,32 @@
 using ErmineEngine;
 using System;
 
-// Simple static helper with fade effect
+// Enhanced damage feedback with multiple effects
 public static class DamageVignetteHelper
 {
     private static float timeSinceLastDamage = 999f;
-    private static float vignetteTimeout = 0.15f;
-    private static float fadeDuration = 0.4f; // Fade out over 0.4 seconds
+    private static float fadeInDuration = 0.15f;   // Fade in over 0.15s
+    private static float holdDuration = 0.25f;     // Hold at full for 0.25s
+    private static float fadeOutDuration = 0.6f;   // Fade out over 0.6s
     
-    // Call this when damage is dealt (not every frame - only on damage tick)
+    // Effect intensities
+    private static float maxVignetteIntensity = 0.7f;
+    private static float maxChromaticAberration = 0.015f;
+    private static float minSaturation = 0.5f;     // Desaturate to 50%
+    
+    // Store original values
+    private static bool hasCachedOriginals = false;
+    private static float originalSaturation = 1.0f;
+    
+    // Call this when damage is dealt
     public static void FlashRedVignette()
     {
+        if (!hasCachedOriginals)
+        {
+            originalSaturation = 1.0f;
+            hasCachedOriginals = true;
+        }
+        
         timeSinceLastDamage = 0f;
     }
     
@@ -19,35 +35,64 @@ public static class DamageVignetteHelper
     {
         timeSinceLastDamage += Time.deltaTime;
         
-        if (timeSinceLastDamage > vignetteTimeout + fadeDuration)
+        float fadeInEnd = fadeInDuration;
+        float holdEnd = fadeInEnd + holdDuration;
+        float totalDuration = holdEnd + fadeOutDuration;
+        
+        if (timeSinceLastDamage > totalDuration)
         {
             // Fully cleared
             PostEffects.EnableVignette = false;
             PostEffects.VignetteIntensity = 0f;
             PostEffects.VignetteMapRGBModifier = new Vector3(0.0f, 0.0f, 0.0f);
+            PostEffects.EnableChromaticAberration = false;
+            PostEffects.ChromaticAberrationIntensity = 0f;
+            PostEffects.Saturation = originalSaturation;
         }
-        else if (timeSinceLastDamage > vignetteTimeout)
+        else if (timeSinceLastDamage > holdEnd)
         {
-            // Fading out
-            float fadeProgress = (timeSinceLastDamage - vignetteTimeout) / fadeDuration;
+            // Fading out phase
+            float fadeProgress = (timeSinceLastDamage - holdEnd) / fadeOutDuration;
             float t = Math.Min(fadeProgress, 1.0f);
+            // Smooth ease out (cubic)
+            float easeOut = 1.0f - (1.0f - t) * (1.0f - t) * (1.0f - t);
+            float intensity = 1.0f - easeOut;
             
-            PostEffects.EnableVignette = true;
-            PostEffects.VignetteIntensity = 0.75f * (1.0f - t);
-            PostEffects.VignetteCoverage = 0.5f * (1.0f - t);
-            PostEffects.VignetteRadius = 0.5f + 0.5f * t;
-            PostEffects.VignetteFalloff = 0.4f + 0.6f * t;
-            PostEffects.VignetteMapRGBModifier = new Vector3(1.0f - t, 0.0f, 0.0f);
+            ApplyEffects(intensity);
+        }
+        else if (timeSinceLastDamage > fadeInEnd)
+        {
+            // Hold at full intensity
+            ApplyEffects(1.0f);
         }
         else
         {
-            // Active damage - full red vignette
-            PostEffects.EnableVignette = true;
-            PostEffects.VignetteIntensity = 0.75f;
-            PostEffects.VignetteCoverage = 0.5f;
-            PostEffects.VignetteRadius = 0.5f;
-            PostEffects.VignetteFalloff = 0.4f;
-            PostEffects.VignetteMapRGBModifier = new Vector3(1.0f, 0.0f, 0.0f);
+            // Fading in phase
+            float fadeProgress = timeSinceLastDamage / fadeInDuration;
+            float t = Math.Min(fadeProgress, 1.0f);
+            // Smooth ease in (quadratic)
+            float easeIn = t * t;
+            
+            ApplyEffects(easeIn);
         }
+    }
+    
+    private static void ApplyEffects(float intensity)
+    {
+        // Vignette
+        PostEffects.EnableVignette = true;
+        PostEffects.VignetteIntensity = maxVignetteIntensity * intensity;
+        PostEffects.VignetteCoverage = 0.45f * intensity;
+        PostEffects.VignetteRadius = 0.5f + 0.5f * (1.0f - intensity);
+        PostEffects.VignetteFalloff = 0.35f + 0.65f * (1.0f - intensity);
+        PostEffects.VignetteMapRGBModifier = new Vector3(intensity, 0.0f, 0.0f);
+        
+        // Chromatic aberration
+        PostEffects.EnableChromaticAberration = intensity > 0.01f;
+        PostEffects.ChromaticAberrationIntensity = maxChromaticAberration * intensity;
+        
+        // Desaturation
+        float currentSat = originalSaturation - (originalSaturation - minSaturation) * intensity;
+        PostEffects.Saturation = currentSat;
     }
 }
