@@ -123,8 +123,8 @@ public class PlayerController2 : MonoBehaviour
         if (isGrounded == true && Input.GetKeyDown(KeyCode.Space) && !isKeyJump)
         {
             isKeyJump = true;
-            isGrounded = false; // prevent double jump
-            GlobalAudio.PlaySFX("Jump");
+            isGrounded = false;
+            GlobalAudio.PlaySFXWithReverbSimple("Jump", wetLevel: -6.0f, decayTime: 3.5f, earlyDelay: 0.001f, lateDelay: 0.1f);
             Physics.Jump((ulong)gameObject.GetInstanceID(), jumpspeed);
         }
 
@@ -196,6 +196,8 @@ public class PlayerController2 : MonoBehaviour
         {
             if (!audioComp.isPlaying)
             {
+                // Apply reverb to footstep audio (minimal pre-delay to avoid echo)
+                audioComp.SetReverb(wetLevel: -1.0f, dryLevel: 0.0f, decayTime: 0.5f);
                 audioComp.shouldPlay = true;
                 footstepTimer = 0f;
             }
@@ -208,6 +210,40 @@ public class PlayerController2 : MonoBehaviour
         if (isPaused) return;
 
         interactTimer += Time.deltaTime;
+
+        RaycastHit hithit;
+        bool hitOutline = Physics.Raycast(
+            gameObject.transform.position + new Vector3(0, cam.position.y * 0.01f, 0),
+            cam.forward,
+            out hithit,
+            interactRange
+        );
+        if (hitOutline)
+        {
+            Debug.LogError("Poi!");
+            GameObject objobj = hithit.transform.gameObject;
+            if (objobj != null)
+            {
+                if (objobj.name == "Switch" ||
+                    objobj.name == "Switch (1)" ||
+                    objobj.name == "Switch (2)" ||
+                    objobj.name == "Switch1" ||
+                    objobj.name == "Switch2" ||
+                    objobj.name == "Paper1" ||
+                    objobj.name == "Paper2" ||
+                    objobj.name == "Paper3" ||
+                    objobj.name == "Paper4" ||
+                    objobj.name == "Book" ||
+                    objobj.name == "GearKeyPrefab" ||
+                    objobj.name == "ComputerDoorUnlock1" ||
+                    objobj.name == "ComputerDoorUnlock2")
+                {
+                    SceneManager.SetEntityOutline(objobj.GetInstanceID());
+                }
+            }
+        }
+        else
+            SceneManager.SetEntityOutline(0);
 
         if (Input.GetKeyDown(KeyCode.E))
         {
@@ -224,11 +260,8 @@ public class PlayerController2 : MonoBehaviour
 
             GameObject obj = hit.transform.gameObject;
             Debug.LogError("hit");
-            if (obj!=null)
+            if (obj != null)
             {
-                //GameObject obj = GameObject.FromEntityID(id);
-                //Debug.Log("You are looking at: " + obj.name);
-
                 // Switch -> ElectricFence 1
                 if (obj.name == "Switch" && interactTimer >= 1f)
                 {
@@ -373,7 +406,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    obj.SetActive(false);
+                    //obj.SetActive(false);
                     interactTimer = 0f;
                 }
                 if (obj.name == "Paper2" && interactTimer > 1f)
@@ -397,7 +430,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    obj.SetActive(false);
+                    //obj.SetActive(false);
                     interactTimer = 0f;
                 }
                 if (obj.name == "Paper3" && interactTimer > 1f)
@@ -417,7 +450,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    obj.SetActive(false);
+                    //obj.SetActive(false);
                     interactTimer = 0f;
                 }
                 if (obj.name == "Paper4" && interactTimer > 1f)
@@ -437,7 +470,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    obj.SetActive(false);
+                    //obj.SetActive(false);
                     interactTimer = 0f;
 
                 }
@@ -458,7 +491,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    obj.SetActive(false);
+                    //obj.SetActive(false);
                     interactTimer = 0f;
 
                 }
@@ -475,7 +508,7 @@ public class PlayerController2 : MonoBehaviour
                         msg.transform.rotation *= Quaternion.Euler(0f, 135f, 0f);
                     }
 
-                    obj.SetActive(false);
+                    //obj.SetActive(false);
                     interactTimer = 0f;
                 }
 
@@ -495,7 +528,7 @@ public class PlayerController2 : MonoBehaviour
                         PlayVoiceWithSubtitle("Key2", 5f);
                     }
 
-                    obj.SetActive(false);
+                    //obj.SetActive(false);
                     interactTimer = 0f;
                 }
 

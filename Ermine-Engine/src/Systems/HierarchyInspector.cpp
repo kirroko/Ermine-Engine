@@ -1113,6 +1113,14 @@ namespace Ermine::editor {
 			refreshMaterialAssets();
 		}
 
+		bool flickerEmissive = matComp.flickerEmissive;
+		if (ImGui::Checkbox("Flicker Emissive", &flickerEmissive)) {
+			matComp.flickerEmissive = flickerEmissive;
+			if (auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>()) {
+				renderer->MarkDrawDataForRebuild();
+			}
+		}
+
 		static char newMaterialName[128] = "NewMaterial";
 		ImGui::InputText("New Material##MaterialAsset", newMaterialName, IM_ARRAYSIZE(newMaterialName));
 		if (ImGui::Button("Create Material##MaterialAsset")) {

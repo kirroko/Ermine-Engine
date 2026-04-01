@@ -26,6 +26,7 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "FiniteStateMachine.h"
 #include "NavMeshAgentSystem.h"
 #include "AudioManager.h"
+#include "AudioSystem.h"
 #include "Physics.h"
 #include "SceneManager.h"
 #include "Serialisation.h"
@@ -1765,6 +1766,12 @@ namespace
 			EE_CORE_ERROR("SceneManager: Scene path is empty!");
 		}
 	}
+
+	void icall_scenemanager_setoutline(uint64_t id)
+	{
+		auto renderer = Ermine::ECS::GetInstance().GetSystem<Ermine::graphics::Renderer>();
+		renderer->SetEntityOutlineEnabled(id);
+	}
 #pragma endregion
 
 #pragma region Application ICalls
@@ -1867,6 +1874,26 @@ namespace
 			{
 				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
 				globalAudio.PlaySFX(sfxName);
+				return;
+			}
+		}
+		EE_CORE_WARN("GlobalAudio: No GlobalAudioComponent found in scene");
+	}
+
+	void icall_globalaudio_play_sfx_with_reverb(MonoString* name, mono_bool useReverb, float wetLevel, float dryLevel, float decayTime, float earlyDelay, float lateDelay)
+	{
+		using namespace Ermine;
+		std::string sfxName;
+		ToTempUTF8(name, sfxName);
+
+		// Find GlobalAudioComponent entity
+		auto& ecs = ECS::GetInstance();
+		for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+		{
+			if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+			{
+				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+				AudioSystem::PlayGlobalSFX(globalAudio, sfxName, useReverb != 0, wetLevel, dryLevel, decayTime, earlyDelay, lateDelay);
 				return;
 			}
 		}
@@ -2105,6 +2132,40 @@ namespace
 		}
 	}
 
+	mono_bool icall_material_get_flicker_emissive(MonoObject* thisObj)
+	{
+		auto* matComp = GetMaterialComponentFromManaged(thisObj);
+		if (!matComp)
+			return 0;
+
+		return matComp->flickerEmissive ? 1 : 0;
+	}
+
+	void icall_material_set_flicker_emissive(MonoObject* thisObj, mono_bool value)
+	{
+		using namespace Ermine;
+		const EntityID id = GetEntityIDFromManaged(thisObj);
+
+		auto* matComp = GetMaterialComponentFromManaged(thisObj);
+		if (!matComp)
+		{
+			EE_CORE_WARN("[Material.FlickerEmissive] Entity {0}: Material component missing", id);
+			return;
+		}
+
+		const bool enabled = (value != 0);
+		if (matComp->flickerEmissive == enabled)
+			return;
+
+		matComp->flickerEmissive = enabled;
+
+		auto renderer = ECS::GetInstance().GetSystem<graphics::Renderer>();
+		if (renderer)
+		{
+			renderer->MarkDrawDataForRebuild();
+		}
+	}
+
 	mono_bool icall_audiocomponent_get_shouldplay(MonoObject* thisObj)
 	{
 		if (auto* ac = GetAudioComponentFromManaged(thisObj))
@@ -2237,6 +2298,59 @@ namespace
 	{
 		if (auto* ac = GetAudioComponentFromManaged(thisObj))
 			ac->followTransform = (value != 0);
+	}
+
+	// Reverb properties
+	mono_bool icall_audiocomponent_get_usereverb(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return ac->useReverb ? 1 : 0;
+		return 0;
+	}
+
+	void icall_audiocomponent_set_usereverb(MonoObject* thisObj, mono_bool value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			ac->useReverb = (value != 0);
+	}
+
+	float icall_audiocomponent_get_reverbwetlevel(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return ac->reverbWetLevel;
+		return -12.0f;
+	}
+
+	void icall_audiocomponent_set_reverbwetlevel(MonoObject* thisObj, float value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			ac->reverbWetLevel = value;
+	}
+
+	float icall_audiocomponent_get_reverbdrylevel(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return ac->reverbDryLevel;
+		return 0.0f;
+	}
+
+	void icall_audiocomponent_set_reverbdrylevel(MonoObject* thisObj, float value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			ac->reverbDryLevel = value;
+	}
+
+	float icall_audiocomponent_get_reverbdecaytime(MonoObject* thisObj)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			return ac->reverbDecayTime;
+		return 1.0f;
+	}
+
+	void icall_audiocomponent_set_reverbdecaytime(MonoObject* thisObj, float value)
+	{
+		if (auto* ac = GetAudioComponentFromManaged(thisObj))
+			ac->reverbDecayTime = value;
 	}
 #pragma endregion
 
@@ -4220,6 +4334,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 
 #pragma region GlobalAudio ICalls
 	mono_add_internal_call("ErmineEngine.GlobalAudio::PlaySFX", (const void*)icall_globalaudio_play_sfx);
+	mono_add_internal_call("ErmineEngine.GlobalAudio::PlaySFXWithReverb", (const void*)icall_globalaudio_play_sfx_with_reverb);
 	mono_add_internal_call("ErmineEngine.GlobalAudio::StopSFX", (const void*)icall_globalaudio_stop_sfx);
 	mono_add_internal_call("ErmineEngine.GlobalAudio::PlayMusic", (const void*)icall_globalaudio_play_music);
 	mono_add_internal_call("ErmineEngine.GlobalAudio::SetMusicVolume", (const void*)icall_globalaudio_set_music_volume);
@@ -4256,11 +4371,22 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.AudioComponent::set_maxDistance", (const void*)icall_audiocomponent_set_maxdistance);
 	mono_add_internal_call("ErmineEngine.AudioComponent::get_followTransform", (const void*)icall_audiocomponent_get_followtransform);
 	mono_add_internal_call("ErmineEngine.AudioComponent::set_followTransform", (const void*)icall_audiocomponent_set_followtransform);
+	// Reverb properties
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_useReverb", (const void*)icall_audiocomponent_get_usereverb);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_useReverb", (const void*)icall_audiocomponent_set_usereverb);
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_reverbWetLevel", (const void*)icall_audiocomponent_get_reverbwetlevel);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_reverbWetLevel", (const void*)icall_audiocomponent_set_reverbwetlevel);
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_reverbDryLevel", (const void*)icall_audiocomponent_get_reverbdrylevel);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_reverbDryLevel", (const void*)icall_audiocomponent_set_reverbdrylevel);
+	mono_add_internal_call("ErmineEngine.AudioComponent::get_reverbDecayTime", (const void*)icall_audiocomponent_get_reverbdecaytime);
+	mono_add_internal_call("ErmineEngine.AudioComponent::set_reverbDecayTime", (const void*)icall_audiocomponent_set_reverbdecaytime);
 #pragma endregion
 
 #pragma region Material ICalls
 	mono_add_internal_call("ErmineEngine.Material::Internal_GetFill", (const void*)icall_material_get_fill);
 	mono_add_internal_call("ErmineEngine.Material::Internal_SetFill", (const void*)icall_material_set_fill);
+	mono_add_internal_call("ErmineEngine.Material::Internal_GetFlickerEmissive", (const void*)icall_material_get_flicker_emissive);
+	mono_add_internal_call("ErmineEngine.Material::Internal_SetFlickerEmissive", (const void*)icall_material_set_flicker_emissive);
 #pragma endregion
 
 #pragma region Debug ICalls
@@ -4271,6 +4397,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 
 #pragma region SceneManager ICalls
 	mono_add_internal_call("ErmineEngine.SceneManager::LoadSceneInternal", (const void*)icall_scenemanager_loadscene);
+	mono_add_internal_call("ErmineEngine.SceneManager::EntityOutlineInternal", (const void*)icall_scenemanager_setoutline);
 #pragma endregion
 
 #pragma region Application ICalls
