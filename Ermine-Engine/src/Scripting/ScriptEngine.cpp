@@ -3256,6 +3256,16 @@ namespace
 		return healthbar.healthRegenRate;
 	}
 
+	static void Internal_Healthbar_SetRegenRate(uint64_t entityID, float value)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIHealthbarComponent>(entityID))
+			return;
+
+		auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
+		healthbar.healthRegenRate = std::max(0.0f, value);
+	}
+
 	// GameplayHUD wrappers for UIHealthbarComponent
 	static float Internal_GameplayHUD_GetMaxHealth(uint64_t entityID)
 	{
@@ -3275,6 +3285,16 @@ namespace
 
 		auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
 		return healthbar.healthRegenRate;
+	}
+
+	static void Internal_GameplayHUD_SetRegenRate(uint64_t entityID, float value)
+	{
+		auto& ecs = ECS::GetInstance();
+		if (!ecs.HasComponent<UIHealthbarComponent>(entityID))
+			return;
+
+		auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entityID);
+		healthbar.healthRegenRate = std::max(0.0f, value);
 	}
 
 	// UIBookCounterComponent bindings
@@ -4480,6 +4500,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_SetHealth", (const void*)Internal_SetHealth);
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetMaxHealth", (const void*)Internal_GameplayHUD_GetMaxHealth);
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetRegenRate", (const void*)Internal_GameplayHUD_GetRegenRate);
+	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_SetRegenRate", (const void*)Internal_GameplayHUD_SetRegenRate);
 	// temporary reference to health bar, to be removed
 	mono_add_internal_call("ErmineEngine.GameplayHUD::Internal_GetHealthBar", Internal_GetHealthBar);
 
@@ -4487,6 +4508,8 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.UIHealthbar::Internal_GetHealth", (const void*)Internal_Healthbar_GetHealth);
 	mono_add_internal_call("ErmineEngine.UIHealthbar::Internal_SetHealth", (const void*)Internal_Healthbar_SetHealth);
 	mono_add_internal_call("ErmineEngine.UIHealthbar::Internal_GetMaxHealth", (const void*)Internal_Healthbar_GetMaxHealth);
+	mono_add_internal_call("ErmineEngine.UIHealthbar::Internal_GetRegenRate", (const void*)Internal_Healthbar_GetRegenRate);
+	mono_add_internal_call("ErmineEngine.UIHealthbar::Internal_SetRegenRate", (const void*)Internal_Healthbar_SetRegenRate);
 	mono_add_internal_call("ErmineEngine.UIBookCounter::Internal_GetCollected", (const void*)Internal_BookCounter_GetCollected);
 	mono_add_internal_call("ErmineEngine.UIBookCounter::Internal_SetCollected", (const void*)Internal_BookCounter_SetCollected);
 	mono_add_internal_call("ErmineEngine.UIBookCounter::Internal_AddBook", (const void*)Internal_BookCounter_AddBook);

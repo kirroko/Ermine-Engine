@@ -19,6 +19,9 @@ namespace ErmineEngine
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern float Internal_GetRegenRate(ulong entity);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void Internal_SetRegenRate(ulong entity, float value);
+
         // temporary reference to health bar, to be removed
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern ulong Internal_GetHealthBar();
@@ -40,6 +43,12 @@ namespace ErmineEngine
 
         public static float GetRegenRate(GameObject obj)
             => Internal_GetRegenRate((ulong)obj.GetInstanceID());
+
+        public static void SetRegenRate(GameObject obj, float value)
+        {
+            if (obj == null) return;
+            Internal_SetRegenRate((ulong)obj.GetInstanceID(), value);
+        }
 
         public static GameObject GetHealthBar()
         {
