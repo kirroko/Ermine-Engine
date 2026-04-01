@@ -642,6 +642,27 @@ namespace Ermine
                 SetEntityActiveByName("SettingsPage", false);
                 SetEntityActiveByName("VideoSettings", true);
             }
+            // Exit button: close ALL settings screens and return to main menu or pause menu
+            else if (button.actionData == "ExitToMenu")
+            {
+                // Hide all settings screens
+                SetEntityActiveByName("SettingsPage", false);
+                SetEntityActiveByName("SettingsMenu", false);
+                SetEntityActiveByName("ControlsScreen", false);
+                SetEntityActiveByName("VideoSettings", false);
+
+                // Show main menu buttons
+                SetEntityActiveByName("Play Button", true);
+                SetEntityActiveByName("Settings Button", true);
+                SetEntityActiveByName("Settings_Button", true);
+                SetEntityActiveByName("Quit Button", true);
+                SetEntityActiveByName("Title", true);
+
+                // Show pause menu buttons
+                SetEntityActiveByName("ResumeButton", true);
+                SetEntityActiveByName("Exit_Game", true);
+                SetEntityActiveByName("PauseBackground", true);
+            }
             // Back from any sub-page -> Settings Page
             else if (button.actionData == "BackToSettingsPage")
             {

@@ -29,6 +29,15 @@ namespace ErmineEngine
         /// </summary>
         public float MaxHealth => Internal_GetMaxHealth(entityID);
 
+        /// <summary>
+        /// Get or set health regeneration rate (health per second)
+        /// </summary>
+        public float RegenRate
+        {
+            get => Internal_GetRegenRate(entityID);
+            set => Internal_SetRegenRate(entityID, value);
+        }
+
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern float Internal_GetHealth(ulong entityID);
 
@@ -37,5 +46,11 @@ namespace ErmineEngine
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern float Internal_GetMaxHealth(ulong entityID);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private static extern float Internal_GetRegenRate(ulong entityID);
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private static extern void Internal_SetRegenRate(ulong entityID, float value);
     }
 }
