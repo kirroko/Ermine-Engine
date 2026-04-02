@@ -1,0 +1,3927 @@
+{
+  "entities": [
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "f5eefc53fc0e3a48a3819c45fcd330b0"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "FINAL_4",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "9eeceb0448499c4b8b6fd5712d63834f"
+        },
+        "Transform": {
+          "position": [
+            -7.436378002166748,
+            131.52882385253907,
+            297.4970703125
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.07000000029802323,
+            0.1120000034570694,
+            0.07000000029802323
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "pillar (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_pillar.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f5eefc53fc0e3a48a3819c45fcd330b0",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "d8c5844fc84b2248bedd36c3265046f0"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_pillar.fbx_pillar8_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "9cac8b2b0e1fea4a94ddefd40f6017a1",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9eeceb0448499c4b8b6fd5712d63834f",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "03eaf1587da63c4887abc65198d28c64"
+        },
+        "Transform": {
+          "position": [
+            -18.418031692504884,
+            142.4432830810547,
+            281.70025634765627
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.20000000298023225,
+            0.10000000149011612,
+            0.10999999940395355
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "floor_1 (122)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_floor_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f5eefc53fc0e3a48a3819c45fcd330b0",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "43f9ac0a8e3fa24b96d0586e20fe7897"
+        },
+        "Transform": {
+          "position": [
+            -1.5088608264923096,
+            0.0,
+            28.561254501342775
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_floor_low.fbx_floor_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "09bedbcf1f780b41a2b642af90d65e0d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "03eaf1587da63c4887abc65198d28c64",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "870cd5ef59805547805075783488ca56"
+        },
+        "Transform": {
+          "position": [
+            64.14227294921875,
+            142.4432830810547,
+            281.70025634765627
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.20000000298023225,
+            0.10000000149011612,
+            0.10999999940395355
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "floor_1 (123)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_floor_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f5eefc53fc0e3a48a3819c45fcd330b0",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "31fb6e6027944a4482531b5a48ed58b3"
+        },
+        "Transform": {
+          "position": [
+            -1.5088608264923096,
+            0.0,
+            28.561254501342775
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_floor_low.fbx_floor_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "09bedbcf1f780b41a2b642af90d65e0d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "870cd5ef59805547805075783488ca56",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "793f6480eb77f242ae174a514a237ca8"
+        },
+        "Transform": {
+          "position": [
+            -11.939596176147461,
+            142.4432830810547,
+            231.61964416503907
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.07999999821186066,
+            0.10000000149011612,
+            0.07000000029802323
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "floor_1 (30)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_floor_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f5eefc53fc0e3a48a3819c45fcd330b0",
+          "depth": 1
+        },
+        "NavMesh": {
+          "cellSize": 1.0,
+          "cellHeight": 0.10000000149011612,
+          "agentHeight": 4.335000038146973,
+          "agentRadius": 1.312324047088623,
+          "bakedAgentRadius": 1.312324047088623,
+          "bakedAgentHeight": 4.335000038146973,
+          "agentMaxClimb": 0.5,
+          "agentMaxSlope": 45.0,
+          "drawInputTri": false,
+          "drawWalkable": false,
+          "drawNavMesh": false,
+          "bakeUsingCustomMesh": false,
+          "bakedNav": {
+            "origX": -38.802001953125,
+            "origY": 140.4432830810547,
+            "origZ": 250.34735107421876,
+            "tileWidth": 64.0,
+            "tileHeight": 37.0,
+            "maxTiles": 1,
+            "maxPolys": 32768,
+            "tiles": [
+              {
+                "size": 2140,
+                "data": "VkFORAcAAAAAAAAAAAAAAAAAAAAAAAAADgAAABgAAAAyAAAADgAAAAAAAAAWAAAAHAAAAAAAAAAOAAAAUriKQDz6pz8AAAA/QDUbwntxDEPsWHpDgJXJQeHXFUN2rI9DAACAP0A1C8IViw9D7Fh+Q0A1C8IViw9DdqyCQ0A1C8IViw9DdiyGQ0A1C8IViw9DdqyJQ0A1C8IViw9DdqyNQ4Bq3sEViw9DdqyNQ4BqpsEViw9DdqyNQwDVXMEViw9DdqyNQwCq2cAViw9DdqyNQwDASj4Viw9DdqyNQwBW5kAViw9DdqyNQwArY0EViw9DdqyNQ4CVqUEViw9DdqyNQ4CVqUEViw9DdqyJQ4CVqUEViw9DdiyGQ4CVqUEViw9DdqyCQ4CVqUEViw9D7Fh+QwArY0EViw9D7Fh+QwBW5kAViw9D7Fh+QwDASj4Viw9D7Fh+QwCq2cAViw9D7Fh+QwDVXMEViw9D7Fh+Q4BqpsEViw9D7Fh+Q4Bq3sEViw9D7Fh+QwAAAAAPABAAEQAAAAAAAAAAAAAABQAAAAAAAAABAAM/AQAAABcAAAABAAAAAAAAAAAAAAAGAAAAAAAAAAEAAz8CAAAAAwAEAAUAAAAAAAAAAAAAAAcAAAAAAAAAAQADPwMAAAALAAwADQAAAAAAAAAAAAAACAAAAAAAAAABAAM/BQAAAA4ADwARABIAAAAAAAAAAQAAAA0AAAAAAAEABD8HAAAAFgAXAAEAAAAAAAAAAAACAAoAAAAAAAAAAQADPwkAAAADAAUABgAAAAAAAAADAAAACwAAAAAAAAABAAM/CwAAAAoACwANAAAAAAAAAAAABAAMAAAAAAAAAAEAAz8OAAAAFQACAAcACAAUAAAACgALAAAADgAAAAAAAQAFPxAAAAAWAAEAAgAVAAAAAAAGAAAACQAAAAAAAAABAAQ/EgAAAAIAAwAGAAcAAAAAAAAABwAAAAkAAAAAAAEABD8UAAAACgANAA4ACQAAAAAACAAAAA4AAAAAAAAAAQAEPxYAAAAOABIAEwAAAAAAAAAFAAAADgAAAAAAAAABAAM/GQAAAAkADgATABQACAAAAAwADQAAAAkAAAAAAAEABT8EgAAA/////wL/AAAFgAAA/////wL/AAAGgAAA/////wL/AAAHgAAA/////wL/AAAMgAAA/////wP/AAAAgAAABAAAAAH/AAAJgAAA/////wL/AAABgAAABgAAAAH/AAAKgAAA/////wL/AAACgAAACAAAAAD/AAALgAAA/////wL/AAADgAAACgAAAAH/AAANgAAA/////wP/AAAKgAAADAAAAAH/AAAJgAAADQAAAAD/AAAIgAAA/////wL/AAAFgAAADwAAAAD/AAAIgAAA/////wP/AAAGgAAAEQAAAAH/AAANgAAA/////wL/AAAHgAAAEwAAAAD/AAANgAAA/////wL/AAAEgAAAFQAAAAD/AAAIgAAA/////wP/AAAMgAAAFwAAAAH/AAALgAAAGAAAAAD/AAAAAAAAGwAAAAAAAAAAAAAAHAAAAAAAAAAAAAAAHQAAAAAAAAAAAAAAHgAAAAAAAAAAAAAAHwAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAIQAAAAAAAAAAAAAAIgAAAAAAAAAAAAAAIwAAAAAAAAAAAAAAJAAAAAAAAAAAAAAAJQAAAAAAAAAAAAAAJgAAAAAAAAAAAAAAJwAAAAAAAAAAAAAAKAAAAAAAAAAAAAAAKQAAAAAAAAAAAAAAKgAAAAAAAAAAAAAAKwAAAAAAAAAAAAAALAAAAAAAAAAAAAAALQAAAAAAAAAAAAAALgAAAAAAAAAAAAAALwAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAMQAAAAAAAAAAAAAA/////wAAAAAAAAAAAAAAAAABAAAAAAAAAQAAAAABAAAAAAAAAgAAAAABAAAAAAAAAwAAAAABAAAAAAAABAAAAAACAAAAAAAABgAAAAABAAAAAAAABwAAAAABAAAAAAAACAAAAAABAAAAAAAACQAAAAADAAAAAAAADAAAAAACAAAAAAAADgAAAAACAAAAAAAAEAAAAAACAAAAAAAAEgAAAAABAAAAAAAAEwAAAAADAAACAAEVAgABFQIAARUCAAEVAQIAEQIDAAUCAAEVAgABFQIAARUAAQQRAQIEAQIDBAUBAgARAgMABQECABECAwAFAQIAEQIDAAUCAAEVAgMBEQMAAQQDBAAFBAADAAQAPAADACEA5f///wQAAwAEACAAAwAhAPP///8EAAMABAAgAAMAIQD7////BAADAAQAEgADAAsABQAAAAQAAwAEACAAAwAhAP3///8EAAMABAAgAAMAIQAIAAAABAADAAQAGQADABIACQAAAAQAAwAEABkAAwAhAPn///8EAAMABAAZAAMAIQD9////BAADAAQACwADAAsAAQAAAAQAAwASABkAAwAhAAoAAAAEAAMAGQASAAMAIQD9////BAADABkAEgADACEABgAAAAQAAwAZAAsAAwAhAAIAAAAgAAMABAA8AAMAIQDz////JwADAAQAPAADABIA+////ycAAwAEADwAAwASAAwAAAAuAAMABAA8AAMAEgD9////LgADAAQAPAADABIABAAAADUAAwAEADwAAwALAAAAAAAgAAMABAA8AAMAIQD5////IAADAAQAPAADACEA/f///yAAAwAEADwAAwAhAA0AAAAnAAMAEgA8AAMAIQALAAAALgADABkAPAADACEA/f///y4AAwAZADwAAwAhAAcAAAA1AAMAGQA8AAMAIQADAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+              }
+            ]
+          }
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "43d302996134304a9d7a2695d52fe9c5"
+        },
+        "Transform": {
+          "position": [
+            -1.5088608264923096,
+            0.0,
+            28.561254501342775
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_floor_low.fbx_floor_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "09bedbcf1f780b41a2b642af90d65e0d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "793f6480eb77f242ae174a514a237ca8",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "2210e8fb76bfc14eb534be65cccd7f55"
+        },
+        "Transform": {
+          "position": [
+            19.840110778808595,
+            142.4432830810547,
+            231.42710876464845
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.07000000029802323,
+            0.10000000149011612,
+            0.07000000029802323
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "floor_1 (24)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_floor_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f5eefc53fc0e3a48a3819c45fcd330b0",
+          "depth": 1
+        },
+        "NavMesh": {
+          "cellSize": 1.0,
+          "cellHeight": 0.10000000149011612,
+          "agentHeight": 4.335000038146973,
+          "agentRadius": 1.312324047088623,
+          "bakedAgentRadius": 1.312324047088623,
+          "bakedAgentHeight": 4.335000038146973,
+          "agentMaxClimb": 0.5,
+          "agentMaxSlope": 45.0,
+          "drawInputTri": false,
+          "drawWalkable": false,
+          "drawNavMesh": false,
+          "bakeUsingCustomMesh": false,
+          "bakedNav": {
+            "origX": -38.802001953125,
+            "origY": 140.4432830810547,
+            "origZ": 250.34735107421876,
+            "tileWidth": 64.0,
+            "tileHeight": 37.0,
+            "maxTiles": 1,
+            "maxPolys": 32768,
+            "tiles": [
+              {
+                "size": 2140,
+                "data": "VkFORAcAAAAAAAAAAAAAAAAAAAAAAAAADgAAABgAAAAyAAAADgAAAAAAAAAWAAAAHAAAAAAAAAAOAAAAUriKQDz6pz8AAAA/QDUbwntxDEPsWHpDgJXJQeHXFUN2rI9DAACAP0A1C8IViw9D7Fh+Q0A1C8IViw9DdqyCQ0A1C8IViw9DdiyGQ0A1C8IViw9DdqyJQ0A1C8IViw9DdqyNQ4Bq3sEViw9DdqyNQ4BqpsEViw9DdqyNQwDVXMEViw9DdqyNQwCq2cAViw9DdqyNQwDASj4Viw9DdqyNQwBW5kAViw9DdqyNQwArY0EViw9DdqyNQ4CVqUEViw9DdqyNQ4CVqUEViw9DdqyJQ4CVqUEViw9DdiyGQ4CVqUEViw9DdqyCQ4CVqUEViw9D7Fh+QwArY0EViw9D7Fh+QwBW5kAViw9D7Fh+QwDASj4Viw9D7Fh+QwCq2cAViw9D7Fh+QwDVXMEViw9D7Fh+Q4BqpsEViw9D7Fh+Q4Bq3sEViw9D7Fh+QwAAAAAPABAAEQAAAAAAAAAAAAAABQAAAAAAAAABAAM/AQAAABcAAAABAAAAAAAAAAAAAAAGAAAAAAAAAAEAAz8CAAAAAwAEAAUAAAAAAAAAAAAAAAcAAAAAAAAAAQADPwMAAAALAAwADQAAAAAAAAAAAAAACAAAAAAAAAABAAM/BQAAAA4ADwARABIAAAAAAAAAAQAAAA0AAAAAAAEABD8HAAAAFgAXAAEAAAAAAAAAAAACAAoAAAAAAAAAAQADPwkAAAADAAUABgAAAAAAAAADAAAACwAAAAAAAAABAAM/CwAAAAoACwANAAAAAAAAAAAABAAMAAAAAAAAAAEAAz8OAAAAFQACAAcACAAUAAAACgALAAAADgAAAAAAAQAFPxAAAAAWAAEAAgAVAAAAAAAGAAAACQAAAAAAAAABAAQ/EgAAAAIAAwAGAAcAAAAAAAAABwAAAAkAAAAAAAEABD8UAAAACgANAA4ACQAAAAAACAAAAA4AAAAAAAAAAQAEPxYAAAAOABIAEwAAAAAAAAAFAAAADgAAAAAAAAABAAM/GQAAAAkADgATABQACAAAAAwADQAAAAkAAAAAAAEABT8EgAAA/////wL/AAAFgAAA/////wL/AAAGgAAA/////wL/AAAHgAAA/////wL/AAAMgAAA/////wP/AAAAgAAABAAAAAH/AAAJgAAA/////wL/AAABgAAABgAAAAH/AAAKgAAA/////wL/AAACgAAACAAAAAD/AAALgAAA/////wL/AAADgAAACgAAAAH/AAANgAAA/////wP/AAAKgAAADAAAAAH/AAAJgAAADQAAAAD/AAAIgAAA/////wL/AAAFgAAADwAAAAD/AAAIgAAA/////wP/AAAGgAAAEQAAAAH/AAANgAAA/////wL/AAAHgAAAEwAAAAD/AAANgAAA/////wL/AAAEgAAAFQAAAAD/AAAIgAAA/////wP/AAAMgAAAFwAAAAH/AAALgAAAGAAAAAD/AAAAAAAAGwAAAAAAAAAAAAAAHAAAAAAAAAAAAAAAHQAAAAAAAAAAAAAAHgAAAAAAAAAAAAAAHwAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAIQAAAAAAAAAAAAAAIgAAAAAAAAAAAAAAIwAAAAAAAAAAAAAAJAAAAAAAAAAAAAAAJQAAAAAAAAAAAAAAJgAAAAAAAAAAAAAAJwAAAAAAAAAAAAAAKAAAAAAAAAAAAAAAKQAAAAAAAAAAAAAAKgAAAAAAAAAAAAAAKwAAAAAAAAAAAAAALAAAAAAAAAAAAAAALQAAAAAAAAAAAAAALgAAAAAAAAAAAAAALwAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAMQAAAAAAAAAAAAAA/////wAAAAAAAAAAAAAAAAABAAAAAAAAAQAAAAABAAAAAAAAAgAAAAABAAAAAAAAAwAAAAABAAAAAAAABAAAAAACAAAAAAAABgAAAAABAAAAAAAABwAAAAABAAAAAAAACAAAAAABAAAAAAAACQAAAAADAAAAAAAADAAAAAACAAAAAAAADgAAAAACAAAAAAAAEAAAAAACAAAAAAAAEgAAAAABAAAAAAAAEwAAAAADAAACAAEVAgABFQIAARUCAAEVAQIAEQIDAAUCAAEVAgABFQIAARUAAQQRAQIEAQIDBAUBAgARAgMABQECABECAwAFAQIAEQIDAAUCAAEVAgMBEQMAAQQDBAAFBAADAAQAPAADACEA5f///wQAAwAEACAAAwAhAPP///8EAAMABAAgAAMAIQD7////BAADAAQAEgADAAsABQAAAAQAAwAEACAAAwAhAP3///8EAAMABAAgAAMAIQAIAAAABAADAAQAGQADABIACQAAAAQAAwAEABkAAwAhAPn///8EAAMABAAZAAMAIQD9////BAADAAQACwADAAsAAQAAAAQAAwASABkAAwAhAAoAAAAEAAMAGQASAAMAIQD9////BAADABkAEgADACEABgAAAAQAAwAZAAsAAwAhAAIAAAAgAAMABAA8AAMAIQDz////JwADAAQAPAADABIA+////ycAAwAEADwAAwASAAwAAAAuAAMABAA8AAMAEgD9////LgADAAQAPAADABIABAAAADUAAwAEADwAAwALAAAAAAAgAAMABAA8AAMAIQD5////IAADAAQAPAADACEA/f///yAAAwAEADwAAwAhAA0AAAAnAAMAEgA8AAMAIQALAAAALgADABkAPAADACEA/f///y4AAwAZADwAAwAhAAcAAAA1AAMAGQA8AAMAIQADAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+              }
+            ]
+          }
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "b655b33743be464c9ae97a4a7e5eee4b"
+        },
+        "Transform": {
+          "position": [
+            -1.5088608264923096,
+            0.0,
+            28.561254501342775
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_floor_low.fbx_floor_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "09bedbcf1f780b41a2b642af90d65e0d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "2210e8fb76bfc14eb534be65cccd7f55",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "0e7b8de22f8e4b499daeb2e99b3b40f9"
+        },
+        "Transform": {
+          "position": [
+            4.821331977844238,
+            131.4774627685547,
+            285.50994873046877
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.07999999821186066,
+            0.10000000149011612,
+            0.10000000149011612
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "floor_1 (100)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_floor_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f5eefc53fc0e3a48a3819c45fcd330b0",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "fbf4cffb54b4ee45becd292ca4cbf3b1"
+        },
+        "Transform": {
+          "position": [
+            -1.5088608264923096,
+            0.0,
+            28.561254501342775
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_floor_low.fbx_floor_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "09bedbcf1f780b41a2b642af90d65e0d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "0e7b8de22f8e4b499daeb2e99b3b40f9",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "5613e6c9d0840c43b8bb02c9eef09f13"
+        },
+        "Transform": {
+          "position": [
+            13.141300201416016,
+            111.04531860351563,
+            251.58523559570313
+          ],
+          "rotation": [
+            4.924665972794173e-7,
+            0.3826834559440613,
+            4.924665972794173e-7,
+            0.9238795042037964
+          ],
+          "scale": [
+            0.04999355226755142,
+            0.10000000149011612,
+            0.04999355226755142
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "floor_1 (117)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_floor_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f5eefc53fc0e3a48a3819c45fcd330b0",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "ddf6a870c56b6a47809a593bfcffb4b0"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_floor_low.fbx_floor_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "09bedbcf1f780b41a2b642af90d65e0d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "5613e6c9d0840c43b8bb02c9eef09f13",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "39389a596989e640a98ce48653e61c0c"
+        },
+        "Transform": {
+          "position": [
+            3.4021291732788088,
+            132.24920654296876,
+            315.3957214355469
+          ],
+          "rotation": [
+            -4.371138828673793e-8,
+            1.0,
+            -4.371138828673793e-8,
+            1.910685465164705e-15
+          ],
+          "scale": [
+            0.0010000000474974514,
+            1.100000023841858,
+            0.10000000149011612
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "floor_1 (120)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_floor_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f5eefc53fc0e3a48a3819c45fcd330b0",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "75cdbada3287b94c813a511a1da352c7"
+        },
+        "Transform": {
+          "position": [
+            -1.5088608264923096,
+            0.0,
+            28.561254501342775
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_floor_low.fbx_floor_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "09bedbcf1f780b41a2b642af90d65e0d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "39389a596989e640a98ce48653e61c0c",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "61c81db542cef54eb0a09be18e5cc61e"
+        },
+        "Transform": {
+          "position": [
+            -18.75938606262207,
+            132.148681640625,
+            315.3957214355469
+          ],
+          "rotation": [
+            -4.371138828673793e-8,
+            1.0,
+            -4.371138828673793e-8,
+            1.910685465164705e-15
+          ],
+          "scale": [
+            0.0010000000474974514,
+            1.100000023841858,
+            0.10000000149011612
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "floor_1 (121)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_floor_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f5eefc53fc0e3a48a3819c45fcd330b0",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "225ff50ac039ed40bf184e0c6c944e45"
+        },
+        "Transform": {
+          "position": [
+            -1.5088608264923096,
+            0.0,
+            28.561254501342775
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_floor_low.fbx_floor_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "09bedbcf1f780b41a2b642af90d65e0d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "61c81db542cef54eb0a09be18e5cc61e",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "e65ce76ba0387d479b208880acba4736"
+        },
+        "Transform": {
+          "position": [
+            5.008406639099121,
+            128.16519165039063,
+            249.792236328125
+          ],
+          "rotation": [
+            0.0,
+            0.03489949554204941,
+            0.0,
+            0.9993908405303955
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Lantern-small-long-chain (34)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f5eefc53fc0e3a48a3819c45fcd330b0",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "bc4c1259f3849c469c8f2c2d107d2b41"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -1.2690000534057618,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            0.914814829826355,
+            0.8828904628753662,
+            0.19651579856872559
+          ],
+          "intensity": 1.7380000352859498,
+          "type": "Point",
+          "castsShadows": false,
+          "castsRays": false,
+          "innerAngle": -1.0,
+          "outerAngle": -1.0,
+          "radius": 15.0
+        },
+        "ObjectMetaData": {
+          "name": "LightSource",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e65ce76ba0387d479b208880acba4736",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "deb3420bde2b97419fa65806d2b3f75c"
+        },
+        "Transform": {
+          "position": [
+            -0.08150321245193482,
+            1.4785642623901368,
+            0.0
+          ],
+          "rotation": [
+            2.7518811407389878e-7,
+            -0.6818707585334778,
+            2.7518811407389878e-7,
+            0.7314726710319519
+          ],
+          "scale": [
+            0.03999999910593033,
+            0.03999999910593033,
+            0.03999999910593033
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e65ce76ba0387d479b208880acba4736",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "be075b0d80a2564195338bbeeb4ce53a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "deb3420bde2b97419fa65806d2b3f75c",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "9b58cdc429b33b4d911d701118dde6a3"
+        },
+        "Transform": {
+          "position": [
+            -0.029999999329447748,
+            -1.899999976158142,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.03999999910593033,
+            0.03999999910593033,
+            0.03999999910593033
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Lantern Head",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_lantern_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e65ce76ba0387d479b208880acba4736",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "2ecee6574d71b6469d9793e35a8a88f0"
+        },
+        "Transform": {
+          "position": [
+            260.09246826171877,
+            -2005.1456298828126,
+            -7158.83935546875
+          ],
+          "rotation": [
+            0.0,
+            -0.034899499267339709,
+            0.0,
+            0.9993908405303955
+          ],
+          "scale": [
+            25.0,
+            25.0,
+            25.000001907348634
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_lantern_low.fbx_lantern_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2a051fd24b0aeb4891de12016222ea71",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9b58cdc429b33b4d911d701118dde6a3",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "7422d55b3940c340b8b7e9b2d5a5ecd2"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_lantern_low.fbx_lantern_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9b58cdc429b33b4d911d701118dde6a3",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "d62fb418c481034c80778fe8a1ffb91b"
+        },
+        "Transform": {
+          "position": [
+            -0.016939565539360048,
+            2.9505491256713869,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999585285782814,
+            0.03999999910593033,
+            0.03999585285782814
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e65ce76ba0387d479b208880acba4736",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "4de553006fe4cd44b00b57da7d06cd78"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d62fb418c481034c80778fe8a1ffb91b",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "397f349da4807e4886a1c2dc12305cb6"
+        },
+        "Transform": {
+          "position": [
+            0.014124810695648194,
+            4.421530723571777,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999427333474159,
+            0.03999999910593033,
+            0.03999427333474159
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e65ce76ba0387d479b208880acba4736",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "f24ddfb24ae08f438eb052fb1e394160"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "397f349da4807e4886a1c2dc12305cb6",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "7728a6b09332da48acff2f4261650bba"
+        },
+        "Transform": {
+          "position": [
+            0.04049983620643616,
+            5.938615322113037,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999292477965355,
+            0.03999999910593033,
+            0.03999292477965355
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (3)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e65ce76ba0387d479b208880acba4736",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "ed2f288987f8c54bbe67e0e9a1f6e88e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "7728a6b09332da48acff2f4261650bba",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "c2c649bf657baf4f9b320c415cbd12a1"
+        },
+        "Transform": {
+          "position": [
+            0.062023043632507327,
+            7.406013011932373,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999190032482147,
+            0.03999999910593033,
+            0.03999190032482147
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (4)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e65ce76ba0387d479b208880acba4736",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "f46c2f5499dcaf49b4a786f86a825526"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "c2c649bf657baf4f9b320c415cbd12a1",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "cf6f8942abf3c74b9d1a0aaa623fdbb5"
+        },
+        "Transform": {
+          "position": [
+            0.10098257660865784,
+            8.88762378692627,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.039988867938518527,
+            0.03999999910593033,
+            0.039988867938518527
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (5)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e65ce76ba0387d479b208880acba4736",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "816da06db7fc474b8316303a65857996"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "cf6f8942abf3c74b9d1a0aaa623fdbb5",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "3820d0ce31b159469d70132aef4cef8d"
+        },
+        "Transform": {
+          "position": [
+            14.262167930603028,
+            98.10479736328125,
+            265.1273498535156
+          ],
+          "rotation": [
+            0.0,
+            0.03489949554204941,
+            0.0,
+            0.9993908405303955
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Lantern-small-long-chain (23)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f5eefc53fc0e3a48a3819c45fcd330b0",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "a0f80c51b78ad64883fbc19a2be0db88"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -1.2690000534057618,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            0.914814829826355,
+            0.8828904628753662,
+            0.19651579856872559
+          ],
+          "intensity": 2.0409998893737795,
+          "type": "Point",
+          "castsShadows": false,
+          "castsRays": false,
+          "innerAngle": -1.0,
+          "outerAngle": -1.0,
+          "radius": 50.0
+        },
+        "ObjectMetaData": {
+          "name": "LightSource",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3820d0ce31b159469d70132aef4cef8d",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "89d7bc9a6c5c2d4c99b28d7b813ba9e8"
+        },
+        "Transform": {
+          "position": [
+            -0.08150321245193482,
+            1.4785642623901368,
+            0.0
+          ],
+          "rotation": [
+            2.7518811407389878e-7,
+            -0.6818707585334778,
+            2.7518811407389878e-7,
+            0.7314726710319519
+          ],
+          "scale": [
+            0.03999999910593033,
+            0.03999999910593033,
+            0.03999999910593033
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3820d0ce31b159469d70132aef4cef8d",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "8e80c910f3a8114090c9a9b3324ca497"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "89d7bc9a6c5c2d4c99b28d7b813ba9e8",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "f6af65e8f06a8f44b63dc4de69edade9"
+        },
+        "Transform": {
+          "position": [
+            -0.029999999329447748,
+            -1.899999976158142,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.03999999910593033,
+            0.03999999910593033,
+            0.03999999910593033
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Lantern Head",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_lantern_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3820d0ce31b159469d70132aef4cef8d",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "37f7c8cb74f9b448aaa225ffb3eb2145"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_lantern_low.fbx_lantern_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f6af65e8f06a8f44b63dc4de69edade9",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "5f3518a85aa45546bed5d77ad685ed67"
+        },
+        "Transform": {
+          "position": [
+            -83.34033203125,
+            -1965.7265625,
+            -7775.1826171875
+          ],
+          "rotation": [
+            0.0,
+            -0.034899499267339709,
+            0.0,
+            0.9993908405303955
+          ],
+          "scale": [
+            25.0,
+            25.0,
+            25.000001907348634
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_lantern_low.fbx_lantern_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2a051fd24b0aeb4891de12016222ea71",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f6af65e8f06a8f44b63dc4de69edade9",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "df7e561b543fa449bd7357300a6bd176"
+        },
+        "Transform": {
+          "position": [
+            -0.016939565539360048,
+            2.9505491256713869,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999585285782814,
+            0.03999999910593033,
+            0.03999585285782814
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3820d0ce31b159469d70132aef4cef8d",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "2474638932253747b45b14a9442b050f"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "df7e561b543fa449bd7357300a6bd176",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "4a2dd99e41209e46aa7d5a0750be9dd3"
+        },
+        "Transform": {
+          "position": [
+            0.014124810695648194,
+            4.421530723571777,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999427333474159,
+            0.03999999910593033,
+            0.03999427333474159
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3820d0ce31b159469d70132aef4cef8d",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "79664717d6185042baabac735e90ca95"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "4a2dd99e41209e46aa7d5a0750be9dd3",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "fee083bcdda5bc48818c27524ffa605a"
+        },
+        "Transform": {
+          "position": [
+            0.04049983620643616,
+            5.938615322113037,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999292477965355,
+            0.03999999910593033,
+            0.03999292477965355
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (3)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3820d0ce31b159469d70132aef4cef8d",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "b09fc52eebfbd94792a92416141f325b"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "fee083bcdda5bc48818c27524ffa605a",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "cf66a11461b34642aadcc6de29d593c4"
+        },
+        "Transform": {
+          "position": [
+            0.062023043632507327,
+            7.406013011932373,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999190032482147,
+            0.03999999910593033,
+            0.03999190032482147
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (4)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3820d0ce31b159469d70132aef4cef8d",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "7726cb5b0656634cb375bf8513b5e18c"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "cf66a11461b34642aadcc6de29d593c4",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "e71a177911a2934d99ad5bcad586f699"
+        },
+        "Transform": {
+          "position": [
+            0.10098257660865784,
+            8.88762378692627,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.039988867938518527,
+            0.03999999910593033,
+            0.039988867938518527
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (5)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "3820d0ce31b159469d70132aef4cef8d",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "e951599aabf53c4288aeca72474ad19d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e71a177911a2934d99ad5bcad586f699",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "1df64966ca7d7e44b9fc7b0ec3906760"
+        },
+        "Transform": {
+          "position": [
+            -43.98040771484375,
+            113.05403137207031,
+            274.9122619628906
+          ],
+          "rotation": [
+            0.0,
+            0.03489949554204941,
+            0.0,
+            0.9993908405303955
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Lantern-small-long-chain (24)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f5eefc53fc0e3a48a3819c45fcd330b0",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "58515f4a3b4cc645b63bcf04ec89da2a"
+        },
+        "Transform": {
+          "position": [
+            0.10098257660865784,
+            8.88762378692627,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.039988867938518527,
+            0.03999999910593033,
+            0.039988867938518527
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (5)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "1df64966ca7d7e44b9fc7b0ec3906760",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "f8ffeeab1d3dce429bca56761b2a18df"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "58515f4a3b4cc645b63bcf04ec89da2a",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "f20cc69f78e11f40b38e28fc17bbd875"
+        },
+        "Transform": {
+          "position": [
+            0.062023043632507327,
+            7.406013011932373,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999190032482147,
+            0.03999999910593033,
+            0.03999190032482147
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (4)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "1df64966ca7d7e44b9fc7b0ec3906760",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "7b91a68d0db9474aa908851f6b7ac8fc"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f20cc69f78e11f40b38e28fc17bbd875",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "0d60489a6156c747b9fa7c287c3d800a"
+        },
+        "Transform": {
+          "position": [
+            0.04049983620643616,
+            5.938615322113037,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999292477965355,
+            0.03999999910593033,
+            0.03999292477965355
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (3)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "1df64966ca7d7e44b9fc7b0ec3906760",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "53d4b5a0828a064bbe5b628f31355d2d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "0d60489a6156c747b9fa7c287c3d800a",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "31386ec83cf314458622a295f9771ba9"
+        },
+        "Transform": {
+          "position": [
+            0.014124810695648194,
+            4.421530723571777,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999427333474159,
+            0.03999999910593033,
+            0.03999427333474159
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "1df64966ca7d7e44b9fc7b0ec3906760",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "c0898cfe35d2004a8ab7de469fc1dfa7"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "31386ec83cf314458622a295f9771ba9",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "9a5d0668887d074bb65d75f9f644589d"
+        },
+        "Transform": {
+          "position": [
+            -0.016939565539360048,
+            2.9505491256713869,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999585285782814,
+            0.03999999910593033,
+            0.03999585285782814
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "1df64966ca7d7e44b9fc7b0ec3906760",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "44081d82c064b046a3aeec967ee18532"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9a5d0668887d074bb65d75f9f644589d",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "425170db5cdf9445a35b5a8de2728ebe"
+        },
+        "Transform": {
+          "position": [
+            -0.029999999329447748,
+            -1.899999976158142,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.03999999910593033,
+            0.03999999910593033,
+            0.03999999910593033
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Lantern Head",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_lantern_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "1df64966ca7d7e44b9fc7b0ec3906760",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "633fecfe2d33b541b0d13284b4af01f1"
+        },
+        "Transform": {
+          "position": [
+            -83.34033203125,
+            -1965.7265625,
+            -7775.1826171875
+          ],
+          "rotation": [
+            0.0,
+            -0.034899499267339709,
+            0.0,
+            0.9993908405303955
+          ],
+          "scale": [
+            25.0,
+            25.0,
+            25.000001907348634
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_lantern_low.fbx_lantern_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2a051fd24b0aeb4891de12016222ea71",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "425170db5cdf9445a35b5a8de2728ebe",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "6557acea0cb7ac4980806dc16ad397f7"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_lantern_low.fbx_lantern_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "425170db5cdf9445a35b5a8de2728ebe",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "6d266de393cb1d48bbff59ed3349f175"
+        },
+        "Transform": {
+          "position": [
+            -0.08150321245193482,
+            1.4785642623901368,
+            0.0
+          ],
+          "rotation": [
+            2.7518811407389878e-7,
+            -0.6818707585334778,
+            2.7518811407389878e-7,
+            0.7314726710319519
+          ],
+          "scale": [
+            0.03999999910593033,
+            0.03999999910593033,
+            0.03999999910593033
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "1df64966ca7d7e44b9fc7b0ec3906760",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "13fdf0c9a6c27a4a90d257e786eee69e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "6d266de393cb1d48bbff59ed3349f175",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "b0920aca3aa4e04e9ceae3f40bc7d04a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -1.2690000534057618,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            0.914814829826355,
+            0.8828904628753662,
+            0.19651579856872559
+          ],
+          "intensity": 2.0409998893737795,
+          "type": "Point",
+          "castsShadows": false,
+          "castsRays": false,
+          "innerAngle": -1.0,
+          "outerAngle": -1.0,
+          "radius": 50.0
+        },
+        "ObjectMetaData": {
+          "name": "LightSource",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "1df64966ca7d7e44b9fc7b0ec3906760",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "f2553954e75fea408ee292f61052bdcc"
+        },
+        "Transform": {
+          "position": [
+            -17.3209171295166,
+            128.16519165039063,
+            251.35369873046876
+          ],
+          "rotation": [
+            0.0,
+            0.03489949554204941,
+            0.0,
+            0.9993908405303955
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Lantern-small-long-chain (26)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f5eefc53fc0e3a48a3819c45fcd330b0",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "526c4af09260a94abfe6ffddf99947fb"
+        },
+        "Transform": {
+          "position": [
+            0.10098257660865784,
+            8.88762378692627,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.039988867938518527,
+            0.03999999910593033,
+            0.039988867938518527
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (5)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f2553954e75fea408ee292f61052bdcc",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "4822bf53be4abb4b98f6ffecca4adc99"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "526c4af09260a94abfe6ffddf99947fb",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "4b2dc80ed7e01748b5cf053a23b003cd"
+        },
+        "Transform": {
+          "position": [
+            0.062023043632507327,
+            7.406013011932373,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999190032482147,
+            0.03999999910593033,
+            0.03999190032482147
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (4)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f2553954e75fea408ee292f61052bdcc",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "30ca3e769d758144b306d27024107bea"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "4b2dc80ed7e01748b5cf053a23b003cd",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "2ca71c2a9a654045bb1bdc6ad0441e14"
+        },
+        "Transform": {
+          "position": [
+            0.04049983620643616,
+            5.938615322113037,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999292477965355,
+            0.03999999910593033,
+            0.03999292477965355
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (3)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f2553954e75fea408ee292f61052bdcc",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "99b64a4b7d4e834b8666eaa5199732c6"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "2ca71c2a9a654045bb1bdc6ad0441e14",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "9e2e8da113a34c4c957f098a3decdda2"
+        },
+        "Transform": {
+          "position": [
+            0.014124810695648194,
+            4.421530723571777,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999427333474159,
+            0.03999999910593033,
+            0.03999427333474159
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (1)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f2553954e75fea408ee292f61052bdcc",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "c48212b1721831488750016b465a4ac0"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9e2e8da113a34c4c957f098a3decdda2",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "cdc4b1d3a8986544a9b04395e9f5c576"
+        },
+        "Transform": {
+          "position": [
+            -0.016939565539360048,
+            2.9505491256713869,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999585285782814,
+            0.03999999910593033,
+            0.03999585285782814
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain (2)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f2553954e75fea408ee292f61052bdcc",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "28218dbdf4e68847af80250ceb6c3ab5"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "cdc4b1d3a8986544a9b04395e9f5c576",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "5c491cd30c597c4e9691d68d06e16cd2"
+        },
+        "Transform": {
+          "position": [
+            -0.029999999329447748,
+            -1.899999976158142,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.03999999910593033,
+            0.03999999910593033,
+            0.03999999910593033
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Lantern Head",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_lantern_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f2553954e75fea408ee292f61052bdcc",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "26d65ff32722a84c8e2723fe9af8b187"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_lantern_low.fbx_lantern_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4f992f4d36179849a6c5749c4d7c74bb",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "5c491cd30c597c4e9691d68d06e16cd2",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "1b4b90cff1d90a4aae47f4934c3b0d1b"
+        },
+        "Transform": {
+          "position": [
+            260.09246826171877,
+            -2005.1456298828126,
+            -7158.83935546875
+          ],
+          "rotation": [
+            0.0,
+            -0.034899499267339709,
+            0.0,
+            0.9993908405303955
+          ],
+          "scale": [
+            25.0,
+            25.0,
+            25.000001907348634
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_lantern_low.fbx_lantern_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2a051fd24b0aeb4891de12016222ea71",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "5c491cd30c597c4e9691d68d06e16cd2",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "0ed5aa60341bdc45a83de969dfd9da31"
+        },
+        "Transform": {
+          "position": [
+            -0.08150321245193482,
+            1.4785642623901368,
+            0.0
+          ],
+          "rotation": [
+            2.7518811407389878e-7,
+            -0.6818707585334778,
+            2.7518811407389878e-7,
+            0.7314726710319519
+          ],
+          "scale": [
+            0.03999999910593033,
+            0.03999999910593033,
+            0.03999999910593033
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Chain",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Chain_linked_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f2553954e75fea408ee292f61052bdcc",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "3d1a464bce2a7641bf800bde57d6e581"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Chain_linked_low.fbx_chainedlink_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "13244f2856e23a47a55f515b01f2f6e0",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "0ed5aa60341bdc45a83de969dfd9da31",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "2f77a7d39267ba45bfdf445f40dba2bc"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -1.2690000534057618,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Light": {
+          "color": [
+            0.914814829826355,
+            0.8828904628753662,
+            0.19651579856872559
+          ],
+          "intensity": 1.7380000352859498,
+          "type": "Point",
+          "castsShadows": false,
+          "castsRays": false,
+          "innerAngle": -1.0,
+          "outerAngle": -1.0,
+          "radius": 15.0
+        },
+        "ObjectMetaData": {
+          "name": "LightSource",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f2553954e75fea408ee292f61052bdcc",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "8225eef6797ac74a983b4fe0e6564093"
+        },
+        "Transform": {
+          "position": [
+            3.9938607215881349,
+            132.27590942382813,
+            285.4542541503906
+          ],
+          "rotation": [
+            0.0,
+            -0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.0009999718749895692,
+            1.100000023841858,
+            0.07599903643131256
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "floor_1 (21)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_floor_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f5eefc53fc0e3a48a3819c45fcd330b0",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "0f4013b2ab523240a61ae0665cd8fdad"
+        },
+        "Transform": {
+          "position": [
+            -1.5088608264923096,
+            0.0,
+            28.561254501342775
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_floor_low.fbx_floor_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "09bedbcf1f780b41a2b642af90d65e0d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "8225eef6797ac74a983b4fe0e6564093",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "c452e5902c397042910f9103931196ff"
+        },
+        "Transform": {
+          "position": [
+            3.9938583374023439,
+            132.69163513183595,
+            315.3977355957031
+          ],
+          "rotation": [
+            0.0,
+            -0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.0009999502217397094,
+            1.2000000476837159,
+            0.07599765062332154
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "floor_1 (22)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_floor_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f5eefc53fc0e3a48a3819c45fcd330b0",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "b315fefce1c9fa4faf44104302d72bc1"
+        },
+        "Transform": {
+          "position": [
+            -1.5088608264923096,
+            0.0,
+            28.561254501342775
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_floor_low.fbx_floor_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "09bedbcf1f780b41a2b642af90d65e0d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "c452e5902c397042910f9103931196ff",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    }
+  ]
+}
