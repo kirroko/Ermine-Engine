@@ -21,6 +21,42 @@ public class SpotLightTrigger : MonoBehaviour
     private float timer;
     private float health = 0f;
 
+    private float regenRate;
+
+    // ===== Base (outside spotlight) =====
+    public float baseChromaticAberration = 0.003f;
+    public float baseExposure = 1f;
+    public float baseGamma = 2.2f;
+    public float baseBloomStrength = 0.03f;
+
+    // ===== Spotlight (inside) =====
+    public float spotlightChromaticAberration = 0.3f;
+    public float spotlightExposure = 3f;
+    public float spotlightGamma = 3f;
+    public float spotlightBloomStrength = 0.4f;
+
+    private bool spotFxFading = false;
+    private bool spotFxFadeIn = false;
+    private float spotFxElapsed = 0f;
+    public float spotFxDuration = 1f;
+
+    // Start values (where the fade begins)
+    private float startChromaticAberration;
+    private float startExposure;
+    private float startGamma;
+    private float startBloom;
+
+    private float currentChromaticAberration;
+    private float currentExposure;
+    private float currentGamma;
+    private float currentBloom;
+
+    private PlayerController2 playerController2;
+    private float playerPrevSpeed;
+    private float playerPrevSprintSpeed;
+    private float slowMoveSpeed = 4f;
+    private float slowSprintSpeed = 4f;
+
     void Start()
     {
         player = GameObject.Find("Player");
@@ -32,10 +68,33 @@ public class SpotLightTrigger : MonoBehaviour
         }
 
         timer = 0;
+
+        currentChromaticAberration = baseChromaticAberration;
+        currentExposure = baseExposure;
+        currentGamma = baseGamma;
+        currentBloom = baseBloomStrength;
+
+        regenRate = GameplayHUD.GetRegenRate(healthBar);
+
+        ApplyPostEffects();
+
+        playerController2 = player?.GetComponent<PlayerController2>();
+        Debug.LogError("Playercontroller2 found: " + (playerController2 != null));
+
+        if (playerController2 != null)
+        {
+            playerPrevSpeed = playerController2.walkSpeed;
+            playerPrevSprintSpeed = playerController2.sprintSpeed;
+        }
     }
     
     void Update()
     {
+        if (spotFxFading)
+        {
+            UpdateSpotlightFade();
+        }
+
         if (player == null) return;
         if (Physics.Internal_GetLightValue((ulong)gameObject.GetInstanceID()) == 0) return;
 
@@ -79,7 +138,7 @@ public class SpotLightTrigger : MonoBehaviour
         health = GameplayHUD.GetHealth(healthBar);
         health = Math.Max(0f, health - dmg);
         GameplayHUD.SetHealth(healthBar, health);
-        
+        GameplayHUD.SetRegenRate(healthBar, 0f);
         // Flash red vignette on damage
         DamageVignetteHelper.FlashRedVignette();
     }
@@ -150,11 +209,81 @@ public class SpotLightTrigger : MonoBehaviour
     {
         Debug.Log("Player entered spotlight cone");
         GlobalAudio.PlaySFX("LightDamageLoop");
+        StartSpotlightFade(true); // fade IN
+
+        if (playerController2 != null)
+        {
+            playerController2.walkSpeed = slowMoveSpeed;
+            playerController2.sprintSpeed = slowSprintSpeed;
+        }
+        Debug.Log("PlayerController speed  = " + playerController2.moveSpeed);
     }
 
     void OnSpotExit()
     {
         Debug.Log("Player left spotlight cone");
         GlobalAudio.StopSFX("LightDamageLoop");
+        StartSpotlightFade(false); // fade OUT
+        GameplayHUD.SetRegenRate(healthBar, regenRate);
+
+        if (playerController2 != null)
+        {
+            playerController2.walkSpeed = playerPrevSpeed;
+            playerController2.sprintSpeed = playerPrevSprintSpeed;
+        }
+    }
+
+    void StartSpotlightFade(bool fadeIn)
+    {
+        // Capture CURRENT values (we can't read engine state, so track what we last set)
+        startChromaticAberration = currentChromaticAberration;
+        startExposure = currentExposure;
+        startGamma = currentGamma;
+        startBloom = currentBloom;
+
+        spotFxElapsed = 0f;
+        spotFxFadeIn = fadeIn;
+        spotFxFading = true;
+    }
+
+    void ApplyPostEffects()
+    {
+        PostEffects.ChromaticAberrationIntensity = currentChromaticAberration;
+        PostEffects.Exposure = currentExposure;
+        PostEffects.Gamma = currentGamma;
+        PostEffects.BloomStrength = currentBloom;
+    }
+
+    void UpdateSpotlightFade()
+    {
+        float duration = Math.Max(0.0001f, spotFxDuration);
+        spotFxElapsed += Time.deltaTime;
+
+        float t = Math.Min(spotFxElapsed / duration, 1.0f);
+
+        // Choose target
+        float targetChromatic = spotFxFadeIn ? spotlightChromaticAberration : baseChromaticAberration;
+        float targetExposure = spotFxFadeIn ? spotlightExposure : baseExposure;
+        float targetGamma = spotFxFadeIn ? spotlightGamma : baseGamma;
+        float targetBloom = spotFxFadeIn ? spotlightBloomStrength : baseBloomStrength;
+
+        // Lerp
+        currentChromaticAberration = startChromaticAberration + (targetChromatic - startChromaticAberration) * t;
+        currentExposure = startExposure + (targetExposure - startExposure) * t;
+        currentGamma = startGamma + (targetGamma - startGamma) * t;
+        currentBloom = startBloom + (targetBloom - startBloom) * t;
+
+        ApplyPostEffects();
+
+        if (t >= 1.0f)
+        {
+            currentChromaticAberration = targetChromatic;
+            currentExposure = targetExposure;
+            currentGamma = targetGamma;
+            currentBloom = targetBloom;
+
+            ApplyPostEffects();
+            spotFxFading = false;
+        }
     }
 }
