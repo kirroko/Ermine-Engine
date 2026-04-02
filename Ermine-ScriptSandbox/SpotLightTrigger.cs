@@ -20,51 +20,6 @@ public class SpotLightTrigger : MonoBehaviour
     private GameObject healthBar;
     private float timer;
     private float health = 0f;
-    float origRegenRate;
-    float regenRate;
-
-
-    private bool cancelRegenInSpotlight = true;
-
-
-
-
-    public float damageVignetteCoverage = 0.4f;
-    public float damageVignetteRadius = 0.6f;
-    public float damageVignetteFalloff = 0.3f;
-
-
-
-    // ===== Base (outside spotlight) =====
-    public float baseChromaticAberration = 0.003f;
-    public float baseExposure = 1f;
-    public float baseGamma = 2.2f;
-    public float baseBloomStrength = 0.03f;
-
-    // ===== Spotlight (inside) =====
-    public float spotlightChromaticAberration = 0.3f;
-    public float spotlightExposure = 3f;
-    public float spotlightGamma = 3f;
-    public float spotlightBloomStrength = 0.4f;
-
-    private bool spotFxFading = false;
-    private bool spotFxFadeIn = false;
-    private float spotFxElapsed = 0f;
-    public float spotFxDuration = 1f;
-
-    // Start values (where the fade begins)
-    private float startChromaticAberration;
-    private float startExposure;
-    private float startGamma;
-    private float startBloom;
-
-    private float currentChromaticAberration;
-    private float currentExposure;
-    private float currentGamma;
-    private float currentBloom;
-
-
-
 
     void Start()
     {
@@ -77,33 +32,12 @@ public class SpotLightTrigger : MonoBehaviour
         }
 
         timer = 0;
-
-
-        currentChromaticAberration = baseChromaticAberration;
-        currentExposure = baseExposure;
-        currentGamma = baseGamma;
-        currentBloom = baseBloomStrength;
-
-        ApplyPostEffects();
-
-        origRegenRate = GameplayHUD.GetRegenRate(healthBar);
     }
     
     void Update()
     {
-        if (vignetteExitFading)
-        {
-            UpdateVignetteExitFade();
-        }
-
-        if (spotFxFading)
-        {
-            UpdateSpotlightFade();
-        }
         if (player == null) return;
         if (Physics.Internal_GetLightValue((ulong)gameObject.GetInstanceID()) == 0) return;
-
-        
 
         bool inside = IsPointInsideSpot(player.transform.position);
 
@@ -129,17 +63,12 @@ public class SpotLightTrigger : MonoBehaviour
         // Damage tick while inside
         if (playerInside)
         {
-
-            CancelHealthRegen(); // Cancel regen every frame while inside
-
             timer -= Time.deltaTime;
             if (timer <= 0f)
             {
                 TakeDamage(damagePerTick);
                 timer = tickInterval;
             }
-            
-
         }
     }
 
@@ -155,45 +84,6 @@ public class SpotLightTrigger : MonoBehaviour
         DamageVignetteHelper.FlashRedVignette();
     }
 
-        // First half: fade in
-        blend = t / half;
-
-        PostEffects.VignetteIntensity =
-            prevVignetteIntensity + (damageVignetteIntensity - prevVignetteIntensity) * blend;
-        PostEffects.VignetteCoverage =
-            prevVignetteCoverage + (damageVignetteCoverage - prevVignetteCoverage) * blend;
-        PostEffects.VignetteRadius =
-            prevVignetteRadius + (damageVignetteRadius - prevVignetteRadius) * blend;
-        PostEffects.VignetteFalloff =
-            prevVignetteFalloff + (damageVignetteFalloff - prevVignetteFalloff) * blend;
-    }
-    else
-    {
-        // Second half: fade out
-        blend = (t - half) / half;
-
-        PostEffects.VignetteIntensity =
-            damageVignetteIntensity + (prevVignetteIntensity - damageVignetteIntensity) * blend;
-        PostEffects.VignetteCoverage =
-            damageVignetteCoverage + (prevVignetteCoverage - damageVignetteCoverage) * blend;
-        PostEffects.VignetteRadius =
-            damageVignetteRadius + (prevVignetteRadius - damageVignetteRadius) * blend;
-        PostEffects.VignetteFalloff =
-            damageVignetteFalloff + (prevVignetteFalloff - damageVignetteFalloff) * blend;
-    }
-
-        PostEffects.VignetteMapRGBModifier = new Vector3(1.0f, 0.0f, 0.0f); //vignette stays red
-
-        /*
-        */
-            // If player is still in the spotlight, repeat the vignette effect
-            if (playerInside)
-            {
-                damageVignetteElapsed = 0f;
-            }
-            else
-            {
-    }
     bool IsPointInsideSpot(Vector3 point)
     {
         Vector3 lightPos = transform.worldPosition;
@@ -260,113 +150,11 @@ public class SpotLightTrigger : MonoBehaviour
     {
         Debug.Log("Player entered spotlight cone");
         GlobalAudio.PlaySFX("LightDamageLoop");
-        StartSpotlightFade(true); // fade IN
     }
 
     void OnSpotExit()
     {
         Debug.Log("Player left spotlight cone");
         GlobalAudio.StopSFX("LightDamageLoop");
-        StartSpotlightFade(false); // fade OUT
-        GameplayHUD.SetRegenRate(healthBar, origRegenRate); // Restore regen when exiting
-                                                            // Start vignette fade-out
-        StartVignetteExitFade();
-    }
-
-    void CancelHealthRegen()
-    {
-        if (healthBar == null) return;
-
-        regenRate = GameplayHUD.GetRegenRate(healthBar);
-        if (regenRate <= 0f) return;
-
-        GameplayHUD.SetRegenRate(healthBar, 0f);
-    }
-
-    void StartSpotlightFade(bool fadeIn)
-    {
-        // Capture CURRENT values (we can't read engine state, so track what we last set)
-        startChromaticAberration = currentChromaticAberration;
-        startExposure = currentExposure;
-        startGamma = currentGamma;
-        startBloom = currentBloom;
-
-        spotFxElapsed = 0f;
-        spotFxFadeIn = fadeIn;
-        spotFxFading = true;
-    }
-
-    void ApplyPostEffects()
-    {
-        PostEffects.ChromaticAberrationIntensity = currentChromaticAberration;
-        PostEffects.Exposure = currentExposure;
-        PostEffects.Gamma = currentGamma;
-        PostEffects.BloomStrength = currentBloom;
-    }
-
-    void UpdateSpotlightFade()
-    {
-        float duration = Math.Max(0.0001f, spotFxDuration);
-        spotFxElapsed += Time.deltaTime;
-
-        float t = Math.Min(spotFxElapsed / duration, 1.0f);
-
-        // Choose target
-        float targetChromatic = spotFxFadeIn ? spotlightChromaticAberration : baseChromaticAberration;
-        float targetExposure = spotFxFadeIn ? spotlightExposure : baseExposure;
-        float targetGamma = spotFxFadeIn ? spotlightGamma : baseGamma;
-        float targetBloom = spotFxFadeIn ? spotlightBloomStrength : baseBloomStrength;
-
-        // Lerp
-        currentChromaticAberration = startChromaticAberration + (targetChromatic - startChromaticAberration) * t;
-        currentExposure = startExposure + (targetExposure - startExposure) * t;
-        currentGamma = startGamma + (targetGamma - startGamma) * t;
-        currentBloom = startBloom + (targetBloom - startBloom) * t;
-
-        ApplyPostEffects();
-
-        if (t >= 1.0f)
-        {
-            currentChromaticAberration = targetChromatic;
-            currentExposure = targetExposure;
-            currentGamma = targetGamma;
-            currentBloom = targetBloom;
-
-            ApplyPostEffects();
-            spotFxFading = false;
-        }
-    }
-
-    void StartVignetteExitFade()
-    {
-        damageVignetteActive = false;
-        vignetteExitFading = true;
-        vignetteExitElapsed = 0f;
-    }
-
-    void UpdateVignetteExitFade()
-    {
-        float duration = Math.Max(0.0001f, vignetteExitFadeDuration);
-        vignetteExitElapsed += Time.deltaTime;
-
-        float t = Math.Min(vignetteExitElapsed / duration, 1.0f);
-
-        // Fade out vignette properties
-        PostEffects.VignetteIntensity = prevVignetteIntensity + (0f - prevVignetteIntensity) * t;
-        PostEffects.VignetteCoverage = prevVignetteCoverage + (0f - prevVignetteCoverage) * t;
-        PostEffects.VignetteRadius = prevVignetteRadius + (0f - prevVignetteRadius) * t;
-        PostEffects.VignetteFalloff = prevVignetteFalloff + (0f - prevVignetteFalloff) * t;
-
-        if (t >= 1.0f)
-        {
-            // Restore previous vignette state
-            PostEffects.EnableVignette = prevVignetteEnabled;
-            PostEffects.VignetteIntensity = prevVignetteIntensity;
-            PostEffects.VignetteRadius = prevVignetteRadius;
-            PostEffects.VignetteCoverage = prevVignetteCoverage;
-            PostEffects.VignetteFalloff = prevVignetteFalloff;
-            PostEffects.VignetteMapRGBModifier = prevVignetteRGBModifier;
-            vignetteExitFading = false;
-        }
     }
 }
