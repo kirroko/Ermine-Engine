@@ -478,8 +478,11 @@ namespace Ermine {
                 // Bind Swirl01.png to texture unit 7
                 glActiveTexture(GL_TEXTURE7);
                 glBindTexture(GL_TEXTURE_2D, m_Swirl01Tex);
+                // Clamp to edge to prevent ghost rings from UV coordinates outside [0,1]
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
                 glUniform1i(glGetUniformLocation(program, "u_SpriteTexture"), 7);
-            } else {
+            }else {
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE);
             }
 

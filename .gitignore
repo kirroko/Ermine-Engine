@@ -34,3 +34,4 @@ ThirdParty/imgui/bin-int/
 ThirdParty/Mono/bin-int/
 dist/*
 *.zip
+Installer/*
