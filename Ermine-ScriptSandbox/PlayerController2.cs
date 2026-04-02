@@ -58,6 +58,14 @@ public class PlayerController2 : MonoBehaviour
     private GameObject bgDarken;
     private bool isPaused = false;
 
+    public float electricFenceDamage = 15f;
+    public float electricFenceDamageCooldown = 1f;
+    public string healthBarName = "Healthbar";
+
+    private GameObject healthBar;
+    private float electricFenceTimer = 0f;
+    private float health = 0f;
+
     void Start()
     {
         GameObject camObj = GameObject.Find("Main Camera");
@@ -79,6 +87,12 @@ public class PlayerController2 : MonoBehaviour
         Cursor.lockState = Cursor.CursorLockState.Confined;
 
         bgDarken = GameObject.Find("BackgroundDarken");
+
+        healthBar = GameObject.Find(healthBarName);
+        if (healthBar != null)
+        {
+            health = GameplayHUD.GetHealth(healthBar);
+        }
     }
 
     void Update()
@@ -95,6 +109,9 @@ public class PlayerController2 : MonoBehaviour
         HandleAnimUpdate();
         HandleClueMessageTimer();
         HandleSubtitleTimer();
+
+        if (electricFenceTimer > 0f)
+            electricFenceTimer -= Time.deltaTime;
     }
 
     private void HandleInput()
@@ -673,12 +690,24 @@ public class PlayerController2 : MonoBehaviour
             isGrounded = true;
             isKeyJump = false;
         }
+
+        if (IsElectricFence(col.gameObject))
+        {
+            TakeElectricFenceDamage(electricFenceDamage);
+            electricFenceTimer = electricFenceDamageCooldown;
+        }
     }
     void OnCollisionStay(Collision col)
     {
         if (col.gameObject.name.Contains("floor") || col.gameObject.name.Contains("Rotating"))
         {
             isGrounded = true;
+        }
+
+        if (IsElectricFence(col.gameObject) && electricFenceTimer <= 0f)
+        {
+            TakeElectricFenceDamage(electricFenceDamage);
+            electricFenceTimer = electricFenceDamageCooldown;
         }
     }
     void OnCollisionExit(Collision col)
@@ -687,5 +716,22 @@ public class PlayerController2 : MonoBehaviour
         {
             isGrounded = false;
         }
+    }
+
+    private bool IsElectricFence(GameObject obj)
+    {
+        if (obj == null) return false;
+        return obj.name.Contains("ElectricFenc");
+    }
+
+    private void TakeElectricFenceDamage(float dmg)
+    {
+        if (healthBar == null) return;
+
+        health = GameplayHUD.GetHealth(healthBar);
+        health = Math.Max(0f, health - dmg);
+        GameplayHUD.SetHealth(healthBar, health);
+
+        DamageVignetteHelper.FlashRedVignette();
     }
 }
