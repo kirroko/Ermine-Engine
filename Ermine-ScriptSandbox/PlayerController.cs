@@ -59,6 +59,9 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        // Hard reset vignette if not being damaged
+        DamageVignetteHelper.UpdateVignette();
+        
         moveInput = Vector2.zero;
         movementKeyPressed = false; // Reset each frame
         //lookInput = Vector2.zero;

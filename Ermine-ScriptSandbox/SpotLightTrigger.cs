@@ -29,26 +29,11 @@ public class SpotLightTrigger : MonoBehaviour
 
 
 
-    // Damage feedback vignette
-    private bool damageVignetteActive = false;
-    private float damageVignetteElapsed = 0f;
-
-    public float damageVignetteDuration = 0.9f;   // total duration
-    public float damageVignetteIntensity = 0.75f;
     public float damageVignetteCoverage = 0.4f;
     public float damageVignetteRadius = 0.6f;
     public float damageVignetteFalloff = 0.3f;
 
-    private bool prevVignetteEnabled = false;
-    private float prevVignetteIntensity = 0f;
-    private float prevVignetteRadius = 0f;
-    private float prevVignetteCoverage = 0f;
-    private float prevVignetteFalloff = 0f;
-    private Vector3 prevVignetteRGBModifier = Vector3.zero;
 
-    private bool vignetteExitFading = false;
-    private float vignetteExitElapsed = 0f;
-    public float vignetteExitFadeDuration = 0.5f;  // fade-out duration when exiting
 
     // ===== Base (outside spotlight) =====
     public float baseChromaticAberration = 0.003f;
@@ -103,12 +88,9 @@ public class SpotLightTrigger : MonoBehaviour
 
         origRegenRate = GameplayHUD.GetRegenRate(healthBar);
     }
+    
     void Update()
     {
-        if (damageVignetteActive)
-        {
-            UpdateDamageVignette();
-        }
         if (vignetteExitFading)
         {
             UpdateVignetteExitFade();
@@ -118,7 +100,6 @@ public class SpotLightTrigger : MonoBehaviour
         {
             UpdateSpotlightFade();
         }
-
         if (player == null) return;
         if (Physics.Internal_GetLightValue((ulong)gameObject.GetInstanceID()) == 0) return;
 
@@ -157,12 +138,8 @@ public class SpotLightTrigger : MonoBehaviour
                 TakeDamage(damagePerTick);
                 timer = tickInterval;
             }
-
             
 
-            // Optional: use intensity (0..1) to scale damage, audio, etc.
-            // float intensity01 = GetSpotIntensity01(player.transform.position);
-            // TakeDamage(damagePerTick * intensity01);  // example
         }
     }
 
@@ -173,41 +150,11 @@ public class SpotLightTrigger : MonoBehaviour
         health = GameplayHUD.GetHealth(healthBar);
         health = Math.Max(0f, health - dmg);
         GameplayHUD.SetHealth(healthBar, health);
-
-        // Trigger red vignette damage feedback
-        TriggerDamageVignette();
+        
+        // Flash red vignette on damage
+        DamageVignetteHelper.FlashRedVignette();
     }
 
-    void TriggerDamageVignette()
-    {
-        // Cache current vignette state
-        prevVignetteEnabled = PostEffects.EnableVignette;
-        prevVignetteIntensity = PostEffects.VignetteIntensity;
-        prevVignetteRadius = PostEffects.VignetteRadius;
-        prevVignetteCoverage = PostEffects.VignetteCoverage;
-        prevVignetteFalloff = PostEffects.VignetteFalloff;
-        prevVignetteRGBModifier = PostEffects.VignetteMapRGBModifier;
-
-        // Enable vignette, but do NOT snap to full damage values
-        PostEffects.EnableVignette = true;
-        PostEffects.VignetteMapRGBModifier = new Vector3(1.0f, 0.0f, 0.0f);
-
-        damageVignetteElapsed = 0f;
-        damageVignetteActive = true;
-    }
-
-    void UpdateDamageVignette()
-    {
-        float duration = Math.Max(0.0001f, damageVignetteDuration);
-        damageVignetteElapsed += Time.deltaTime;
-
-        float t = Math.Min(damageVignetteElapsed / duration, 1.0f);
-
-        // Split into fade-in then fade-out
-        float half = 0.5f;
-        float blend;
-        if (t < half)
-    {
         // First half: fade in
         blend = t / half;
 
@@ -235,21 +182,10 @@ public class SpotLightTrigger : MonoBehaviour
             damageVignetteFalloff + (prevVignetteFalloff - damageVignetteFalloff) * blend;
     }
 
-
         PostEffects.VignetteMapRGBModifier = new Vector3(1.0f, 0.0f, 0.0f); //vignette stays red
 
         /*
-        // Fade from red back to original color
-        Vector3 redTint = new Vector3(1.0f, 0.0f, 0.0f);
-        PostEffects.VignetteMapRGBModifier = new Vector3(
-            redTint.x + (prevVignetteRGBModifier.x - redTint.x) * t,
-            redTint.y + (prevVignetteRGBModifier.y - redTint.y) * t,
-            redTint.z + (prevVignetteRGBModifier.z - redTint.z) * t
-        );
         */
-
-        if (t >= 1.0f)
-        {
             // If player is still in the spotlight, repeat the vignette effect
             if (playerInside)
             {
@@ -257,18 +193,7 @@ public class SpotLightTrigger : MonoBehaviour
             }
             else
             {
-                // Restore previous vignette state
-                PostEffects.EnableVignette = prevVignetteEnabled;
-                PostEffects.VignetteIntensity = prevVignetteIntensity;
-                PostEffects.VignetteRadius = prevVignetteRadius;
-                PostEffects.VignetteCoverage = prevVignetteCoverage;
-                PostEffects.VignetteFalloff = prevVignetteFalloff;
-                PostEffects.VignetteMapRGBModifier = prevVignetteRGBModifier;
-                damageVignetteActive = false;
-            }
-        }
     }
-
     bool IsPointInsideSpot(Vector3 point)
     {
         Vector3 lightPos = transform.worldPosition;
@@ -327,9 +252,6 @@ public class SpotLightTrigger : MonoBehaviour
         if (dist < 1e-5f) return true;
 
         dir = dir / dist;
-
-        // If/when your engine exposes Physics.Raycast(origin, dir, dist):
-        // return !Physics.Raycast(origin, dir, dist);
 
         return true;
     }
