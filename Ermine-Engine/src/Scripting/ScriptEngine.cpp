@@ -1178,6 +1178,20 @@ namespace
 			ui->position = ToNativeVec(value);
 	}
 
+	float icall_uiimage_get_alpha(MonoObject* thisObj)
+	{
+		if (auto* ui = GetUIImageComponentFromManaged(thisObj))
+			return ui->alpha;
+
+		return 1.0f;
+	}
+
+	void icall_uiimage_set_alpha(MonoObject* thisObj, float value)
+	{
+		if (auto* ui = GetUIImageComponentFromManaged(thisObj))
+			ui->alpha = std::clamp(value, 0.0f, 1.0f);
+	}
+
 #pragma region Transform ICalls
 	ManagedVector3 icall_transform_get_position(MonoObject* thisObj)
 	{
@@ -4524,6 +4538,8 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 
 	mono_add_internal_call("ErmineEngine.UIImage::get_position", (const void*)icall_uiimage_get_position);
 	mono_add_internal_call("ErmineEngine.UIImage::set_position", (const void*)icall_uiimage_set_position);
+	mono_add_internal_call("ErmineEngine.UIImage::get_alpha", (const void*)icall_uiimage_get_alpha);
+	mono_add_internal_call("ErmineEngine.UIImage::set_alpha", (const void*)icall_uiimage_set_alpha);
 
 #pragma endregion UI ICalls
 

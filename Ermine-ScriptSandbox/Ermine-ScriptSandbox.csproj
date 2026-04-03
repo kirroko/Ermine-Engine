@@ -103,6 +103,7 @@
     <Compile Include="Sandbox2.cs" />
     <Compile Include="SpawnPointController.cs" />
     <Compile Include="Sphere.cs" />
+    <Compile Include="SplashScreen.cs" />
     <Compile Include="SpotLightTrigger.cs" />
     <Compile Include="Switch.cs" />
     <Compile Include="TemplateScript.cs" />
