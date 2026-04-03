@@ -93317,7 +93317,7 @@
     "grainIntensity": 0.014999999664723874,
     "grainScale": 1.5,
     "chromaticAberrationEnabled": true,
-    "chromaticAmount": 0.06485209614038468,
+    "chromaticAmount": 0.03,
     "radialBlurEnabled": true,
     "radialBlurStrength": 0.0000023285379029402977,
     "radialBlurSamples": 14,
