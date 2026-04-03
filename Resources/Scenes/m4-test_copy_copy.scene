@@ -46,8 +46,73 @@
               "volume": 0.6000000238418579
             },
             {
-              "name": "Jump",
-              "path": "../Resources/Audio/jump1.wav",
+              "name": "Jump1",
+              "path": "../Resources/Audio/VO_Jump_01.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Jump2",
+              "path": "../Resources/Audio/VO_Jump_02.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Jump3",
+              "path": "../Resources/Audio/VO_Jump_03.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Jump4",
+              "path": "../Resources/Audio/VO_Jump_04.wav",
+              "volume": 0.5
+            },
+            {
+              "name": "Jump5",
+              "path": "../Resources/Audio/VO_Jump_05.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Jump6",
+              "path": "../Resources/Audio/VO_Jump_06.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Jump7",
+              "path": "../Resources/Audio/VO_Jump_07.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Jump8",
+              "path": "../Resources/Audio/VO_Jump_08.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Jump9",
+              "path": "../Resources/Audio/VO_Jump_09.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Jump10",
+              "path": "../Resources/Audio/VO_Jump_10.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Jump11",
+              "path": "../Resources/Audio/VO_Jump_11.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Jump12",
+              "path": "../Resources/Audio/VO_Jump_12.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Jump13",
+              "path": "../Resources/Audio/VO_Jump_13.wav",
+              "volume": 1.0
+            },
+            {
+              "name": "Jump14",
+              "path": "../Resources/Audio/VO_Jump_14.wav",
               "volume": 1.0
             },
             {
