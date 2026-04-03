@@ -22,9 +22,9 @@
         },
         "GlobalAudioComponent": {
           "masterVolume": 1.0,
-          "musicVolume": 0.23999999463558198,
+          "musicVolume": 1.0,
           "sfxVolume": 1.0,
-          "ambienceVolume": 0.10000000149011612,
+          "ambienceVolume": 1.0,
           "voiceVolume": 1.0,
           "autoPlay": true,
           "music": [
@@ -161753,13 +161753,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.10000000149011612
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.10000000149011612
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -161769,13 +161769,13 @@
                   "t": 0,
                   "v": 8.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -161795,11 +161795,11 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "damage": {
+                "recallHealAmt": {
                   "t": 0,
                   "v": 10.0
                 },
-                "recallHealAmt": {
+                "damage": {
                   "t": 0,
                   "v": 10.0
                 },
@@ -190928,13 +190928,13 @@
                   "t": 0,
                   "v": 2.0
                 },
-                "sceneName": {
-                  "t": 3,
-                  "v": "Level2toEnd.scene"
-                },
                 "eDuration": {
                   "t": 0,
                   "v": 3.0
+                },
+                "sceneName": {
+                  "t": 3,
+                  "v": "Level2toEnd.scene"
                 },
                 "dSpeed": {
                   "t": 0,
@@ -199176,7 +199176,7 @@
           "trackImage": "./Resources/Textures/UI/Audio_Bar.png",
           "fillImage": "./Resources/Textures/UI/Audio_Fill.png",
           "handleImage": "./Resources/Textures/UI/Audio_Indicator.png",
-          "value": 0.23999999463558198,
+          "value": 1.0,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 2,
@@ -225461,14 +225461,14 @@
         "Transform": {
           "position": [
             1.8036772012710572,
-            -20.648000717163087,
+            5.452000141143799,
             -7.479665756225586
           ],
           "rotation": [
+            -0.0,
             0.0,
-            0.0,
-            0.0,
-            1.0
+            1.0,
+            -4.371138828673793e-8
           ],
           "scale": [
             0.10000000149011612,
@@ -225852,7 +225852,7 @@
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
-          "motionType": "Static",
+          "motionType": "Kinematic",
           "mass": 0.0,
           "shapeType": "CustomMesh",
           "colliderpivot": [
@@ -225994,7 +225994,7 @@
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
-          "motionType": "Static",
+          "motionType": "Kinematic",
           "mass": 0.0,
           "shapeType": "CustomMesh",
           "colliderpivot": [
@@ -226328,14 +226328,14 @@
         "Transform": {
           "position": [
             1.8036772012710572,
-            -20.648000717163087,
+            6.052000045776367,
             -7.479665756225586
           ],
           "rotation": [
+            -0.0,
             0.0,
-            0.0,
-            0.0,
-            1.0
+            1.0,
+            -4.371138828673793e-8
           ],
           "scale": [
             0.10000000149011612,
@@ -226682,14 +226682,14 @@
         "Transform": {
           "position": [
             1.8036772012710572,
-            -20.648000717163087,
+            4.3520002365112309,
             -7.479665756225586
           ],
           "rotation": [
+            -0.0,
             0.0,
-            0.0,
-            0.0,
-            1.0
+            1.0,
+            -4.371138828673793e-8
           ],
           "scale": [
             0.10000000149011612,
@@ -227060,7 +227060,7 @@
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
-          "motionType": "Static",
+          "motionType": "Kinematic",
           "mass": 0.0,
           "shapeType": "CustomMesh",
           "colliderpivot": [

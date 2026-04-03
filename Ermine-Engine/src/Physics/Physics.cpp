@@ -158,7 +158,7 @@ namespace Ermine
 	 allocators, job system, and sets up filter and listener objects.
 	***************************************************************************/
 	Physics::Physics()
-		: mTempAllocator(10 * 1024 * 1024),  // Allocate 10 MB for temporary physics data
+		: mTempAllocator(100 * 1024 * 1024),  // Allocate 100 MB for temporary physics data
 		mJobSystem(cMaxPhysicsJobs, cMaxPhysicsBarriers, std::thread::hardware_concurrency() - 1)
 	{
 		// Create filter and listener objects for collision handling
@@ -1016,8 +1016,9 @@ namespace Ermine
 		mPhysicsSystem.GetBodies(bodies);
 
 		const JPH::BodyLockInterface& bli = mPhysicsSystem.GetBodyLockInterface();
+		auto& ecs = ECS::GetInstance();
 
-		constexpr int cMax = 512;
+		constexpr int cMax = 912;
 		constexpr int kMaxDebugTrianglesPerShape = 5000;
 
 		for (JPH::BodyID id : bodies)
@@ -1027,6 +1028,12 @@ namespace Ermine
 				continue;
 
 			const JPH::Body& body = lock.GetBody();
+			EntityID entity = static_cast<EntityID>(body.GetUserData());
+
+			if (!ecs.IsEntityValid(entity) || !ecs.HasComponent<PhysicComponent>(entity))
+				continue;
+
+			auto& phys = ecs.GetComponent<PhysicComponent>(entity);
 
 			JPH::Color color = JPH::Color::sWhite;
 			switch (body.GetMotionType())
@@ -1037,53 +1044,50 @@ namespace Ermine
 			default: break;
 			}
 
+			// Static CustomMesh draw only AABB, skip full triangle wireframe
+			if (phys.shapeType == ShapeType::CustomMesh &&
+				body.GetMotionType() == JPH::EMotionType::Static)
+			{
+				const JPH::AABox localBounds = body.GetShape()->GetLocalBounds();
+				const JPH::RMat44 world = body.GetCenterOfMassTransform();
+
+				JPH::Vec3 mn = localBounds.mMin;
+				JPH::Vec3 mx = localBounds.mMax;
+
+				JPH::RVec3 p000 = world * JPH::Vec3(mn.GetX(), mn.GetY(), mn.GetZ());
+				JPH::RVec3 p001 = world * JPH::Vec3(mn.GetX(), mn.GetY(), mx.GetZ());
+				JPH::RVec3 p010 = world * JPH::Vec3(mn.GetX(), mx.GetY(), mn.GetZ());
+				JPH::RVec3 p011 = world * JPH::Vec3(mn.GetX(), mx.GetY(), mx.GetZ());
+				JPH::RVec3 p100 = world * JPH::Vec3(mx.GetX(), mn.GetY(), mn.GetZ());
+				JPH::RVec3 p101 = world * JPH::Vec3(mx.GetX(), mn.GetY(), mx.GetZ());
+				JPH::RVec3 p110 = world * JPH::Vec3(mx.GetX(), mx.GetY(), mn.GetZ());
+				JPH::RVec3 p111 = world * JPH::Vec3(mx.GetX(), mx.GetY(), mx.GetZ());
+
+				mDebugRenderer->DrawLine(p000, p001, color);
+				mDebugRenderer->DrawLine(p000, p010, color);
+				mDebugRenderer->DrawLine(p000, p100, color);
+
+				mDebugRenderer->DrawLine(p111, p110, color);
+				mDebugRenderer->DrawLine(p111, p101, color);
+				mDebugRenderer->DrawLine(p111, p011, color);
+
+				mDebugRenderer->DrawLine(p001, p011, color);
+				mDebugRenderer->DrawLine(p001, p101, color);
+
+				mDebugRenderer->DrawLine(p010, p011, color);
+				mDebugRenderer->DrawLine(p010, p110, color);
+
+				mDebugRenderer->DrawLine(p100, p101, color);
+				mDebugRenderer->DrawLine(p100, p110, color);
+
+				continue;
+			}
+
 			JPH::AllHitCollisionCollector<JPH::TransformedShapeCollector> collector;
 			body.GetTransformedShape().CollectTransformedShapes(body.GetWorldSpaceBounds(), collector);
 
 			for (const JPH::TransformedShape& ts : collector.mHits)
 			{
-				// Optional: skip giant static meshes completely
-				if (body.GetMotionType() == JPH::EMotionType::Static)
-				{
-					const JPH::AABox bounds = ts.GetWorldSpaceBounds();
-					JPH::Vec3 extent = bounds.GetExtent();
-
-					// Very large object, draw only AABB
-					if (extent.GetX() > 20.0f || extent.GetY() > 20.0f || extent.GetZ() > 20.0f)
-					{
-						JPH::RVec3 mn = bounds.mMin;
-						JPH::RVec3 mx = bounds.mMax;
-
-						JPH::RVec3 p000(mn.GetX(), mn.GetY(), mn.GetZ());
-						JPH::RVec3 p001(mn.GetX(), mn.GetY(), mx.GetZ());
-						JPH::RVec3 p010(mn.GetX(), mx.GetY(), mn.GetZ());
-						JPH::RVec3 p011(mn.GetX(), mx.GetY(), mx.GetZ());
-						JPH::RVec3 p100(mx.GetX(), mn.GetY(), mn.GetZ());
-						JPH::RVec3 p101(mx.GetX(), mn.GetY(), mx.GetZ());
-						JPH::RVec3 p110(mx.GetX(), mx.GetY(), mn.GetZ());
-						JPH::RVec3 p111(mx.GetX(), mx.GetY(), mx.GetZ());
-
-						mDebugRenderer->DrawLine(p000, p001, color);
-						mDebugRenderer->DrawLine(p000, p010, color);
-						mDebugRenderer->DrawLine(p000, p100, color);
-
-						mDebugRenderer->DrawLine(p111, p110, color);
-						mDebugRenderer->DrawLine(p111, p101, color);
-						mDebugRenderer->DrawLine(p111, p011, color);
-
-						mDebugRenderer->DrawLine(p001, p011, color);
-						mDebugRenderer->DrawLine(p001, p101, color);
-
-						mDebugRenderer->DrawLine(p010, p011, color);
-						mDebugRenderer->DrawLine(p010, p110, color);
-
-						mDebugRenderer->DrawLine(p100, p101, color);
-						mDebugRenderer->DrawLine(p100, p110, color);
-
-						continue;
-					}
-				}
-
 				JPH::Shape::GetTrianglesContext ctx;
 				ts.mShape->GetTrianglesStart(
 					ctx,
@@ -1106,11 +1110,8 @@ namespace Ermine
 
 					totalTriangles += triCount;
 
-					// Too expensive, stop drawing this shape
 					if (totalTriangles > kMaxDebugTrianglesPerShape)
-					{
 						break;
-					}
 
 					for (int t = 0; t < triCount; ++t)
 					{
