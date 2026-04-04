@@ -19,8 +19,8 @@ public class EmergencySequenceController : MonoBehaviour
     private float timer = 0.0f;
 
     public float killAreaRiseSpeed = 0.5f;
-    private float safeOffsetBelowRespawn = 4.0f;
-    private float respawnPauseTime = 1.0f;
+    private float safeOffsetBelowRespawn = 15.0f;
+    private float respawnPauseTime = 3.0f;
     private float respawnPauseTimer = 0.0f;
 
     private float startKillAreaY = 0.0f;
@@ -187,6 +187,7 @@ public class EmergencySequenceController : MonoBehaviour
     private void TriggerAlarm()
     {
         Debug.Log("[Emergency] TriggerAlarm()");
+        GameObject.Find("EmergencyAlarm");
     }
 
     private void TriggerRumble() // Camera shake and sfx
@@ -217,6 +218,7 @@ public class EmergencySequenceController : MonoBehaviour
         Vector3 pos = killArea.transform.position;
         pos.y += killAreaRiseSpeed * dt;
         killArea.transform.position = pos;
+        Physics.SetPosition((ulong)killArea.GetInstanceID(), pos);
 
         Debug.Log("[Emergency] Kill area Y = " + pos.y);
     }
@@ -251,13 +253,16 @@ public class EmergencySequenceController : MonoBehaviour
         }
 
         Vector3 pos = killArea.transform.position;
-        pos.y = targetY;
-        killArea.transform.position = pos;
+        if (pos.y > targetY)
+        {
+            pos.y = targetY;
+            killArea.transform.position = pos;
+            Physics.SetPosition((ulong)killArea.GetInstanceID(), pos);
+            Debug.Log("[Emergency] Kill area moved to Y = " + pos.y);
 
-        Debug.Log("[Emergency] Kill area moved to Y = " + pos.y);
-
-        respawnPauseTimer = respawnPauseTime;
-        Debug.Log("[Emergency] Kill area paused for " + respawnPauseTime + " seconds");
+            respawnPauseTimer = respawnPauseTime;
+            Debug.Log("[Emergency] Kill area paused for " + respawnPauseTime + " seconds");
+        }
     }
 
     public void ResetSequenceCompletely()

@@ -99,6 +99,7 @@
     <Compile Include="PatrolState.cs" />
     <Compile Include="PlayerController.cs" />
     <Compile Include="PlayerController2.cs" />
+    <Compile Include="AlarmLights.cs" />
     <Compile Include="RotatingPlatform.cs" />
     <Compile Include="Sandbox.cs" />
     <Compile Include="Sandbox2.cs" />
