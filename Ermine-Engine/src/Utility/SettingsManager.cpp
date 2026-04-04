@@ -107,7 +107,7 @@ namespace Ermine
         auto& ecs = ECS::GetInstance();
 
         // Apply gamma to renderer
-        float gamma = 2.8f - (gammaSliderValue * 1.2f);
+        float gamma = 1.6f + (gammaSliderValue * 1.2f);
         if (auto renderer = ecs.GetSystem<graphics::Renderer>())
         {
             renderer->m_Gamma = gamma;
