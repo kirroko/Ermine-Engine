@@ -128,8 +128,8 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.15877988934516908,
-            0.4226650297641754,
+            0.17499999701976777,
+            0.4230000078678131,
             0.0
           ],
           "size": [
@@ -207,7 +207,7 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.20815926790237428,
+            0.21899999678134919,
             0.19078239798545838,
             0.0
           ],
@@ -280,10 +280,10 @@
           "selfActive": false
         },
         "GlobalAudioComponent": {
-          "masterVolume": 0.2515869140625,
-          "musicVolume": 1.0,
-          "sfxVolume": 0.8826786875724793,
-          "ambienceVolume": 1.0,
+          "masterVolume": 0.49925273656845095,
+          "musicVolume": 0.23999999463558198,
+          "sfxVolume": 1.0,
+          "ambienceVolume": 0.10000000149011612,
           "voiceVolume": 1.0,
           "autoPlay": true,
           "music": [
@@ -1183,7 +1183,7 @@
           "trackImage": "Resources/Textures/UI/UI UPDATED/Audio_Bar.png",
           "fillImage": "Resources/Textures/UI/UI UPDATED/Audio_Fill.png",
           "handleImage": "Resources/Textures/UI/UI UPDATED/Audio_Indicator.png",
-          "value": 0.2515869140625,
+          "value": 0.49925273656845095,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 1,
@@ -1286,7 +1286,7 @@
           "trackImage": "./Resources/Textures/UI/Audio_Bar.png",
           "fillImage": "./Resources/Textures/UI/Audio_Fill.png",
           "handleImage": "./Resources/Textures/UI/Audio_Indicator.png",
-          "value": 1.0,
+          "value": 0.23999999463558198,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 2,
@@ -1389,7 +1389,7 @@
           "trackImage": "./Resources/Textures/UI/Audio_Bar.png",
           "fillImage": "./Resources/Textures/UI/Audio_Fill.png",
           "handleImage": "./Resources/Textures/UI/Audio_Indicator.png",
-          "value": 0.8826786875724793,
+          "value": 1.0,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 3,
@@ -1607,7 +1607,7 @@
         "UIButtonComponent": {
           "text": "",
           "position": [
-            0.2070435881614685,
+            0.2150000035762787,
             0.30896496772766116,
             0.0
           ],
@@ -2597,7 +2597,7 @@
           "trackImage": "Resources/Textures/UI/UI UPDATED/Audio_Bar.png",
           "fillImage": "Resources/Textures/UI/UI UPDATED/Audio_Fill.png",
           "handleImage": "Resources/Textures/UI/UI UPDATED/Audio_Indicator.png",
-          "value": 0.8799394369125366,
+          "value": 1.0,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 5,
@@ -3056,7 +3056,7 @@
     "exposure": 1.0,
     "contrast": 1.0,
     "saturation": 1.0,
-    "gamma": 1.7440725564956666,
+    "gamma": 2.8000001907348635,
     "vignetteIntensity": 0.30000001192092898,
     "vignetteRadius": 0.800000011920929,
     "vignetteCoverage": 0.0,
