@@ -89,6 +89,7 @@
     <Compile Include="GearRotateAnimationTest2.cs" />
     <Compile Include="HealthDrivenMaterialFill.cs" />
     <Compile Include="IdleState.cs" />
+    <Compile Include="Level1.cs" />
     <Compile Include="Level2KeySystem\UnlockDoor.cs" />
     <Compile Include="LifeEssenceSkillController.cs" />
     <Compile Include="LoadingScreen.cs" />

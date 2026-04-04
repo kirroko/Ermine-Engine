@@ -21,7 +21,7 @@
           "selfActive": false
         },
         "GlobalAudioComponent": {
-          "masterVolume": 0.09985508769750595,
+          "masterVolume": 1.0,
           "musicVolume": 0.23999999463558198,
           "sfxVolume": 1.0,
           "ambienceVolume": 0.10000000149011612,
@@ -1112,7 +1112,7 @@
           ]
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -1147,7 +1147,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -9949,7 +9949,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -9984,7 +9984,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -10029,7 +10029,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -10064,7 +10064,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -10109,7 +10109,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -10143,7 +10143,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -10643,7 +10643,7 @@
           ]
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -10661,9 +10661,9 @@
         },
         "Transform": {
           "position": [
-            7.153594017028809,
-            4.743929862976074,
-            -112.87236022949219
+            0.0,
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -10678,7 +10678,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -11982,7 +11982,7 @@
           ]
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -12017,7 +12017,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -39777,7 +39777,7 @@
           ]
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -39812,12 +39812,12 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "1c7e368869a95a499eccbed936214dae",
+          "guid": "70e78d85217a10418d6981d4cfbc774b",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -45621,7 +45621,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -45655,7 +45655,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -45727,7 +45727,7 @@
           ]
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -45761,7 +45761,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -45912,7 +45912,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -45946,7 +45946,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -49997,7 +49997,7 @@
           "position": [
             -5.4558258056640629,
             0.0002689361572265625,
-            -17.738000869750978
+            16.562000274658204
           ],
           "rotation": [
             0.0,
@@ -51382,7 +51382,7 @@
           ]
         },
         "Material": {
-          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
+          "guid": "bc8e6db2ba54b547956f897567a62d79",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -51426,7 +51426,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
+          "guid": "df8df48d1b3b61448dace9936ed5822a",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -51493,7 +51493,7 @@
           ]
         },
         "Material": {
-          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
+          "guid": "bc8e6db2ba54b547956f897567a62d79",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -51537,7 +51537,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
+          "guid": "df8df48d1b3b61448dace9936ed5822a",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -51604,7 +51604,7 @@
           ]
         },
         "Material": {
-          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
+          "guid": "bc8e6db2ba54b547956f897567a62d79",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -51648,7 +51648,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
+          "guid": "df8df48d1b3b61448dace9936ed5822a",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -51715,7 +51715,7 @@
           ]
         },
         "Material": {
-          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
+          "guid": "bc8e6db2ba54b547956f897567a62d79",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -51759,7 +51759,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
+          "guid": "df8df48d1b3b61448dace9936ed5822a",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -73795,7 +73795,7 @@
           }
         },
         "Material": {
-          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
+          "guid": "bc8e6db2ba54b547956f897567a62d79",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -81098,13 +81098,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
@@ -81322,13 +81316,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
@@ -81437,13 +81425,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
@@ -81876,13 +81858,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
@@ -82794,7 +82770,7 @@
           ],
           "scale": [
             0.039989665150642398,
-            0.03999999910593033,
+            0.04100000113248825,
             0.04443900287151337
           ]
         },
@@ -82900,7 +82876,7 @@
           ],
           "scale": [
             0.03998665139079094,
-            0.03999999910593033,
+            0.04100000113248825,
             0.03999170660972595
           ]
         },
@@ -83369,13 +83345,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
@@ -83702,13 +83672,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
@@ -86698,13 +86662,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
@@ -91115,7 +91073,7 @@
           "trackImage": "Resources/Textures/UI/UI UPDATED/Audio_Bar.png",
           "fillImage": "Resources/Textures/UI/UI UPDATED/Audio_Fill.png",
           "handleImage": "Resources/Textures/UI/UI UPDATED/Audio_Indicator.png",
-          "value": 0.09985508769750595,
+          "value": 1.0,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 1,
@@ -92452,7 +92410,7 @@
           "trackImage": "Resources/Textures/UI/UI UPDATED/Audio_Bar.png",
           "fillImage": "Resources/Textures/UI/UI UPDATED/Audio_Fill.png",
           "handleImage": "Resources/Textures/UI/UI UPDATED/Audio_Indicator.png",
-          "value": 1.0,
+          "value": 0.5,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 5,
@@ -93497,7 +93455,7 @@
     "exposure": 1.003999948501587,
     "contrast": 1.093000054359436,
     "saturation": 1.1030000448226929,
-    "gamma": 1.5999999046325684,
+    "gamma": 2.200000047683716,
     "vignetteIntensity": 0.30000001192092898,
     "vignetteRadius": 0.800000011920929,
     "vignetteCoverage": 0.0,
