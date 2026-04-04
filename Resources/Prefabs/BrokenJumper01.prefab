@@ -1,0 +1,471 @@
+{
+  "entities": [
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "27d003feaf611e48b4c5c872d0333f02"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.009999999776482582,
+            0.009999999776482582,
+            0.009999999776482582
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "BrokenJumper01",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "BrokenJumper01.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "f47b1223702d87469fba29517a23cdc8"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenJumper01.fbx_Leg_Rotation_Hinge_mesh10",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "7b3d57a17af4804c992c15230cba3d3d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "27d003feaf611e48b4c5c872d0333f02",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "499de11295b10140b6ff8ca1631e913b"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenJumper01.fbx_Leg_Rotation_mesh9",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "7b3d57a17af4804c992c15230cba3d3d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "27d003feaf611e48b4c5c872d0333f02",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "e5253492a2068f4fb2c509d86b7d8036"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenJumper01.fbx_Leg_Tubes1_mesh8",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "7b3d57a17af4804c992c15230cba3d3d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "27d003feaf611e48b4c5c872d0333f02",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "47adef530ab8a94fb97e8013561b1a74"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenJumper01.fbx_Leg_Hinge_mesh7",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "7b3d57a17af4804c992c15230cba3d3d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "27d003feaf611e48b4c5c872d0333f02",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "a78bd72badcaff4099e3bb52852fdf68"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenJumper01.fbx_Body_mesh6",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "c62afd5c3aa7e44791fcb7afd67c538f",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "27d003feaf611e48b4c5c872d0333f02",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "05247372d2ae314792d0e3c6fdef9bcd"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenJumper01.fbx_Body_mesh5",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "7b3d57a17af4804c992c15230cba3d3d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "27d003feaf611e48b4c5c872d0333f02",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "9dcd84cba4b159448186c538352e5276"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenJumper01.fbx_Leg_TubeRings4_mesh4",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "7b3d57a17af4804c992c15230cba3d3d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "27d003feaf611e48b4c5c872d0333f02",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "d78c37eda2622f469725a721aadb1853"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenJumper01.fbx_Leg_Wires_mesh3",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "7b3d57a17af4804c992c15230cba3d3d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "27d003feaf611e48b4c5c872d0333f02",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "3013d5b49014704883bcde2ae939b5a4"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenJumper01.fbx_LegGyro_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "7b3d57a17af4804c992c15230cba3d3d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "27d003feaf611e48b4c5c872d0333f02",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "096683374144004488c82ce4aba0ad0c"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenJumper01.fbx_Leg_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "7b3d57a17af4804c992c15230cba3d3d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "27d003feaf611e48b4c5c872d0333f02",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "b2ad905772d96146a1d553e7f6ec288e"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenJumper01.fbx_Needle_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "7b3d57a17af4804c992c15230cba3d3d",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "27d003feaf611e48b4c5c872d0333f02",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    }
+  ]
+}

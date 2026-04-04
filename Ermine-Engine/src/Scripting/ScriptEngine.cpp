@@ -1928,7 +1928,10 @@ namespace
 				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
 				int index = globalAudio.GetMusicIndex(musicName);
 				if (index >= 0)
+				{
 					globalAudio.PlayMusic(index);
+					globalAudio.autoPlay = true; // Re-enable autoPlay when manually playing music
+				}
 				return;
 			}
 		}
@@ -1944,6 +1947,22 @@ namespace
 			{
 				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
 				globalAudio.SetMusicVolume(volume);
+				return;
+			}
+		}
+	}
+
+	void icall_globalaudio_stop_music()
+	{
+		using namespace Ermine;
+		auto& ecs = ECS::GetInstance();
+		for (EntityID entity = 1; entity <= MAX_ENTITIES; ++entity)
+		{
+			if (ecs.IsEntityValid(entity) && ecs.HasComponent<GlobalAudioComponent>(entity))
+			{
+				auto& globalAudio = ecs.GetComponent<GlobalAudioComponent>(entity);
+				globalAudio.StopMusic();
+				globalAudio.autoPlay = false; // Disable autoPlay to prevent auto-restart
 				return;
 			}
 		}
@@ -4371,6 +4390,7 @@ void Ermine::scripting::ScriptEngine::RegisterInternalCalls() const
 	mono_add_internal_call("ErmineEngine.GlobalAudio::PlaySFXWithReverb", (const void*)icall_globalaudio_play_sfx_with_reverb);
 	mono_add_internal_call("ErmineEngine.GlobalAudio::StopSFX", (const void*)icall_globalaudio_stop_sfx);
 	mono_add_internal_call("ErmineEngine.GlobalAudio::PlayMusic", (const void*)icall_globalaudio_play_music);
+	mono_add_internal_call("ErmineEngine.GlobalAudio::StopMusic", (const void*)icall_globalaudio_stop_music);
 	mono_add_internal_call("ErmineEngine.GlobalAudio::SetMusicVolume", (const void*)icall_globalaudio_set_music_volume);
 	mono_add_internal_call("ErmineEngine.GlobalAudio::SetSFXVolume", (const void*)icall_globalaudio_set_sfx_volume);
 	mono_add_internal_call("ErmineEngine.GlobalAudio::PlayVoice", (const void*)icall_globalaudio_play_voice);

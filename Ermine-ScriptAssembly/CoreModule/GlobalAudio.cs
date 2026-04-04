@@ -55,6 +55,9 @@ namespace ErmineEngine
         public static extern void PlayMusic(string name);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void StopMusic();
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void SetMusicVolume(float volume);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
