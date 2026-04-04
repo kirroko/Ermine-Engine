@@ -15,7 +15,7 @@ public class SpotLightTrigger : MonoBehaviour
     public string healthBarName = "Healthbar";
 
     private GameObject player;
-    private bool playerInside = false;
+    public bool playerInside = false;
 
     private GameObject healthBar;
     private float timer;
@@ -219,7 +219,7 @@ public class SpotLightTrigger : MonoBehaviour
         Debug.Log("PlayerController speed  = " + playerController2.moveSpeed);
     }
 
-    void OnSpotExit()
+    public void OnSpotExit()
     {
         Debug.Log("Player left spotlight cone");
         GlobalAudio.StopSFX("LightDamageLoop");

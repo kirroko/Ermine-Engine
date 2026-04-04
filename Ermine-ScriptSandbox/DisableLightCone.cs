@@ -79,6 +79,12 @@ public class DisableLightCone : MonoBehaviour
     private void DisableLight()
     {
         disabled = true;
+        SpotLightTrigger trigger = lightCone.GetComponent<SpotLightTrigger>();
+        if (trigger != null)
+        {
+            trigger.playerInside = false;
+            trigger.OnSpotExit();
+        }
 
         if (lightCone.activeSelf)
         {

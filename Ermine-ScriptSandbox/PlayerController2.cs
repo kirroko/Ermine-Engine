@@ -293,7 +293,7 @@ public class PlayerController2 : MonoBehaviour
                     objobj.name == "Paper2" ||
                     objobj.name == "Paper3" ||
                     objobj.name == "Paper4" ||
-                    objobj.name == "Book" ||
+                    objobj.name == "Paper5" ||
                     objobj.name == "GearKeyPrefab" ||
                     objobj.name == "ComputerDoorUnlock1" ||
                     objobj.name == "ComputerDoorUnlock2" ||
