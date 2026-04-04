@@ -385,27 +385,22 @@ namespace Ermine
         if (!ecs.IsEntityValid(entity))
             return;
 
-        // Check if entity has required components before accessing
         if (!ecs.HasComponent<HierarchyComponent>(entity))
             return;
 
         auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
 
-        // DEBUG LOG - Can be commented out in production
-        //EE_CORE_WARN("MarkDirty called for entity {} - investigate why!", entity);
-
-        // Mark hierarchy as needing update
+        // This entity's local transform changed, so mark both local/world dirty
         hierarchy.isDirty = true;
         hierarchy.worldTransformDirty = true;
 
-        // Only mark Transform dirty if entity has one
         if (ecs.HasComponent<Transform>(entity))
         {
             auto& transform = ecs.GetComponent<Transform>(entity);
-            transform.isDirty = true;  // Make sure Transform component is also marked dirty
+            transform.isDirty = true;
         }
 
-        // Bubble up so a root (or any ancestor) triggers UpdateWorldTransform
+        // Bubble up so some root/ancestor will be picked up by UpdateHierarchy()
         EntityID ancestor = hierarchy.parent;
         while (ancestor != HierarchyComponent::INVALID_PARENT && ecs.IsEntityValid(ancestor))
         {
@@ -413,36 +408,14 @@ namespace Ermine
                 break;
 
             auto& ancHier = ecs.GetComponent<HierarchyComponent>(ancestor);
-            // No need to mark ancestor's local transform dirty unless its own local changed.
-            // We only need worldTransform recompute.
             ancHier.worldTransformDirty = true;
 
-            // Optionally mark isDirty if you treat it as "needs recompute" (keeps semantics simple):
+            // Optional: keep this off unless your UpdateHierarchy depends on it
             // ancHier.isDirty = true;
 
             ancestor = ancHier.parent;
         }
 
-        // Mark all children's world transforms as needing update (but not their local transforms)
-        for (auto child : hierarchy.children) {
-            if (!ecs.IsEntityValid(child) || !ecs.HasComponent<HierarchyComponent>(child))
-                continue;
-
-            auto& childHierarchy = ecs.GetComponent<HierarchyComponent>(child);
-
-            // Mark world transform as dirty for children - their local transforms haven't changed
-            childHierarchy.worldTransformDirty = true;
-
-            // Only mark Transform dirty if child has one
-            if (ecs.HasComponent<Transform>(child))
-            {
-                auto& childTransform = ecs.GetComponent<Transform>(child);
-                childTransform.isDirty = true; // Also mark Transform component dirty for proper rendering
-            }
-            
-            // Recursively mark children's world transforms as dirty
-            MarkChildrenWorldTransformDirty(child);
-        }
     }
 
     /**
@@ -451,33 +424,35 @@ namespace Ermine
      */
     void HierarchySystem::MarkChildrenWorldTransformDirty(EntityID entity)
     {
-        auto& ecs = ECS::GetInstance();
+        (void)entity;
+        return;
+        //auto& ecs = ECS::GetInstance();
 
-        if (!ecs.IsEntityValid(entity))
-            return;
+        //if (!ecs.IsEntityValid(entity))
+        //    return;
 
-        if (!ecs.HasComponent<HierarchyComponent>(entity))
-            return;
+        //if (!ecs.HasComponent<HierarchyComponent>(entity))
+        //    return;
 
-        const auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
+        //const auto& hierarchy = ecs.GetComponent<HierarchyComponent>(entity);
 
-        for (auto child : hierarchy.children) {
-            if (!ecs.IsEntityValid(child) || !ecs.HasComponent<HierarchyComponent>(child))
-                continue;
+        //for (auto child : hierarchy.children) {
+        //    if (!ecs.IsEntityValid(child) || !ecs.HasComponent<HierarchyComponent>(child))
+        //        continue;
 
-            auto& childHierarchy = ecs.GetComponent<HierarchyComponent>(child);
-            childHierarchy.worldTransformDirty = true;
+        //    auto& childHierarchy = ecs.GetComponent<HierarchyComponent>(child);
+        //    childHierarchy.worldTransformDirty = true;
 
-            // Only mark Transform dirty if child has one
-            if (ecs.HasComponent<Transform>(child))
-            {
-                auto& childTransform = ecs.GetComponent<Transform>(child);
-                childTransform.isDirty = true; // Also mark Transform component dirty
-            }
+        //    // Only mark Transform dirty if child has one
+        //    if (ecs.HasComponent<Transform>(child))
+        //    {
+        //        auto& childTransform = ecs.GetComponent<Transform>(child);
+        //        childTransform.isDirty = true; // Also mark Transform component dirty
+        //    }
 
-            // Recursively mark grandchildren
-            MarkChildrenWorldTransformDirty(child);
-        }
+        //    // Recursively mark grandchildren
+        //    MarkChildrenWorldTransformDirty(child);
+        //}
     }
 
     /**

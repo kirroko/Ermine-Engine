@@ -10,6 +10,9 @@ public class GameManager : MonoBehaviour
     private Vector3 startPos;
     private Vector3 respawnPos;
     private List<Vector3> teleportPoints = new List<Vector3>();
+    private Random rand = new Random();
+
+    EmergencySequenceController seq;
 
     void Awake()
     {
@@ -20,6 +23,27 @@ public class GameManager : MonoBehaviour
         player = GameObject.Find("Player");
         if (player != null)startPos = player.transform.position;
         respawnPos = startPos;
+
+        GameObject obj = GameObject.Find("EmergencyComputer");
+
+        if (obj != null)
+        {
+            seq = obj.GetComponent<EmergencySequenceController>();
+
+            if (seq != null)
+            {
+                seq.Init();
+                Debug.Log("EmergencySequenceController initialized successfully");
+            }
+            else
+            {
+                Debug.Log("EmergencySequenceController component not found on EmergencyComputer");
+            }
+        }
+        else
+        {
+            Debug.Log("EmergencyComputer object not found");
+        }
     }
 
     
@@ -46,6 +70,11 @@ public class GameManager : MonoBehaviour
         if (player == null) return;
         player.transform.position = respawnPos;
         Physics.SetPosition((ulong)player.GetInstanceID(), respawnPos);
+
+        if (EmergencySequenceController.Instance != null)
+        {
+            EmergencySequenceController.Instance.OnPlayerRespawn(respawnPos);
+        }
     }
 
     public void UpdateRespawnPoint(Vector3 pos)
@@ -66,6 +95,11 @@ public class GameManager : MonoBehaviour
 
         player.transform.position = pos;
         Physics.SetPosition((ulong)player.GetInstanceID(), pos);
+    }
+
+    public float RandomRange(float min, float max)
+    {
+        return (float)(min + rand.NextDouble() * (max - min));
     }
 }
 

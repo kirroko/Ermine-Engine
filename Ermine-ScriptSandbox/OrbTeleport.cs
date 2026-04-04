@@ -4,7 +4,7 @@ using System.Threading;
 
 public class OrbTeleport : MonoBehaviour
 {
-    public static bool shoot = false;
+    public static bool shoot = true;
     private Transform origin;
     private Transform cam;
     private Animator anim;
@@ -237,7 +237,7 @@ public class OrbTeleport : MonoBehaviour
             return;
         }
 
-        TakeDamage(damage);
+        //TakeDamage(damage);
 
         GlobalAudio.PlaySFX("Teleport");
 

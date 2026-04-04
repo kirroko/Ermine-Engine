@@ -1,0 +1,557 @@
+{
+  "entities": [
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "f2dd32d7e3bdc543b4236292a65aab84"
+        },
+        "Transform": {
+          "position": [
+            -6.818286418914795,
+            11.509732246398926,
+            35.26774978637695
+          ],
+          "rotation": [
+            0.0,
+            -0.3505089581012726,
+            0.0,
+            0.9365594983100891
+          ],
+          "scale": [
+            1.9999998807907105,
+            1.0,
+            1.9999998807907105
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Rotating floorEmgcy",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "AudioComponent": {
+          "soundName": "../Resources\\Audio\\Alarms.wav",
+          "eventName": "alarm",
+          "useRandomVariation": false,
+          "is3D": true,
+          "isLooping": true,
+          "isStreaming": false,
+          "volume": 0.5,
+          "followTransform": true,
+          "minDistance": 1.0,
+          "maxDistance": 100.0,
+          "playOnStart": false,
+          "useReverb": false,
+          "reverbWetLevel": -12.0,
+          "reverbDryLevel": 0.0,
+          "reverbDecayTime": 1.0
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            -6.849999904632568,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            2.700000047683716,
+            0.5,
+            10.149999618530274
+          ]
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "RotatingPlatform"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "a00f9f66d2f0cb42b3f5c666d5682248"
+        },
+        "Transform": {
+          "position": [
+            0.03800010681152344,
+            12.46342945098877,
+            1.588592529296875
+          ],
+          "rotation": [
+            0.0000018996602193510626,
+            -0.7072288990020752,
+            4.746074466766004e-7,
+            0.7069846391677856
+          ],
+          "scale": [
+            0.49979838728904726,
+            1.0,
+            0.49979838728904726
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightSource (3)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            4.0,
+            2.0,
+            4.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f2dd32d7e3bdc543b4236292a65aab84",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": []
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "ff2ca06a3f469b4793ac1b230d5dcb3d"
+        },
+        "Transform": {
+          "position": [
+            0.4000000059604645,
+            -0.8999999761581421,
+            0.0
+          ],
+          "rotation": [
+            -0.13134416937828065,
+            0.6757070422172546,
+            -0.7120476961135864,
+            0.1384081095457077
+          ],
+          "scale": [
+            2.499997615814209,
+            1.3000004291534424,
+            2.5
+          ]
+        },
+        "Light": {
+          "color": [
+            1.0,
+            0.22745098173618318,
+            0.22745098173618318
+          ],
+          "intensity": 6.480999946594238,
+          "type": "Spot",
+          "castsShadows": true,
+          "castsRays": true,
+          "innerAngle": 13.300000190734864,
+          "outerAngle": 37.0,
+          "radius": 18.0
+        },
+        "ObjectMetaData": {
+          "name": "VolumeLightTWO",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "a00f9f66d2f0cb42b3f5c666d5682248",
+          "depth": 2
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": []
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "b10c8d266ebfe84f98dda4ed27816ff6"
+        },
+        "Transform": {
+          "position": [
+            0.03800010681152344,
+            12.46342945098877,
+            -1.7114028930664063
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.49979838728904726,
+            1.0,
+            0.49979838728904726
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "LightSource (4)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            4.0,
+            2.0,
+            4.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f2dd32d7e3bdc543b4236292a65aab84",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": []
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "88cc4fa7c575a349803e8c3357adaf9a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -1.0,
+            0.0
+          ],
+          "rotation": [
+            0.7016613483428955,
+            0.12805120646953584,
+            0.12583567202091218,
+            0.6895212531089783
+          ],
+          "scale": [
+            2.499997615814209,
+            1.3000004291534424,
+            2.5
+          ]
+        },
+        "Light": {
+          "color": [
+            1.0,
+            0.22745098173618318,
+            0.22745098173618318
+          ],
+          "intensity": 6.452000141143799,
+          "type": "Spot",
+          "castsShadows": true,
+          "castsRays": true,
+          "innerAngle": 13.0,
+          "outerAngle": 37.0,
+          "radius": 18.0
+        },
+        "ObjectMetaData": {
+          "name": "VolumeLightONE",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "b10c8d266ebfe84f98dda4ed27816ff6",
+          "depth": 2
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": []
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "61406a0576a130429ac1b7e02f36aa19"
+        },
+        "Transform": {
+          "position": [
+            0.03799999877810478,
+            13.562999725341797,
+            -0.210999995470047
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.03999999910593033,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Wall lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_WallLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f2dd32d7e3bdc543b4236292a65aab84",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "e4d63a1d0791f940874a0069c5b57f0f"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2a051fd24b0aeb4891de12016222ea71",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "61406a0576a130429ac1b7e02f36aa19",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "5608d9b6e53de34a8f5bc59ceb3c70d4"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "e00398aa306ddc40b391e26359745341",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "61406a0576a130429ac1b7e02f36aa19",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "9668b2288f932f42ae8c09fa33e3ab56"
+        },
+        "Transform": {
+          "position": [
+            0.03799999877810478,
+            13.562999725341797,
+            0.1889999955892563
+          ],
+          "rotation": [
+            -9.099629210140847e-7,
+            1.0,
+            -9.099629210140847e-7,
+            8.280325210219264e-13
+          ],
+          "scale": [
+            0.019999999552965165,
+            0.03999999910593033,
+            0.019999999552965165
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Wall lights",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_WallLight.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "f2dd32d7e3bdc543b4236292a65aab84",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "4ab278dd0be58346a124d6b3e4d609c7"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2a051fd24b0aeb4891de12016222ea71",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9668b2288f932f42ae8c09fa33e3ab56",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "bc0a217bde69be4592464ac2de5576c9"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_WallLight.fbx_Bulb4_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "e00398aa306ddc40b391e26359745341",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "9668b2288f932f42ae8c09fa33e3ab56",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 ﻿using ErmineEngine;
 using System;
+using System.Runtime.Remoting;
 
 public class PlayerController2 : MonoBehaviour
 {
@@ -66,6 +67,20 @@ public class PlayerController2 : MonoBehaviour
     private GameObject healthBar;
     private float electricFenceTimer = 0f;
     private float health = 0f;
+
+
+    private float shakeYawOffset = 0f;
+    private float shakePitchOffset = 0f;
+    private float shakeRollOffset = 0f;
+
+    private float rumbleYawTimer = 0f;
+    public float rumbleYawDuration = 12f;
+
+    public float rumbleYawIntensity = 0.05f;
+    public float pitchIntensity = 0.5f; // smaller
+    public float rollIntensity = 0.5f;  // smaller
+
+
 
     void Start()
     {
@@ -173,6 +188,25 @@ public class PlayerController2 : MonoBehaviour
         float mouseX = -lookInput.x * mouseHorSens * Time.deltaTime;
         float mouseY = lookInput.y * mouseVertSens * Time.deltaTime;
 
+        if (rumbleYawTimer > 0f)
+        {
+            rumbleYawTimer -= Time.deltaTime;
+            shakeYawOffset = GameManager.I.RandomRange(-rumbleYawIntensity, rumbleYawIntensity);
+            shakePitchOffset = GameManager.I.RandomRange(-pitchIntensity, pitchIntensity);
+            shakeRollOffset = GameManager.I.RandomRange(-rollIntensity, rollIntensity);
+
+            if (rumbleYawTimer <= 0f)
+            {
+                rumbleYawTimer = 0f;
+                shakeYawOffset = 0f;
+                Debug.Log("[Emergency] Yaw shake ended");
+            }
+        }
+        else
+        {
+            shakeYawOffset = 0f;
+        }
+
         // rotate player horizontally
         transform.Rotate(Vector3.up * mouseX);
         Physics.SetRotationQuat((ulong)gameObject.GetInstanceID(), transform.rotation);
@@ -181,7 +215,7 @@ public class PlayerController2 : MonoBehaviour
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, minPitch, maxPitch);
 
-        cam.rotation = Quaternion.Euler(xRotation, 0f, 0f);
+        cam.rotation = Quaternion.Euler(xRotation, shakeYawOffset, 0f);
     }
 
     private void HandleCameraLerp()
@@ -259,11 +293,12 @@ public class PlayerController2 : MonoBehaviour
                     objobj.name == "Paper2" ||
                     objobj.name == "Paper3" ||
                     objobj.name == "Paper4" ||
-                    objobj.name == "Book" ||
+                    objobj.name == "Paper5" ||
                     objobj.name == "GearKeyPrefab" ||
                     objobj.name == "ComputerDoorUnlock1" ||
                     objobj.name == "ComputerDoorUnlock2" ||
-                    objobj.name == "SyringeWeapon")
+                    objobj.name == "SyringeWeapon" ||
+                    objobj.name == "EmergencyComputer")
                 {
                     SceneManager.SetEntityOutline(objobj.GetInstanceID());
                 }
@@ -296,16 +331,16 @@ public class PlayerController2 : MonoBehaviour
 
                     if (!flipSwitch1)
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
                         flipSwitch1 = true;
                         GameObject fence1 = GameObject.Find("ElectricFenc 1");
                         if (fence1 != null) fence1.SetActive(false);
                     }
                     else
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
                         flipSwitch1 = false;
                         GameObject fence1 = GameObject.Find("ElectricFenc 1");
                         if (fence1 != null) fence1.SetActive(true);
@@ -319,16 +354,16 @@ public class PlayerController2 : MonoBehaviour
 
                     if (!flipSwitch2)
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
                         flipSwitch2 = true;
                         GameObject fence2 = GameObject.Find("ElectricFenc 2");
                         if (fence2 != null) fence2.SetActive(false);
                     }
                     else
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
                         flipSwitch2 = false;
                         GameObject fence2 = GameObject.Find("ElectricFenc 2");
                         if (fence2 != null) fence2.SetActive(true);
@@ -342,8 +377,9 @@ public class PlayerController2 : MonoBehaviour
 
                     if (!flipSwitch3)
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
+
                         flipSwitch3 = true;
                         GameObject fence3 = GameObject.Find("ElectricFenc 3");
                         if (fence3 != null) fence3.SetActive(false);
@@ -352,8 +388,9 @@ public class PlayerController2 : MonoBehaviour
                     }
                     else
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
+
                         flipSwitch3 = false;
                         GameObject fence3 = GameObject.Find("ElectricFenc 3");
                         if (fence3 != null) fence3.SetActive(true);
@@ -371,16 +408,18 @@ public class PlayerController2 : MonoBehaviour
 
                     if (!flipSwitch1)
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
+
                         flipSwitch1 = true;
                         GameObject fence = GameObject.Find("ElectricFenc 1");
                         if (fence != null) fence.SetActive(false);
                     }
                     else
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
+
                         flipSwitch1 = false;
                         GameObject fence = GameObject.Find("ElectricFenc 1");
                         if (fence != null) fence.SetActive(true);
@@ -394,16 +433,18 @@ public class PlayerController2 : MonoBehaviour
 
                     if (!flipSwitch2)
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
+
                         flipSwitch2 = true;
                         GameObject fence = GameObject.Find("ElectricFenc");
                         if (fence != null) fence.SetActive(false);
                     }
                     else
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
+
                         flipSwitch2 = false;
                         GameObject fence = GameObject.Find("ElectricFenc");
                         if (fence != null) fence.SetActive(true);
@@ -426,7 +467,8 @@ public class PlayerController2 : MonoBehaviour
                         msg.SetActive(true);
                         hint1.SetActive(false);
                         hint2.SetActive(true);
-                        bgDarken.SetActive(true);
+                        if (bgDarken != null)
+                            bgDarken.SetActive(true);
                         activeClueMessage = msg;
                         clueMessageTimer = 0f;
 
@@ -450,7 +492,8 @@ public class PlayerController2 : MonoBehaviour
                         msg.SetActive(true);
                         hint2.SetActive(false);
                         hint3.SetActive(true);
-                        bgDarken.SetActive(true);
+                        if (bgDarken != null)
+                            bgDarken.SetActive(true);
                         activeClueMessage = msg;
                         clueMessageTimer = 0f;
 
@@ -470,7 +513,8 @@ public class PlayerController2 : MonoBehaviour
                     if (msg != null)
                     {
                         msg.SetActive(true);
-                        bgDarken.SetActive(true);
+                        if (bgDarken != null)
+                            bgDarken.SetActive(true);
                         activeClueMessage = msg;
                         clueMessageTimer = 0f;
 
@@ -490,7 +534,8 @@ public class PlayerController2 : MonoBehaviour
                     if (msg != null)
                     {
                         msg.SetActive(true);
-                        bgDarken.SetActive(true);
+                        if (bgDarken != null)
+                            bgDarken.SetActive(true);
                         activeClueMessage = msg;
                         clueMessageTimer = 0f;
 
@@ -511,7 +556,8 @@ public class PlayerController2 : MonoBehaviour
                     if (msg != null)
                     {
                         msg.SetActive(true);
-                        bgDarken.SetActive(true);
+                        if (bgDarken != null)
+                            bgDarken.SetActive(true);
                         activeClueMessage = msg;
                         clueMessageTimer = 0f;
 
@@ -614,6 +660,7 @@ public class PlayerController2 : MonoBehaviour
                 if (obj.name == "SyringeWeapon" && interactTimer > 1f)
                 {
                     // Collect syringe weapon
+                    GlobalAudio.PlaySFX("WeaponPickup");
                     GameObject syringe = GameObject.Find("PlayerAnim");
 
                     OrbTeleport.shoot = true;
@@ -622,6 +669,25 @@ public class PlayerController2 : MonoBehaviour
                     obj.SetActive(false);
                     interactTimer = 0f;
                 }
+
+                if (obj.name == "EmergencyComputer" && interactTimer > 1f)
+                {
+                    EmergencySequenceController seq = obj.GetComponent<EmergencySequenceController>();
+
+                    if (seq != null)
+                    {
+                        seq.StartSequence();
+                    }
+                    else
+                    {
+                        Debug.Log("EmergencySequenceController not found on " + obj.name);
+                    }
+
+
+                    interactTimer = 0f;
+                }
+
+                
             }
             /*else
             {
@@ -657,7 +723,8 @@ public class PlayerController2 : MonoBehaviour
             if (clueMessageTimer >= clueMessageDuration)
             {
                 activeClueMessage.SetActive(false);
-                bgDarken.SetActive(false);
+                if (bgDarken != null)
+                    bgDarken.SetActive(false);
                 activeClueMessage = null;
                 clueMessageTimer = 0f;
 
@@ -753,5 +820,11 @@ public class PlayerController2 : MonoBehaviour
         GameplayHUD.SetHealth(healthBar, health);
 
         DamageVignetteHelper.FlashRedVignette();
+    }
+
+    public void TriggerRumble()
+    {
+        Debug.Log("[Emergency] TriggerRumble()");
+        rumbleYawTimer = rumbleYawDuration;
     }
 }

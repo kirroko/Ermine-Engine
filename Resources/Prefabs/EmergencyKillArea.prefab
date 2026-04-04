@@ -1,0 +1,87 @@
+{
+  "entities": [
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "54a83af8ca1dec4ea4e3f37254c4cdba"
+        },
+        "Transform": {
+          "position": [
+            -39.53923797607422,
+            10.854132652282715,
+            81.20431518554688
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            17.011812210083009,
+            1.0,
+            15.517416954040528
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "EmergencyKillArea",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "Mesh": {
+          "kind": "Primitive",
+          "primitive": {
+            "type": "Cube",
+            "size": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "PhysicComponent": {
+          "bodyType": "Trigger",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Material": {
+          "guid": "2f6239f428656e46b94c66e6ff5f10fb",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "VoidDeath"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
