@@ -66,18 +66,30 @@ namespace Ermine
         m_aspectRatio = (screenHeight > 0) ? static_cast<float>(screenWidth) / static_cast<float>(screenHeight) : 1.0f;
         EE_CORE_INFO("UIButtonSystem initialized ({}x{}, aspect ratio: {})", screenWidth, screenHeight, m_aspectRatio);
 
-        auto& ecs = ECS::GetInstance();
-        for (EntityID e = 0; e < MAX_ENTITIES; ++e)
-        {
-            if (!ecs.IsEntityValid(e)) continue;
-            if (!ecs.HasComponent<ObjectMetaData>(e)) continue;
+        //auto& ecs = ECS::GetInstance();
+   //     for (auto& entity : m_Entities)
+   //     {
+   //         if (!ecs.IsEntityValid(entity)) continue;
 
-            auto& meta = ecs.GetComponent<ObjectMetaData>(e);
-            if (meta.name == "PauseMenu" || meta.name == "PauseBackground" || meta.name == "ResumeButton")
-            {
-                EE_CORE_INFO("Entity '{}' (ID: {}) has selfActive = {}", meta.name, e, meta.selfActive);
-            }
-        }
+			//if (auto meta = ecs.TryGetComponent<ObjectMetaData>(entity))
+			//{
+   //             if (meta->name == "PauseMenu" || meta->name == "PauseBackground" || meta->name == "ResumeButton")
+			//    {
+			//        EE_CORE_INFO("Entity '{}' (ID: {}) has selfActive = {}", meta->name, entity, meta->selfActive);
+			//    }
+			//}
+   //     }
+        //for (EntityID e = 0; e < MAX_ENTITIES; ++e)
+        //{
+        //    if (!ecs.IsEntityValid(e)) continue;
+        //    if (!ecs.HasComponent<ObjectMetaData>(e)) continue;
+
+        //    auto& meta = ecs.GetComponent<ObjectMetaData>(e);
+        //    if (meta.name == "PauseMenu" || meta.name == "PauseBackground" || meta.name == "ResumeButton")
+        //    {
+        //        EE_CORE_INFO("Entity '{}' (ID: {}) has selfActive = {}", meta.name, e, meta.selfActive);
+        //    }
+        //}
 
         EE_CORE_INFO("UIButtonSystem::s_isGamePaused = {}", s_isGamePaused);
         EE_CORE_INFO("UIButtonSystem initialized ({}x{}, aspect ratio: {})", screenWidth, screenHeight, m_aspectRatio);
@@ -87,6 +99,9 @@ namespace Ermine
     EntityID UIButtonSystem::GetGlobalAudioEntity()
     {
         auto& ecs = ECS::GetInstance();
+
+        if (m_GlobalAudioEntity != MAX_ENTITIES)
+			return m_GlobalAudioEntity;
 
         // Check if cached entity is still valid
         if (ecs.IsEntityValid(m_GlobalAudioEntity) &&
