@@ -21,7 +21,7 @@
           "selfActive": false
         },
         "GlobalAudioComponent": {
-          "masterVolume": 0.09985508769750595,
+          "masterVolume": 1.0,
           "musicVolume": 0.23999999463558198,
           "sfxVolume": 1.0,
           "ambienceVolume": 0.10000000149011612,
@@ -11388,13 +11388,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -11553,13 +11553,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -12806,11 +12806,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -13640,11 +13640,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -14474,11 +14474,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -15308,11 +15308,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -16142,11 +16142,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -16976,11 +16976,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -17810,11 +17810,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -18644,11 +18644,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -19478,11 +19478,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -20312,11 +20312,11 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveDistance": {
+                "moveSpeed": {
                   "t": 0,
                   "v": 2.0
                 },
-                "moveSpeed": {
+                "moveDistance": {
                   "t": 0,
                   "v": 2.0
                 }
@@ -21331,13 +21331,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -21496,13 +21496,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -21661,13 +21661,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -21826,13 +21826,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -21991,13 +21991,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -22156,13 +22156,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -22321,13 +22321,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -31472,13 +31472,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "mouseHorSens": {
-                  "t": 0,
-                  "v": 0.10000000149011612
-                },
                 "jumpHeight": {
                   "t": 0,
                   "v": 2.0
+                },
+                "mouseHorSens": {
+                  "t": 0,
+                  "v": 0.10000000149011612
                 },
                 "mouseVertSens": {
                   "t": 0,
@@ -31492,13 +31492,13 @@
                   "t": 0,
                   "v": 8.0
                 },
-                "jumpspeed": {
-                  "t": 0,
-                  "v": 5.0
-                },
                 "camDefaultY": {
                   "t": 0,
                   "v": 4.5
+                },
+                "jumpspeed": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -31526,21 +31526,21 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "damage": {
-                  "t": 0,
-                  "v": 10.0
-                },
-                "recallHealAmt": {
-                  "t": 0,
-                  "v": 10.0
+                "shoot": {
+                  "t": 2,
+                  "v": false
                 },
                 "teleportChromaticAberrationIntensity": {
                   "t": 0,
                   "v": 0.07999999821186066
                 },
-                "shoot": {
-                  "t": 2,
-                  "v": false
+                "recallHealAmt": {
+                  "t": 0,
+                  "v": 10.0
+                },
+                "damage": {
+                  "t": 0,
+                  "v": 10.0
                 },
                 "regenDelay": {
                   "t": 0,
@@ -46454,13 +46454,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -46924,13 +46924,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -47124,13 +47124,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -47439,13 +47439,13 @@
               "class": "SpotLightTrigger",
               "enabled": true,
               "fields": {
-                "healthBarName": {
-                  "t": 3,
-                  "v": "Healthbar"
-                },
                 "radius": {
                   "t": 0,
                   "v": 18.09000015258789
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 },
                 "innerAngleDeg": {
                   "t": 0,
@@ -48018,13 +48018,13 @@
                   "t": 0,
                   "v": 2.0
                 },
-                "eDuration": {
-                  "t": 0,
-                  "v": 3.0
-                },
                 "sceneName": {
                   "t": 3,
                   "v": "LevelTransitionCutscene.scene"
+                },
+                "eDuration": {
+                  "t": 0,
+                  "v": 3.0
                 },
                 "dSpeed": {
                   "t": 0,
@@ -51382,7 +51382,7 @@
           ]
         },
         "Material": {
-          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
+          "guid": "bc8e6db2ba54b547956f897567a62d79",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -51426,7 +51426,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
+          "guid": "bc8e6db2ba54b547956f897567a62d79",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -51493,7 +51493,7 @@
           ]
         },
         "Material": {
-          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
+          "guid": "bc8e6db2ba54b547956f897567a62d79",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -51537,7 +51537,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
+          "guid": "bc8e6db2ba54b547956f897567a62d79",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -51604,7 +51604,7 @@
           ]
         },
         "Material": {
-          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
+          "guid": "bc8e6db2ba54b547956f897567a62d79",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -51648,7 +51648,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
+          "guid": "bc8e6db2ba54b547956f897567a62d79",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -51715,7 +51715,7 @@
           ]
         },
         "Material": {
-          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
+          "guid": "bc8e6db2ba54b547956f897567a62d79",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -51759,7 +51759,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
+          "guid": "bc8e6db2ba54b547956f897567a62d79",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -73795,7 +73795,7 @@
           }
         },
         "Material": {
-          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
+          "guid": "bc8e6db2ba54b547956f897567a62d79",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -81098,13 +81098,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
@@ -81322,13 +81316,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
@@ -81437,13 +81425,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
@@ -81876,13 +81858,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
@@ -83369,13 +83345,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
@@ -83702,13 +83672,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
@@ -86698,13 +86662,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
@@ -91115,7 +91073,7 @@
           "trackImage": "Resources/Textures/UI/UI UPDATED/Audio_Bar.png",
           "fillImage": "Resources/Textures/UI/UI UPDATED/Audio_Fill.png",
           "handleImage": "Resources/Textures/UI/UI UPDATED/Audio_Indicator.png",
-          "value": 0.09985508769750595,
+          "value": 1.0,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 1,
@@ -92452,7 +92410,7 @@
           "trackImage": "Resources/Textures/UI/UI UPDATED/Audio_Bar.png",
           "fillImage": "Resources/Textures/UI/UI UPDATED/Audio_Fill.png",
           "handleImage": "Resources/Textures/UI/UI UPDATED/Audio_Indicator.png",
-          "value": 1.0,
+          "value": 0.5,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 5,
@@ -93497,7 +93455,7 @@
     "exposure": 1.003999948501587,
     "contrast": 1.093000054359436,
     "saturation": 1.1030000448226929,
-    "gamma": 1.5999999046325684,
+    "gamma": 2.1999998092651369,
     "vignetteIntensity": 0.30000001192092898,
     "vignetteRadius": 0.800000011920929,
     "vignetteCoverage": 0.0,
