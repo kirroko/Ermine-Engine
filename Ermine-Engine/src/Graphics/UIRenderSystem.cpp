@@ -19,7 +19,6 @@ prior written consent of DigiPen Institute of Technology is prohibited.
 #include "Logger.h"
 #include "Texture.h"
 #include "SettingsManager.h"
-#include <cmath>
 #include <algorithm>
 #include <vector>
 
@@ -91,20 +90,23 @@ namespace Ermine
 
     void UIRenderSystem::Update(float deltaTime)
     {
+        auto& ecs = ECS::GetInstance();
+        const bool isPaused = UIButtonSystem::IsGamePaused();
+
         // Iterate through all entities with UIComponent
         for (EntityID entity : m_Entities)
         {
             // Skip if entity no longer has UIComponent (may have been removed in inspector)
-            if (!ECS::GetInstance().HasComponent<UIComponent>(entity))
+            if (!ecs.HasComponent<UIComponent>(entity))
                 continue;
 
-            if (ECS::GetInstance().HasComponent<ObjectMetaData>(entity))
+            if (const auto& meta = ecs.TryGetComponent<ObjectMetaData>(entity))
             {
-                const auto& meta = ECS::GetInstance().GetComponent<ObjectMetaData>(entity);
-                if (!meta.selfActive)
+                if (!meta->selfActive)
                     continue;
             }
-            auto& ui = ECS::GetInstance().GetComponent<UIComponent>(entity);
+
+            auto& ui = ecs.GetComponent<UIComponent>(entity);
 
             // Update skill cooldowns and activation animations
             bool anySkillOnCooldown = false;
@@ -129,8 +131,7 @@ namespace Ermine
                 if (skill.activationFlashTimer > 0.0f)
                 {
                     skill.activationFlashTimer -= deltaTime;
-                    if (skill.activationFlashTimer < 0.0f)
-                        skill.activationFlashTimer = 0.0f;
+                    skill.activationFlashTimer = std::max(skill.activationFlashTimer, 0.0f);
                 }
             }
 
@@ -144,8 +145,7 @@ namespace Ermine
                 if (ui.healthRegenTimer >= ui.healthRegenDelay)
                 {
                     ui.currentHealth += ui.healthRegenRate * deltaTime;
-                    if (ui.currentHealth > ui.maxHealth)
-                        ui.currentHealth = ui.maxHealth;
+                    ui.currentHealth = std::min(ui.currentHealth, ui.maxHealth);
                 }
             }
             else
@@ -153,50 +153,70 @@ namespace Ermine
                 // Reset timer when skills are being used
                 ui.healthRegenTimer = 0.0f;
             }
+
+            // Safe check for optional health bar component
+            if (!isPaused)
+            {
+                if (auto* healthBar = ecs.TryGetComponent<UIHealthbarComponent>(entity))
+                {
+                    if (healthBar->currentHealth < healthBar->maxHealth)
+                    {
+                        healthBar->healthRegenTimer += deltaTime;
+
+                        // Only regenerate health after the delay
+                        if (healthBar->healthRegenTimer >= healthBar->healthRegenDelay)
+                        {
+                            healthBar->currentHealth += healthBar->healthRegenRate * deltaTime;
+                            healthBar->currentHealth = std::min(healthBar->currentHealth, healthBar->maxHealth);
+                        }
+                    }
+                    else
+                    {
+                        // Reset timer when at full health
+                        healthBar->healthRegenTimer = 0.0f;
+                    }
+                }
+            }
         }
 
         // Update UIHealthbarComponent (new separate component, skip when paused)
-        auto& ecs = ECS::GetInstance();
+        
         if (!UIButtonSystem::IsGamePaused())
         {
-            constexpr EntityID MAX_ENTITIES_UPDATE = 10000;
-            for (EntityID entity = 1; entity < MAX_ENTITIES_UPDATE; ++entity)
-            {
-                if (!ecs.IsEntityValid(entity))
-                    continue;
+            //for (EntityID e : m_Entities)
+            //{
+	           // if (!ecs.IsEntityValid(e))
+            //        continue;
 
-                if (!ecs.HasComponent<UIHealthbarComponent>(entity))
-                    continue;
+            //    if (!ecs.HasComponent<UIHealthbarComponent>(e))
+            //        continue;
 
-                // Skip if entity is inactive
-                if (ecs.HasComponent<ObjectMetaData>(entity))
-                {
-                    const auto& meta = ecs.GetComponent<ObjectMetaData>(entity);
-                    if (!meta.selfActive)
-                        continue;
-                }
+            //    if (const auto& meta = ecs.TryGetComponent<ObjectMetaData>(e))
+            //    {
+	           //     if (!meta->selfActive)
+            //            continue;
+            //    }
 
-                auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entity);
+            //    auto& healthBar = ecs.GetComponent<UIHealthbarComponent>(e);
 
-                // Health Regeneration System (Option A: regenerate independently)
-                if (healthbar.currentHealth < healthbar.maxHealth)
-                {
-                    healthbar.healthRegenTimer += deltaTime;
+            //    // Health Regeneration System (Option A: regenerate independently)
+            //    if (healthBar.currentHealth < healthBar.maxHealth)
+            //    {
+            //        healthBar.healthRegenTimer += deltaTime;
 
-                    // Only regenerate health after the delay
-                    if (healthbar.healthRegenTimer >= healthbar.healthRegenDelay)
-                    {
-                        healthbar.currentHealth += healthbar.healthRegenRate * deltaTime;
-                        if (healthbar.currentHealth > healthbar.maxHealth)
-                            healthbar.currentHealth = healthbar.maxHealth;
-                    }
-                }
-                else
-                {
-                    // Reset timer when at full health
-                    healthbar.healthRegenTimer = 0.0f;
-                }
-            }
+            //        // Only regenerate health after the delay
+            //        if (healthBar.healthRegenTimer >= healthBar.healthRegenDelay)
+            //        {
+            //            healthBar.currentHealth += healthBar.healthRegenRate * deltaTime;
+            //            healthBar.currentHealth = std::min(healthBar.currentHealth, healthBar.maxHealth);
+            //        }
+            //    }
+            //    else
+            //    {
+            //        // Reset timer when at full health
+            //        healthBar.healthRegenTimer = 0.0f;
+            //    }
+            //}
         }
     }
 
@@ -243,24 +263,66 @@ namespace Ermine
 
         // Render UIImageComponent entities sorted by renderOrder
         auto& ecs = ECS::GetInstance();
-        constexpr EntityID MAX_ENTITIES = 10000;
+        //constexpr EntityID MAX_ENTITIES = 10000;
 
-        // Collect active image entities and sort by renderOrder
+        std::vector<int8_t> activeStateCache(static_cast<size_t>(MAX_ENTITIES) + 1, -1);
+        auto isEntityActiveCached = [&](EntityID entity) -> bool
+        {
+            if (entity <= 0 || entity > MAX_ENTITIES)
+                return IsEntityActiveInHierarchy(entity);
+
+            int8_t& state = activeStateCache[static_cast<size_t>(entity)];
+            if (state != -1)
+                return state == 1;
+
+            const bool active = IsEntityActiveInHierarchy(entity);
+            state = active ? 1 : 0;
+            return active;
+        };
+
+        // Collect active entities by component type
         std::vector<EntityID> imageEntities;
-        for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
+        std::vector<EntityID> buttonEntities;
+        std::vector<EntityID> sliderEntities;
+        std::vector<EntityID> textEntities;
+
+        imageEntities.reserve(m_Entities.size());
+        buttonEntities.reserve(m_Entities.size());
+        sliderEntities.reserve(m_Entities.size());
+        textEntities.reserve(m_Entities.size());
+
+        for (EntityID entity : m_Entities)
         {
             if (!ecs.IsEntityValid(entity))
                 continue;
-            if (!ecs.HasComponent<UIImageComponent>(entity))
+            if (!isEntityActiveCached(entity))
                 continue;
-            if (!IsEntityActiveInHierarchy(entity))
-                continue;
-            imageEntities.push_back(entity);
+
+            if (ecs.HasComponent<UIImageComponent>(entity))
+                imageEntities.push_back(entity);
+
+            if (ecs.HasComponent<UIButtonComponent>(entity))
+                buttonEntities.push_back(entity);
+
+            if (ecs.HasComponent<UISliderComponent>(entity))
+                sliderEntities.push_back(entity);
+
+            if (ecs.HasComponent<UITextComponent>(entity))
+                textEntities.push_back(entity);
         }
-        std::sort(imageEntities.begin(), imageEntities.end(), [&ecs](EntityID a, EntityID b)
+
+        ranges::sort(imageEntities, [&ecs](EntityID a, EntityID b)
         {
             return ecs.GetComponent<UIImageComponent>(a).renderOrder < ecs.GetComponent<UIImageComponent>(b).renderOrder;
         });
+        ranges::sort(buttonEntities, [&ecs](EntityID a, EntityID b)
+        {
+            return ecs.GetComponent<UIButtonComponent>(a).renderOrder < ecs.GetComponent<UIButtonComponent>(b).renderOrder;
+		});
+        ranges::sort(sliderEntities, [&ecs](EntityID a, EntityID b)
+        {
+            return ecs.GetComponent<UISliderComponent>(a).renderOrder < ecs.GetComponent<UISliderComponent>(b).renderOrder;
+		});
 
         for (EntityID entity : imageEntities)
         {
@@ -364,11 +426,12 @@ namespace Ermine
         // Render UI for all entities with UIComponent (legacy support)
         for (EntityID entity : m_Entities)
         {
-            // ✅ FIX: Check hierarchy before rendering UIComponent elements
+            if (!ecs.HasComponent<UIComponent>(entity))
+                continue;
             if (!IsEntityActiveInHierarchy(entity))
                 continue;
 
-            const auto& ui = ECS::GetInstance().GetComponent<UIComponent>(entity);
+            const auto& ui = ecs.GetComponent<UIComponent>(entity);
 
             if (ui.showHealthbar)
                 RenderHealthBar(ui);
@@ -388,7 +451,7 @@ namespace Ermine
 
         // Render new separate UI components (skip when game is paused — pause background covers them)
         if (!UIButtonSystem::IsGamePaused())
-        for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
+        for (auto& entity : m_Entities)
         {
             if (!ecs.IsEntityValid(entity))
                 continue;
@@ -433,22 +496,6 @@ namespace Ermine
         }
 
         // Render UIButtonComponent entities sorted by renderOrder
-        std::vector<EntityID> buttonEntities;
-        for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
-        {
-            if (!ecs.IsEntityValid(entity))
-                continue;
-            if (!ecs.HasComponent<UIButtonComponent>(entity))
-                continue;
-            if (!IsEntityActiveInHierarchy(entity))
-                continue;
-            buttonEntities.push_back(entity);
-        }
-        ranges::sort(buttonEntities, [&ecs](EntityID a, EntityID b)
-        {
-	        return ecs.GetComponent<UIButtonComponent>(a).renderOrder < ecs.GetComponent<UIButtonComponent>(b).renderOrder;
-        });
-
         for (EntityID entity : buttonEntities)
         {
             const auto& button = ecs.GetComponent<UIButtonComponent>(entity);
@@ -456,43 +503,33 @@ namespace Ermine
         }
 
         // Render UISliderComponent entities sorted by renderOrder
-        std::vector<EntityID> sliderEntities;
-        for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
-        {
-            if (!ecs.IsEntityValid(entity))
-                continue;
-            if (!ecs.HasComponent<UISliderComponent>(entity))
-                continue;
-            if (!IsEntityActiveInHierarchy(entity))
-                continue;
-            sliderEntities.push_back(entity);
-        }
-        ranges::sort(sliderEntities, [&ecs](EntityID a, EntityID b)
-        {
-	        return ecs.GetComponent<UISliderComponent>(a).renderOrder < ecs.GetComponent<UISliderComponent>(b).renderOrder;
-        });
-
         for (EntityID entity : sliderEntities)
         {
             const auto& slider = ecs.GetComponent<UISliderComponent>(entity);
             RenderSlider(slider);
         }
 
-        // Render UITextComponent entities
-        for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
+        for (EntityID entity : textEntities)
         {
-            if (!ecs.IsEntityValid(entity))
-                continue;
-
-            if (!ecs.HasComponent<UITextComponent>(entity))
-                continue;
-
-            if (!IsEntityActiveInHierarchy(entity))
-                continue;
-
             const auto& textComp = ecs.GetComponent<UITextComponent>(entity);
             RenderTextComponent(textComp);
         }
+
+        // Render UITextComponent entities
+        //for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
+        //{
+        //    if (!ecs.IsEntityValid(entity))
+        //        continue;
+
+        //    if (!ecs.HasComponent<UITextComponent>(entity))
+        //        continue;
+
+        //    if (!IsEntityActiveInHierarchy(entity))
+        //        continue;
+
+        //    const auto& textComp = ecs.GetComponent<UITextComponent>(entity);
+        //    RenderTextComponent(textComp);
+        //}
 
         // Re-enable depth test
         glEnable(GL_DEPTH_TEST);
@@ -503,29 +540,32 @@ namespace Ermine
     {
         auto& ecs = ECS::GetInstance();
 
-        // Check if entity itself is valid
-        if (!ecs.IsEntityValid(entity))
-            return false;
+        // Safety cap to avoid infinite loop if hierarchy data is malformed (cycle).
+        constexpr int MAX_HIERARCHY_DEPTH = 256;
+        int depth = 0;
 
-        // Check self active state
-        if (const auto& meta = ecs.TryGetComponent<ObjectMetaData>(entity))
+        EntityID current = entity;
+        while (current != HierarchyComponent::INVALID_PARENT)
         {
-            if (!meta->selfActive)
+            if (++depth > MAX_HIERARCHY_DEPTH)
                 return false;
-        }
 
-        // Check parent chain via HierarchyComponent
-        if (const auto& hierarchy = ecs.TryGetComponent<HierarchyComponent>(entity))
-        {
-            // If has a valid parent, check if parent is active
-            if (hierarchy->parent != HierarchyComponent::INVALID_PARENT)
+            if (!ecs.IsEntityValid(current))
+                return false;
+
+            if (const auto& meta = ecs.TryGetComponent<ObjectMetaData>(current))
             {
-                // Recursively check parent's active state
-                return IsEntityActiveInHierarchy(hierarchy->parent);
+                if (!meta->selfActive)
+                    return false;
             }
+
+            const auto& hierarchy = ecs.TryGetComponent<HierarchyComponent>(current);
+            if (!hierarchy)
+                return true;
+
+            current = hierarchy->parent;
         }
 
-        // No parent or parent is active - entity is active
         return true;
     }
 
@@ -1478,7 +1518,7 @@ namespace Ermine
 
             left,  bottom,        color.x, color.y, color.z, alpha,     u0, texV0,   // Bottom-left
             right, top,           color.x, color.y, color.z, alpha,     u1, texV1,   // Top-right
-            left,  top,           color.x, color.y, color.z, alpha,     u0, texV1    // Top-left
+            left,  top,           color.x, color.y, color.z, alpha,     u0, texV1,   // Top-left
         };
 
         // Enable texture mode in shader
