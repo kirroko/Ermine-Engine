@@ -331,16 +331,16 @@ public class PlayerController2 : MonoBehaviour
 
                     if (!flipSwitch1)
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
                         flipSwitch1 = true;
                         GameObject fence1 = GameObject.Find("ElectricFenc 1");
                         if (fence1 != null) fence1.SetActive(false);
                     }
                     else
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
                         flipSwitch1 = false;
                         GameObject fence1 = GameObject.Find("ElectricFenc 1");
                         if (fence1 != null) fence1.SetActive(true);
@@ -354,16 +354,16 @@ public class PlayerController2 : MonoBehaviour
 
                     if (!flipSwitch2)
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
                         flipSwitch2 = true;
                         GameObject fence2 = GameObject.Find("ElectricFenc 2");
                         if (fence2 != null) fence2.SetActive(false);
                     }
                     else
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
                         flipSwitch2 = false;
                         GameObject fence2 = GameObject.Find("ElectricFenc 2");
                         if (fence2 != null) fence2.SetActive(true);
@@ -377,8 +377,9 @@ public class PlayerController2 : MonoBehaviour
 
                     if (!flipSwitch3)
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
+
                         flipSwitch3 = true;
                         GameObject fence3 = GameObject.Find("ElectricFenc 3");
                         if (fence3 != null) fence3.SetActive(false);
@@ -387,8 +388,9 @@ public class PlayerController2 : MonoBehaviour
                     }
                     else
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
+
                         flipSwitch3 = false;
                         GameObject fence3 = GameObject.Find("ElectricFenc 3");
                         if (fence3 != null) fence3.SetActive(true);
@@ -406,16 +408,18 @@ public class PlayerController2 : MonoBehaviour
 
                     if (!flipSwitch1)
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
+
                         flipSwitch1 = true;
                         GameObject fence = GameObject.Find("ElectricFenc 1");
                         if (fence != null) fence.SetActive(false);
                     }
                     else
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
+
                         flipSwitch1 = false;
                         GameObject fence = GameObject.Find("ElectricFenc 1");
                         if (fence != null) fence.SetActive(true);
@@ -429,16 +433,18 @@ public class PlayerController2 : MonoBehaviour
 
                     if (!flipSwitch2)
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y + 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
+
                         flipSwitch2 = true;
                         GameObject fence = GameObject.Find("ElectricFenc");
                         if (fence != null) fence.SetActive(false);
                     }
                     else
                     {
-                        obj.transform.scale = new Vector3(obj.transform.scale.x, obj.transform.scale.y, obj.transform.scale.z * -1f);
-                        obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y - 1.51f, obj.transform.position.z);
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
+
                         flipSwitch2 = false;
                         GameObject fence = GameObject.Find("ElectricFenc");
                         if (fence != null) fence.SetActive(true);
