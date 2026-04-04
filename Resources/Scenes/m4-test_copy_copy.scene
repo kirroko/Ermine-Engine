@@ -31484,6 +31484,10 @@
                   "t": 0,
                   "v": 0.10000000149011612
                 },
+                "electricFenceDamageCooldown": {
+                  "t": 0,
+                  "v": 1.0
+                },
                 "moveSpeed": {
                   "t": 0,
                   "v": 8.0
@@ -31507,6 +31511,14 @@
                 "sprintSpeed": {
                   "t": 0,
                   "v": 8.0
+                },
+                "electricFenceDamage": {
+                  "t": 0,
+                  "v": 15.0
+                },
+                "healthBarName": {
+                  "t": 3,
+                  "v": "Healthbar"
                 }
               }
             },
@@ -31525,6 +31537,10 @@
                 "teleportChromaticAberrationIntensity": {
                   "t": 0,
                   "v": 0.07999999821186066
+                },
+                "shoot": {
+                  "t": 2,
+                  "v": false
                 },
                 "regenDelay": {
                   "t": 0,
@@ -31619,7 +31635,7 @@
         "ObjectMetaData": {
           "name": "PlayerAnim",
           "tag": "Untagged",
-          "selfActive": true
+          "selfActive": false
         },
         "ModelComponent": {
           "model": "DavidArmsV3_ALL.fbx",
@@ -81197,13 +81213,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
@@ -81542,13 +81552,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
@@ -81657,13 +81661,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
@@ -83486,13 +83484,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
@@ -83601,13 +83593,7 @@
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
-          "scripts": [
-            {
-              "class": "VoidDeath",
-              "enabled": true,
-              "fields": {}
-            }
-          ]
+          "scripts": []
         }
       }
     },
