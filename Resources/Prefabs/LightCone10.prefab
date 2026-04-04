@@ -3,7 +3,7 @@
     {
       "components": {
         "IDComponent": {
-          "guid": "267a275d82183c4d9dfba52dcdf86568"
+          "guid": "51d2601c3a3a15479e4fd25925c01e93"
         },
         "Transform": {
           "position": [
@@ -31,7 +31,7 @@
           ],
           "intensity": 6.480999946594238,
           "type": "Spot",
-          "castsShadows": true,
+          "castsShadows": false,
           "castsRays": true,
           "innerAngle": 13.300000190734864,
           "outerAngle": 37.0,
@@ -43,8 +43,7 @@
           "selfActive": true
         },
         "HierarchyComponent": {
-          "parentGuid": "60a5f246c8e7734e9cdad80574223704",
-          "depth": 3
+          "depth": 0
         },
         "GlobalTransform": {},
         "ScriptsComponent": {
