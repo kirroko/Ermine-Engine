@@ -1112,7 +1112,7 @@
           ]
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -1147,7 +1147,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -1157,7 +1157,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "0fd888cfb015f34ea6e70d512a496e18",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -9949,7 +9949,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -9984,7 +9984,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -9994,7 +9994,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "a6e2a021c349114b962e4072adbed583",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -10029,7 +10029,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -10064,7 +10064,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -10074,7 +10074,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "d5858ad70d33764a8c94e4cbea2f3b65",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -10109,7 +10109,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -10143,7 +10143,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -10643,7 +10643,7 @@
           ]
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -10661,9 +10661,9 @@
         },
         "Transform": {
           "position": [
-            7.153594017028809,
-            4.743929862976074,
-            -112.87236022949219
+            0.0,
+            0.0,
+            0.0
           ],
           "rotation": [
             0.0,
@@ -10678,7 +10678,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -10688,7 +10688,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "e20187cea72f6f4e8fed18fbe418a08c",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -11982,7 +11982,7 @@
           ]
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -12017,7 +12017,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -12027,7 +12027,7 @@
         },
         "HierarchyComponent": {
           "parentGuid": "016c3e3c5f11cb4eb3cb0ce05e416c92",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -39777,7 +39777,7 @@
           ]
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -39812,17 +39812,17 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
         "Material": {
-          "guid": "1c7e368869a95a499eccbed936214dae",
+          "guid": "70e78d85217a10418d6981d4cfbc774b",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
           "parentGuid": "05645623011bc1439f0e23a6dc3dfa15",
-          "depth": 2
+          "depth": 1
         },
         "GlobalTransform": {}
       }
@@ -45621,7 +45621,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -45655,7 +45655,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -45727,7 +45727,7 @@
           ]
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -45761,7 +45761,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -45912,7 +45912,7 @@
           "selfActive": true
         },
         "ModelComponent": {
-          "model": "ART1_wall_low.fbx",
+          "model": "ART1_wall_new_low.fbx",
           "isSkinFile": false
         },
         "HierarchyComponent": {
@@ -45946,7 +45946,7 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_low.fbx_Jail_wall_old_mesh0",
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
           "tag": "Mesh",
           "selfActive": true
         },
@@ -51426,7 +51426,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79",
+          "guid": "df8df48d1b3b61448dace9936ed5822a",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -51537,7 +51537,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79",
+          "guid": "df8df48d1b3b61448dace9936ed5822a",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -51648,7 +51648,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79",
+          "guid": "df8df48d1b3b61448dace9936ed5822a",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -51759,7 +51759,7 @@
           "selfActive": true
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79",
+          "guid": "df8df48d1b3b61448dace9936ed5822a",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -93455,7 +93455,7 @@
     "exposure": 1.003999948501587,
     "contrast": 1.093000054359436,
     "saturation": 1.1030000448226929,
-    "gamma": 2.1999998092651369,
+    "gamma": 2.200000047683716,
     "vignetteIntensity": 0.30000001192092898,
     "vignetteRadius": 0.800000011920929,
     "vignetteCoverage": 0.0,
