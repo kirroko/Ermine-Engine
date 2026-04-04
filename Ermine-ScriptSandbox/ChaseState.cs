@@ -47,7 +47,8 @@ public class Chase : MonoBehaviour
     private float recoverTimer = 0.0f;
 
     private GameObject enemyLight;
-
+    private string enemyLightPrefabPath = "../Resources/Prefabs/LightCone10.prefab";
+    private bool lightVisible = false;
     public float lightHeight = 5.0f;
     public float lightForwardOffset = 0.5f;
     public Vector3 lightRotationOffset = new Vector3(0f, 0f, 0f); // radians
@@ -113,23 +114,24 @@ public class Chase : MonoBehaviour
 
     private void EnsureEnemyLight()
     {
+        if (enemyLight != null)
+            return;
+
         enemyLight = GameObject.Find(GetEnemyLightName());
 
         if (enemyLight == null)
         {
-            enemyLight = Prefab.Instantiate("../Resources/Prefabs/LightCone10.prefab");
+            enemyLight = Prefab.Instantiate(enemyLightPrefabPath);
             if (enemyLight != null)
                 enemyLight.name = GetEnemyLightName();
         }
     }
 
-    private void ShowEnemyLight()
+    private void UpdateEnemyLightTransform()
     {
-        EnsureEnemyLight();
-        if (enemyLight == null)
+        if (!lightVisible || enemyLight == null)
             return;
 
-        Physics.Internal_SetLightValue((ulong)enemyLight.GetInstanceID(), 6.481f);
         Vector3 lightPos = transform.position
                          + new Vector3(0f, lightHeight, 0f)
                          + transform.forward * lightForwardOffset;
@@ -144,18 +146,35 @@ public class Chase : MonoBehaviour
         );
 
         enemyLight.transform.rotation = rot;
+    }
+
+    private void ShowEnemyLight()
+    {
+        EnsureEnemyLight();
+
+        if (enemyLight == null || lightVisible)
+            return;
+
+        Physics.Internal_SetLightValue((ulong)enemyLight.GetInstanceID(), 6.481f);
         enemyLight.SetActive(true);
+        lightVisible = true;
+
+        UpdateEnemyLightTransform();
     }
 
     private void HideEnemyLight()
     {
         EnsureEnemyLight();
-        if (enemyLight != null)
-        {
-            Physics.Internal_SetLightValue((ulong)enemyLight.GetInstanceID() ,0.0f);
-            GlobalAudio.StopSFX("LightDamageLoop");
-        }
+
+        if (enemyLight == null || !lightVisible)
+            return;
+
+        Physics.Internal_SetLightValue((ulong)enemyLight.GetInstanceID(), 0.0f);
+        enemyLight.SetActive(false);
+        GlobalAudio.StopSFX("LightDamageLoop");
+        lightVisible = false;
     }
+
     void Start()
     {
         entityID = (ulong)gameObject.GetInstanceID();
@@ -319,9 +338,14 @@ public class Chase : MonoBehaviour
         if (stunVFX != null && stunVFX.activeSelf) stunVFX.SetActive(false);
 
         if (isStunned || recoverTimer > 0.0f)
+        {
             HideEnemyLight();
+        }
         else
+        {
             ShowEnemyLight();
+            UpdateEnemyLightTransform();
+        }
 
         if (anim != null)
             anim.SetBool("IsMoving", true);
