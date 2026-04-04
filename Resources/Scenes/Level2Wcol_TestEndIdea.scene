@@ -134466,7 +134466,7 @@
         "Transform": {
           "position": [
             -63.02204895019531,
-            18.116107940673829,
+            24.9888973236084,
             158.51039123535157
           ],
           "rotation": [
@@ -134573,19 +134573,19 @@
         "Transform": {
           "position": [
             -54.142887115478519,
-            17.1804141998291,
+            25.043840408325197,
             103.51480102539063
           ],
           "rotation": [
             0.0,
-            0.8772594332695007,
+            0.8772593140602112,
             0.0,
             -0.4800167679786682
           ],
           "scale": [
-            0.10000006854534149,
+            0.1000000536441803,
             0.05000000074505806,
-            0.20000022649765016
+            0.20000019669532777
           ]
         },
         "ObjectMetaData": {
@@ -371436,6 +371436,324 @@
         },
         "HierarchyComponent": {
           "parentGuid": "e281112b985c1649a22743829dbb21bb",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 7712,
+      "components": {
+        "IDComponent": {
+          "guid": "93218240d089a946be38399db76b8004"
+        },
+        "Transform": {
+          "position": [
+            -21.939302444458009,
+            96.09187316894531,
+            301.8983154296875
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999307379126549,
+            0.03999999910593033,
+            0.0799848735332489
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "BEAM_FINALAREA (23)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_industrial beam_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 7713,
+      "components": {
+        "IDComponent": {
+          "guid": "55ed6fef4c64d24c892c850d6003bb0b"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_industrial beam_low.fbx_pCube5_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4686add7734bf542a3c94a8c5808db98",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "93218240d089a946be38399db76b8004",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 7714,
+      "components": {
+        "IDComponent": {
+          "guid": "e26caa591ce8904cbbc66e7d620d9cdd"
+        },
+        "Transform": {
+          "position": [
+            -21.939302444458009,
+            93.64203643798828,
+            253.69993591308595
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.039992570877075198,
+            0.03999999910593033,
+            0.07998386770486832
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "BEAM_FINALAREA (24)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_industrial beam_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 7715,
+      "components": {
+        "IDComponent": {
+          "guid": "0beb3440af93894c82cd433a11bb6254"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_industrial beam_low.fbx_pCube5_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4686add7734bf542a3c94a8c5808db98",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e26caa591ce8904cbbc66e7d620d9cdd",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 7716,
+      "components": {
+        "IDComponent": {
+          "guid": "29d81b8002434443acef624640a60d59"
+        },
+        "Transform": {
+          "position": [
+            -21.939302444458009,
+            93.64203643798828,
+            231.8203582763672
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.03999212011694908,
+            0.03999999910593033,
+            0.07998296618461609
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "BEAM_FINALAREA (25)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_industrial beam_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 7717,
+      "components": {
+        "IDComponent": {
+          "guid": "01dd5166c3297345acaf2be72178988a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_industrial beam_low.fbx_pCube5_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "4686add7734bf542a3c94a8c5808db98",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "29d81b8002434443acef624640a60d59",
           "depth": 1
         },
         "GlobalTransform": {}
