@@ -7,6 +7,7 @@ public class PlayerController2 : MonoBehaviour
     private Transform cam;
     private AudioComponent audioComp;
     private Animator anim;
+    private Random random;
 
     public float mouseHorSens = 0.1f;
     public float mouseVertSens = 0.1f;
@@ -83,6 +84,8 @@ public class PlayerController2 : MonoBehaviour
 
     void Start()
     {
+        random = new Random();
+        
         GameObject camObj = GameObject.Find("Main Camera");
         if (camObj != null)
             cam = camObj.GetComponent<Transform>();
@@ -159,7 +162,11 @@ public class PlayerController2 : MonoBehaviour
         {
             isKeyJump = true;
             isGrounded = false;
-            GlobalAudio.PlaySFXWithReverbSimple("Jump", wetLevel: -6.0f, decayTime: 3.5f, earlyDelay: 0.001f, lateDelay: 0.1f);
+            
+            int jumpIndex = random.Next(1, 15); // Random number between 1 and 14
+            string jumpSound = "Jump" + jumpIndex;
+            GlobalAudio.PlaySFXWithReverbSimple(jumpSound, wetLevel: -6.0f, decayTime: 3.5f, earlyDelay: 0.001f, lateDelay: 0.1f);
+            
             Physics.Jump((ulong)gameObject.GetInstanceID(), jumpspeed);
         }
 

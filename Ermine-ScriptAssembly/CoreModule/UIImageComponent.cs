@@ -11,5 +11,13 @@ namespace ErmineEngine
             [MethodImpl(MethodImplOptions.InternalCall)]
             set;
         }
+
+        public float alpha
+        {
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            get;
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            set;
+        }
     }
 }
