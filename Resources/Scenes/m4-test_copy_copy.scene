@@ -21,7 +21,7 @@
           "selfActive": false
         },
         "GlobalAudioComponent": {
-          "masterVolume": 1.0,
+          "masterVolume": 0.49925273656845095,
           "musicVolume": 0.23999999463558198,
           "sfxVolume": 1.0,
           "ambienceVolume": 0.10000000149011612,
@@ -51382,7 +51382,7 @@
           ]
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79",
+          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -51493,7 +51493,7 @@
           ]
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79",
+          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -51604,7 +51604,7 @@
           ]
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79",
+          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -51715,7 +51715,7 @@
           ]
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79",
+          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -70188,9 +70188,9 @@
         },
         "Transform": {
           "position": [
-            12.812817573547364,
+            12.835638046264649,
             -1.6622740030288697,
-            -165.64503479003907
+            -167.70001220703126
           ],
           "rotation": [
             0.0,
@@ -73795,7 +73795,7 @@
           }
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79",
+          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -91073,7 +91073,7 @@
           "trackImage": "Resources/Textures/UI/UI UPDATED/Audio_Bar.png",
           "fillImage": "Resources/Textures/UI/UI UPDATED/Audio_Fill.png",
           "handleImage": "Resources/Textures/UI/UI UPDATED/Audio_Indicator.png",
-          "value": 1.0,
+          "value": 0.49925273656845095,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 1,
@@ -92410,7 +92410,7 @@
           "trackImage": "Resources/Textures/UI/UI UPDATED/Audio_Bar.png",
           "fillImage": "Resources/Textures/UI/UI UPDATED/Audio_Fill.png",
           "handleImage": "Resources/Textures/UI/UI UPDATED/Audio_Indicator.png",
-          "value": 0.5,
+          "value": 1.0,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 5,
@@ -93417,6 +93417,50 @@
         },
         "GlobalTransform": {}
       }
+    },
+    {
+      "id": 1934,
+      "components": {
+        "IDComponent": {
+          "guid": "60711444efbd674d8c0e4f638d214536"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Level1Load",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "Level1",
+              "enabled": true,
+              "fields": {}
+            }
+          ]
+        }
+      }
     }
   ],
   "globalGraphics": {
@@ -93455,7 +93499,7 @@
     "exposure": 1.003999948501587,
     "contrast": 1.093000054359436,
     "saturation": 1.1030000448226929,
-    "gamma": 2.200000047683716,
+    "gamma": 2.8000001907348635,
     "vignetteIntensity": 0.30000001192092898,
     "vignetteRadius": 0.800000011920929,
     "vignetteCoverage": 0.0,
