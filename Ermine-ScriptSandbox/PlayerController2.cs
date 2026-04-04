@@ -1,5 +1,6 @@
 ﻿using ErmineEngine;
 using System;
+using System.Runtime.Remoting;
 
 public class PlayerController2 : MonoBehaviour
 {
@@ -65,6 +66,20 @@ public class PlayerController2 : MonoBehaviour
     private GameObject healthBar;
     private float electricFenceTimer = 0f;
     private float health = 0f;
+
+
+    private float shakeYawOffset = 0f;
+    private float shakePitchOffset = 0f;
+    private float shakeRollOffset = 0f;
+
+    private float rumbleYawTimer = 0f;
+    public float rumbleYawDuration = 2f;
+
+    public float rumbleYawIntensity = 0.05f;
+    public float pitchIntensity = 0.5f; // smaller
+    public float rollIntensity = 0.5f;  // smaller
+
+
 
     void Start()
     {
@@ -166,6 +181,25 @@ public class PlayerController2 : MonoBehaviour
         float mouseX = -lookInput.x * mouseHorSens * Time.deltaTime;
         float mouseY = lookInput.y * mouseVertSens * Time.deltaTime;
 
+        if (rumbleYawTimer > 0f)
+        {
+            rumbleYawTimer -= Time.deltaTime;
+            shakeYawOffset = GameManager.I.RandomRange(-rumbleYawIntensity, rumbleYawIntensity);
+            shakePitchOffset = GameManager.I.RandomRange(-pitchIntensity, pitchIntensity);
+            shakeRollOffset = GameManager.I.RandomRange(-rollIntensity, rollIntensity);
+
+            if (rumbleYawTimer <= 0f)
+            {
+                rumbleYawTimer = 0f;
+                shakeYawOffset = 0f;
+                Debug.Log("[Emergency] Yaw shake ended");
+            }
+        }
+        else
+        {
+            shakeYawOffset = 0f;
+        }
+
         // rotate player horizontally
         transform.Rotate(Vector3.up * mouseX);
         Physics.SetRotationQuat((ulong)gameObject.GetInstanceID(), transform.rotation);
@@ -174,7 +208,7 @@ public class PlayerController2 : MonoBehaviour
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, minPitch, maxPitch);
 
-        cam.rotation = Quaternion.Euler(xRotation, 0f, 0f);
+        cam.rotation = Quaternion.Euler(xRotation, shakeYawOffset, 0f);
     }
 
     private void HandleCameraLerp()
@@ -255,7 +289,8 @@ public class PlayerController2 : MonoBehaviour
                     objobj.name == "Book" ||
                     objobj.name == "GearKeyPrefab" ||
                     objobj.name == "ComputerDoorUnlock1" ||
-                    objobj.name == "ComputerDoorUnlock2")
+                    objobj.name == "ComputerDoorUnlock2" ||
+                    objobj.name == "EmergencyComputer")
                 {
                     SceneManager.SetEntityOutline(objobj.GetInstanceID());
                 }
@@ -602,6 +637,25 @@ public class PlayerController2 : MonoBehaviour
 
                     interactTimer = 0f;
                 }
+
+                if (obj.name == "EmergencyComputer" && interactTimer > 1f)
+                {
+                    EmergencySequenceController seq = obj.GetComponent<EmergencySequenceController>();
+
+                    if (seq != null)
+                    {
+                        seq.StartSequence();
+                    }
+                    else
+                    {
+                        Debug.Log("EmergencySequenceController not found on " + obj.name);
+                    }
+
+
+                    interactTimer = 0f;
+                }
+
+                
             }
             /*else
             {
@@ -733,5 +787,11 @@ public class PlayerController2 : MonoBehaviour
         GameplayHUD.SetHealth(healthBar, health);
 
         DamageVignetteHelper.FlashRedVignette();
+    }
+
+    public void TriggerRumble()
+    {
+        Debug.Log("[Emergency] TriggerRumble()");
+        rumbleYawTimer = rumbleYawDuration;
     }
 }
