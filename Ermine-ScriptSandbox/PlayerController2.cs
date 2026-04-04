@@ -660,6 +660,7 @@ public class PlayerController2 : MonoBehaviour
                 if (obj.name == "SyringeWeapon" && interactTimer > 1f)
                 {
                     // Collect syringe weapon
+                    GlobalAudio.PlaySFX("WeaponPickup");
                     GameObject syringe = GameObject.Find("PlayerAnim");
 
                     OrbTeleport.shoot = true;

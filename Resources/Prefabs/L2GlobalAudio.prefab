@@ -36,6 +36,11 @@
               "volume": 0.6000000238418579
             },
             {
+              "name": "WeaponPickup",
+              "path": "../Resources/Audio/weapon_pickup.wav",
+              "volume": 0.3
+            },
+            {
               "name": "Jump1",
               "path": "../Resources/Audio/VO_Jump_01.wav",
               "volume": 1.0
