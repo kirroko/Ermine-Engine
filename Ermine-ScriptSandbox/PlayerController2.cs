@@ -74,7 +74,7 @@ public class PlayerController2 : MonoBehaviour
     private float shakeRollOffset = 0f;
 
     private float rumbleYawTimer = 0f;
-    public float rumbleYawDuration = 2f;
+    public float rumbleYawDuration = 12f;
 
     public float rumbleYawIntensity = 0.05f;
     public float pitchIntensity = 0.5f; // smaller

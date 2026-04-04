@@ -52,7 +52,7 @@ public class EmergencySequenceController : MonoBehaviour
             if (obj != null)
                 obj.GetComponent<RotatingPlatform>().active = false;
             else
-                Debug.Log(name + " not found");
+                Debug.Log("Emergency" + name + " not found");
         }
     }
 
@@ -156,28 +156,28 @@ public class EmergencySequenceController : MonoBehaviour
             Debug.Log("[Emergency] Timer = " + timer);
         }
 
-        if (!alarmTriggered && timer >= 0.2f)
+        if (!alarmTriggered && timer >= 7f)
         {
             alarmTriggered = true;
             Debug.Log("[Emergency] Alarm triggered at time: " + timer);
             TriggerAlarm();
         }
 
-        if (!rumbleTriggered && timer >= 0.5f)
+        if (!rumbleTriggered && timer >= 1f)
         {
             rumbleTriggered = true;
             Debug.Log("[Emergency] Rumble triggered at time: " + timer);
             TriggerRumble();
         }
 
-        if (!bgmTriggered && timer >= 1.2f)
+        if (!bgmTriggered && timer >= 15f)
         {
             bgmTriggered = true;
             Debug.Log("[Emergency] BGM triggered at time: " + timer);
             TriggerDangerBGM();
         }
 
-        if (!killAreaTriggered && timer >= 1.5f)
+        if (!killAreaTriggered && timer >= 16f)
         {
             killAreaTriggered = true;
             Debug.Log("[Emergency] Kill area movement STARTED at time: " + timer);
@@ -211,7 +211,8 @@ public class EmergencySequenceController : MonoBehaviour
     private void TriggerAlarm()
     {
         Debug.Log("[Emergency] TriggerAlarm()");
-        GlobalAudio.PlayMusic("EndAreaBGM");
+
+        
 
         foreach (string name in names)
         {
@@ -230,15 +231,31 @@ public class EmergencySequenceController : MonoBehaviour
             if (obj != null)
                 obj.GetComponent<RotatingPlatform>().active = true;
             else
-                Debug.Log(name + " not found");
+                Debug.Log(obj.name + " not found");
         }
+
+        AudioComponent aud = gameObject.GetComponent<AudioComponent>();
+        if (aud != null)
+        {
+            GlobalAudio.PlaySFX("alarm");
+            Debug.Log("[Emergency] Can earthquake");
+        }
+        else Debug.Log("[Emergency] Canot earthquake");
     }
 
     private void TriggerRumble() // Camera shake and sfx
     {
-        Debug.Log("[Emergency] TriggerRumble()");
+        Debug.Log("[Emergency] TriggerRumble");
+        
+        AudioComponent obj = gameObject.GetComponent<AudioComponent>();
+        if (obj != null)
+        {
+            GlobalAudio.PlaySFX("earthquake");
+            Debug.Log("[Emergency] Can earthquake");
+        }
+        else Debug.Log("[Emergency] Canot earthquake");
 
-        GameManager.I.player.GetComponent<PlayerController2>()?.TriggerRumble();
+            GameManager.I.player.GetComponent<PlayerController2>()?.TriggerRumble();
     }
 
     private float RandomRange(float min, float max)
@@ -249,7 +266,9 @@ public class EmergencySequenceController : MonoBehaviour
     private void TriggerDangerBGM()
     {
         Debug.Log("[Emergency] TriggerDangerBGM()");
-        
+
+
+        GlobalAudio.StopMusic();
         GlobalAudio.PlayMusic("EndAreaBGM");
     }
 
