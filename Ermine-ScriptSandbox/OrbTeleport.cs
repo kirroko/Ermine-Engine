@@ -237,7 +237,7 @@ public class OrbTeleport : MonoBehaviour
             return;
         }
 
-        TakeDamage(damage);
+        //TakeDamage(damage);
 
         GlobalAudio.PlaySFX("Teleport");
 
