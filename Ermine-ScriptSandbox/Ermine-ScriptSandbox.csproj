@@ -79,6 +79,7 @@
     <Compile Include="DamagePlayer.cs" />
     <Compile Include="DamageVignetteHelper.cs" />
     <Compile Include="DisableLightCone.cs" />
+    <Compile Include="EmergencySequenceController.cs" />
     <Compile Include="EndElevator.cs" />
     <Compile Include="EnemyFootstep.cs" />
     <Compile Include="FakePlayer.cs" />
@@ -99,6 +100,7 @@
     <Compile Include="PatrolState.cs" />
     <Compile Include="PlayerController.cs" />
     <Compile Include="PlayerController2.cs" />
+    <Compile Include="AlarmLights.cs" />
     <Compile Include="RotatingPlatform.cs" />
     <Compile Include="Sandbox.cs" />
     <Compile Include="Sandbox2.cs" />

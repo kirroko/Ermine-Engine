@@ -1,0 +1,171 @@
+{
+  "entities": [
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "d9d17ba4585555418dbfa076410a643c"
+        },
+        "Transform": {
+          "position": [
+            -22.297834396362306,
+            9.92724609375,
+            45.67808151245117
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.02999742701649666,
+            0.029999999329447748,
+            0.02999742701649666
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "EmergencyComputer",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "AudioComponent": {
+          "soundName": "../Resources/Audio/earthquake.mp3",
+          "eventName": "earthquake",
+          "useRandomVariation": false,
+          "is3D": false,
+          "isLooping": false,
+          "isStreaming": false,
+          "volume": 0.5,
+          "followTransform": true,
+          "minDistance": 1.0,
+          "maxDistance": 100.0,
+          "playOnStart": false,
+          "useReverb": false,
+          "reverbWetLevel": -12.0,
+          "reverbDryLevel": 0.0,
+          "reverbDecayTime": 1.0
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            2.700000047683716,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            100.0,
+            120.0,
+            80.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_ComputerDesk.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "EmergencySequenceController"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "bc9b41bd9fdb8544969300f3a6761a10"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_ComputerDesk.fbx_pCube1_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "bb4e2f0ef016494bbf2ed481f20e3572",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d9d17ba4585555418dbfa076410a643c",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "00d242e64053b446bb865f14bee00b6d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_ComputerDesk.fbx_pCube1_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2a051fd24b0aeb4891de12016222ea71",
+          "flickerEmissive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d9d17ba4585555418dbfa076410a643c",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    }
+  ]
+}
