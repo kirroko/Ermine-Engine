@@ -306908,9 +306908,9 @@
         },
         "Transform": {
           "position": [
-            2.8505048751831056,
-            128.16519165039063,
-            249.94309997558595
+            4.204338550567627,
+            129.0084686279297,
+            247.44041442871095
           ],
           "rotation": [
             0.0,
@@ -320172,20 +320172,20 @@
         },
         "Transform": {
           "position": [
-            12.933152198791504,
+            12.933332443237305,
             77.4975814819336,
-            324.3311767578125
+            324.5923767089844
           ],
           "rotation": [
-            -0.49980029463768008,
-            0.5001996159553528,
-            0.5001456141471863,
-            0.4998544454574585
+            -0.499801903963089,
+            0.5001980066299439,
+            0.5001472234725952,
+            0.49985283613204958
           ],
           "scale": [
-            0.050000742077827457,
+            0.05000084266066551,
             0.14999935030937196,
-            0.20000101625919343
+            0.2000018209218979
           ]
         },
         "ObjectMetaData": {
@@ -371754,6 +371754,112 @@
         },
         "HierarchyComponent": {
           "parentGuid": "29d81b8002434443acef624640a60d59",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 7718,
+      "components": {
+        "IDComponent": {
+          "guid": "e02c4263a82a5940abe1d85f5ab93258"
+        },
+        "Transform": {
+          "position": [
+            4.33637809753418,
+            125.82487487792969,
+            242.68568420410157
+          ],
+          "rotation": [
+            0.0,
+            -0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.05000000074505806,
+            0.019999999552965165,
+            0.09999637305736542
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "WallDecoLow (6)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_wall_deco_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 7719,
+      "components": {
+        "IDComponent": {
+          "guid": "ff40faf740c30d488cd31154fd5a15df"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_wall_deco_low.fbx_wall_deco_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "3bf7760ea04fc34a8c4e6553c423ae8b",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "e02c4263a82a5940abe1d85f5ab93258",
           "depth": 1
         },
         "GlobalTransform": {}
