@@ -467,7 +467,8 @@ public class PlayerController2 : MonoBehaviour
                         msg.SetActive(true);
                         hint1.SetActive(false);
                         hint2.SetActive(true);
-                        bgDarken.SetActive(true);
+                        if (bgDarken != null)
+                            bgDarken.SetActive(true);
                         activeClueMessage = msg;
                         clueMessageTimer = 0f;
 
@@ -491,7 +492,8 @@ public class PlayerController2 : MonoBehaviour
                         msg.SetActive(true);
                         hint2.SetActive(false);
                         hint3.SetActive(true);
-                        bgDarken.SetActive(true);
+                        if (bgDarken != null)
+                            bgDarken.SetActive(true);
                         activeClueMessage = msg;
                         clueMessageTimer = 0f;
 
@@ -511,7 +513,8 @@ public class PlayerController2 : MonoBehaviour
                     if (msg != null)
                     {
                         msg.SetActive(true);
-                        bgDarken.SetActive(true);
+                        if (bgDarken != null)
+                            bgDarken.SetActive(true);
                         activeClueMessage = msg;
                         clueMessageTimer = 0f;
 
@@ -531,7 +534,8 @@ public class PlayerController2 : MonoBehaviour
                     if (msg != null)
                     {
                         msg.SetActive(true);
-                        bgDarken.SetActive(true);
+                        if (bgDarken != null)
+                            bgDarken.SetActive(true);
                         activeClueMessage = msg;
                         clueMessageTimer = 0f;
 
@@ -552,7 +556,8 @@ public class PlayerController2 : MonoBehaviour
                     if (msg != null)
                     {
                         msg.SetActive(true);
-                        bgDarken.SetActive(true);
+                        if (bgDarken != null)
+                            bgDarken.SetActive(true);
                         activeClueMessage = msg;
                         clueMessageTimer = 0f;
 
@@ -717,7 +722,8 @@ public class PlayerController2 : MonoBehaviour
             if (clueMessageTimer >= clueMessageDuration)
             {
                 activeClueMessage.SetActive(false);
-                bgDarken.SetActive(false);
+                if (bgDarken != null)
+                    bgDarken.SetActive(false);
                 activeClueMessage = null;
                 clueMessageTimer = 0f;
 
