@@ -573,10 +573,10 @@ bool engine::Init(GLFWwindow* windowContext)
 
 	// Load main menu scene on startup (scene-based approach)
 	EE_CORE_INFO("Loading main menu scene...");
-	SceneManager::GetInstance().OpenScene("../Resources/Scenes/mainmenu_video_bg.scene");
+	SceneManager::GetInstance().OpenScene("../Resources/Scenes/SplashScreen.scene");
 	EE_CORE_INFO("Main menu scene loaded");
 #else
-	SceneManager::GetInstance().OpenScene("../Resources/Scenes/mainmenu_video_bg.scene"); // Load mainmenu scene
+	SceneManager::GetInstance().OpenScene("../Resources/Scenes/SplashScreen.scene"); // Load mainmenu scene
 	editor::EditorGUI::s_state = editor::EditorGUI::SimState::playing;			 // Set to playing state
 #endif
 
