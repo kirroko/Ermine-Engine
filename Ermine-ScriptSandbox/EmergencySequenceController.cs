@@ -27,10 +27,34 @@ public class EmergencySequenceController : MonoBehaviour
     private float minKillAreaY = -9999.0f;
 
 
+    private string[] names = { "VolumeLightONE", "VolumeLightTWO", "VolumeLightTHREE", "VolumeLightFOUR" };
+    private string[] controllers = { "Rotating floorEmgcy" };
 
-    
 
     private Random rand = new Random();
+
+    void Start()
+    {
+        foreach (string name in names)
+        {
+            GameObject obj = GameObject.Find(name);
+
+            if (obj != null)
+                obj.SetActive(false);
+            else
+                Debug.Log(name + " not found");
+        }
+
+        foreach (string control in controllers)
+        {
+            GameObject obj = GameObject.Find(control);
+
+            if (obj != null)
+                obj.GetComponent<RotatingPlatform>().active = false;
+            else
+                Debug.Log(name + " not found");
+        }
+    }
 
     public EmergencySequenceController()
     {
@@ -187,7 +211,27 @@ public class EmergencySequenceController : MonoBehaviour
     private void TriggerAlarm()
     {
         Debug.Log("[Emergency] TriggerAlarm()");
-        GameObject.Find("EmergencyAlarm");
+        GlobalAudio.PlayMusic("EndAreaBGM");
+
+        foreach (string name in names)
+        {
+            GameObject obj = GameObject.Find(name);
+
+            if (obj != null)
+                obj.SetActive(true);
+            else
+                Debug.Log(name + " not found");
+        }
+
+        foreach (string control in controllers)
+        {
+            GameObject obj = GameObject.Find(control);
+
+            if (obj != null)
+                obj.GetComponent<RotatingPlatform>().active = true;
+            else
+                Debug.Log(name + " not found");
+        }
     }
 
     private void TriggerRumble() // Camera shake and sfx
@@ -205,6 +249,8 @@ public class EmergencySequenceController : MonoBehaviour
     private void TriggerDangerBGM()
     {
         Debug.Log("[Emergency] TriggerDangerBGM()");
+        
+        GlobalAudio.PlayMusic("EndAreaBGM");
     }
 
     private void UpdateKillArea(float dt)
