@@ -94,7 +94,7 @@
         },
         "materialRoughness": {
             "type": "float",
-            "value": 0.30000001192092898
+            "value": 0.7
         },
         "materialRoughnessMap": {
             "type": "texture2d",
