@@ -381,8 +381,11 @@ public class Attack : MonoBehaviour
         bool isMyVOLocked = voTimeTracker - myVOLockTime < myVOLockDuration;
 
         // Play attack VO when entering attack range (only once per attack session)
-        if (hasLOS && distToPlayer <= attackRange && !hasPlayedAttackVO && !isPlayingVO && !isGlobalVOLocked && !isMyVOLocked && voTimeTracker - lastVOTime >= voCooldown)
+        // INTERRUPT any playing VO (like SecurityBreachConfirmed) to immediately play attack VO
+        if (hasLOS && distToPlayer <= attackRange && !hasPlayedAttackVO && !isGlobalVOLocked && !isMyVOLocked && voTimeTracker - lastVOTime >= voCooldown)
         {
+            GlobalAudio.StopVoice(); // Stop any currently playing voice line
+            
             double voRoll = random.NextDouble();
             if (voRoll < 0.5)
                 GlobalAudio.PlayVoice("ActivateInstantKill");

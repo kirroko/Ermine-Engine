@@ -277,7 +277,7 @@ namespace Ermine
             // Set gamma uniform: apply gamma correction only to the preview image
             if (isGammaPreview)
             {
-                float gamma = 2.8f - (Ermine::SettingsManager::GetInstance().gammaSliderValue * 1.2f);
+                float gamma = 1.6f + (Ermine::SettingsManager::GetInstance().gammaSliderValue * 1.2f);
                 m_uiShader->SetUniform1f("u_Gamma", gamma);
             }
             else

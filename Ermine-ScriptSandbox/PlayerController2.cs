@@ -297,7 +297,7 @@ public class PlayerController2 : MonoBehaviour
                     objobj.name == "GearKeyPrefab" ||
                     objobj.name == "ComputerDoorUnlock1" ||
                     objobj.name == "ComputerDoorUnlock2" ||
-                    objobj.name == "EmergencyComputer")
+                    objobj.name == "SyringeWeapon")
                 {
                     SceneManager.SetEntityOutline(objobj.GetInstanceID());
                 }
@@ -467,7 +467,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    //obj.SetActive(false);
+                    obj.SetActive(false);
                     interactTimer = 0f;
                 }
                 if (obj.name == "Paper2" && interactTimer > 1f)
@@ -491,7 +491,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    //obj.SetActive(false);
+                    obj.SetActive(false);
                     interactTimer = 0f;
                 }
                 if (obj.name == "Paper3" && interactTimer > 1f)
@@ -511,7 +511,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    //obj.SetActive(false);
+                    obj.SetActive(false);
                     interactTimer = 0f;
                 }
                 if (obj.name == "Paper4" && interactTimer > 1f)
@@ -531,7 +531,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    //obj.SetActive(false);
+                    obj.SetActive(false);
                     interactTimer = 0f;
 
                 }
@@ -552,7 +552,7 @@ public class PlayerController2 : MonoBehaviour
                         isPaused = true;
                     }
 
-                    //obj.SetActive(false);
+                    obj.SetActive(false);
                     interactTimer = 0f;
 
                 }
@@ -569,7 +569,7 @@ public class PlayerController2 : MonoBehaviour
                         msg.transform.rotation *= Quaternion.Euler(0f, 135f, 0f);
                     }
 
-                    //obj.SetActive(false);
+                    obj.SetActive(false);
                     interactTimer = 0f;
                 }
 
@@ -589,7 +589,7 @@ public class PlayerController2 : MonoBehaviour
                         PlayVoiceWithSubtitle("Key2", 5f);
                     }
 
-                    //obj.SetActive(false);
+                    obj.SetActive(false);
                     interactTimer = 0f;
                 }
 
@@ -642,6 +642,18 @@ public class PlayerController2 : MonoBehaviour
                         Debug.Log("Computer 2 activated!");
                     }
 
+                    interactTimer = 0f;
+                }
+
+                if (obj.name == "SyringeWeapon" && interactTimer > 1f)
+                {
+                    // Collect syringe weapon
+                    GameObject syringe = GameObject.Find("PlayerAnim");
+
+                    OrbTeleport.shoot = true;
+
+                    syringe.SetActive(true);
+                    obj.SetActive(false);
                     interactTimer = 0f;
                 }
 

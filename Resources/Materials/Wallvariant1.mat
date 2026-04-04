@@ -1,5 +1,21 @@
 {
     "parameters": {
+        "materialAlbedoMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_BC.png"
+        },
+        "materialHasNormalMap": {
+            "type": "bool",
+            "value": true
+        },
+        "materialMetallicMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Metallic.png"
+        },
+        "materialNormalMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_NRM.png"
+        },
         "materialAlbedo": {
             "type": "vec4",
             "value": [
@@ -9,13 +25,13 @@
                 1.0
             ]
         },
-        "materialAlbedoMap": {
-            "type": "texture2d",
-            "value": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine Editor\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_BC.png"
-        },
         "materialAo": {
             "type": "float",
             "value": 1.0
+        },
+        "materialAoMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_AO.png"
         },
         "materialCastsShadows": {
             "type": "bool",
@@ -58,7 +74,7 @@
         },
         "materialHasAoMap": {
             "type": "bool",
-            "value": false
+            "value": true
         },
         "materialHasEmissiveMap": {
             "type": "bool",
@@ -66,15 +82,11 @@
         },
         "materialHasMetallicMap": {
             "type": "bool",
-            "value": false
-        },
-        "materialHasNormalMap": {
-            "type": "bool",
-            "value": false
+            "value": true
         },
         "materialHasRoughnessMap": {
             "type": "bool",
-            "value": false
+            "value": true
         },
         "materialMetallic": {
             "type": "float",
@@ -86,7 +98,11 @@
         },
         "materialRoughness": {
             "type": "float",
-            "value": 0.30000001192092898
+            "value": 0.7
+        },
+        "materialRoughnessMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_wall_Roughness.png"
         },
         "materialShadingModel": {
             "type": "int",
