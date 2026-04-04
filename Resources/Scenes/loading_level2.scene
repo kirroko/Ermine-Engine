@@ -93,7 +93,7 @@
       }
     },
     {
-      "id": 4,
+      "id": 3,
       "components": {
         "IDComponent": {
           "guid": "a54150f663f10c5ab8e2916c3e6d615f"
@@ -135,13 +135,13 @@
                   "t": 3,
                   "v": "../Resources/Scenes/Level2Wcol.scene"
                 },
+                "videoDurationSeconds": {
+                  "t": 0,
+                  "v": 2.0999999046325685
+                },
                 "VideoFileName": {
                   "t": 3,
                   "v": "LoadingScreen_v1.mpeg"
-                },
-                "videoDurationSeconds": {
-                  "t": 0,
-                  "v": 2.0
                 },
                 "assumedFPS": {
                   "t": 0,
@@ -154,7 +154,7 @@
       }
     },
     {
-      "id": 5,
+      "id": 4,
       "components": {
         "IDComponent": {
           "guid": "c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7"
@@ -258,7 +258,7 @@
     "exposure": 1.0,
     "contrast": 1.0,
     "saturation": 1.0,
-    "gamma": 2.1999998092651369,
+    "gamma": 2.8000001907348635,
     "vignetteIntensity": 0.30000001192092898,
     "vignetteRadius": 0.800000011920929,
     "vignetteCoverage": 0.0,
