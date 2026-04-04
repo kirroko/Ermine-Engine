@@ -1,0 +1,315 @@
+{
+  "entities": [
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "cd41b347d7ee0348950b961f0dc62d3d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.009999999776482582,
+            0.009999999776482582,
+            0.009999999776482582
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "BrokenWalker04Head",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "BrokenWalker04 (Head).fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "2a036bc33bf61f4b82cb17a0eac022fa"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker04 (Head).fbx_EnemyRig_Fixed_M_CineFinal_Edited__1__TPose:pSphere2_mesh6",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "c62afd5c3aa7e44791fcb7afd67c538f",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "cd41b347d7ee0348950b961f0dc62d3d",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "acd70472e1716a459152e4fa4b6f1592"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker04 (Head).fbx_EnemyRig_Fixed_M_CineFinal_Edited__1__TPose:pasted__Spikes.002_mesh5",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2fb4f95becc56248b66da5b5aa8fab47",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "cd41b347d7ee0348950b961f0dc62d3d",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "fd7ea0b57d672c47a764a860b5ac8c32"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker04 (Head).fbx_EnemyRig_Fixed_M_CineFinal_Edited__1__TPose:pasted__Sphere.007_mesh4",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2fb4f95becc56248b66da5b5aa8fab47",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "cd41b347d7ee0348950b961f0dc62d3d",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "e984d0a87a7c08468a4da961c0d075e3"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker04 (Head).fbx_EnemyRig_Fixed_M_CineFinal_Edited__1__TPose:pasted__Lantern rungs.005_mesh3",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2fb4f95becc56248b66da5b5aa8fab47",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "cd41b347d7ee0348950b961f0dc62d3d",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "c3d5816d6cb7714d83f91b889f9a7443"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker04 (Head).fbx_EnemyRig_Fixed_M_CineFinal_Edited__1__TPose:pasted__Lantern rungs.004_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2fb4f95becc56248b66da5b5aa8fab47",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "cd41b347d7ee0348950b961f0dc62d3d",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "a9e5bb3be807b6458281fc30fd807711"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker04 (Head).fbx_EnemyRig_Fixed_M_CineFinal_Edited__1__TPose:pasted__Cylinder.036_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2fb4f95becc56248b66da5b5aa8fab47",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "cd41b347d7ee0348950b961f0dc62d3d",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "52f52202419fa0458c2ececd3799cc05"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker04 (Head).fbx_EnemyRig_Fixed_M_CineFinal_Edited__1__TPose:pasted__Cylinder.034_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2fb4f95becc56248b66da5b5aa8fab47",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "cd41b347d7ee0348950b961f0dc62d3d",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    }
+  ]
+}

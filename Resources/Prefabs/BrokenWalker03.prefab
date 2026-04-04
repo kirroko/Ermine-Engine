@@ -1,0 +1,1563 @@
+{
+  "entities": [
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "051c5e02b26fa540bda5f52609096817"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.009999999776482582,
+            0.009999999776482582,
+            0.009999999776482582
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "BrokenWalker03",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "BrokenWalker03.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "c48364d6e69ba84a94f40b6788a15940"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cylinder.039_mesh38",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2b75cd7c142b2548b71409d0b0f7da20",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "3f837aecc8bdf6429f2dfb2ab1fa3fea"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Pelvis.002_mesh37",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2b75cd7c142b2548b71409d0b0f7da20",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "fed512ab035a0b4ea3db2f41ec56a0e9"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cylinder.047_mesh36",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "f6bc06080a2e7f45b7b928dfbf51b579",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "b9eb37849ed08f4986d839b5691d33c7"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cube.004_mesh35",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2b75cd7c142b2548b71409d0b0f7da20",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "7b8b4de25c49e34b83d899965c79d5b3"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Feet.002_mesh34",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "b80f24441d0823478e6c9acc1ea1bf06",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "189d90a278832a4aa906f1c03c8e1583"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cylinder.042_mesh33",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "f6bc06080a2e7f45b7b928dfbf51b579",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "424be466bee41647878ef1596882d294"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Bottom Legs.002_mesh32",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "f6bc06080a2e7f45b7b928dfbf51b579",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "a2ce36321ac1374a87325c98e8cc2d4d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cylinder.036_mesh31",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2fb4f95becc56248b66da5b5aa8fab47",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "a149272e6e89504a8333a487609ff318"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Belt.002_mesh30",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2b75cd7c142b2548b71409d0b0f7da20",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "5627cac611508e46a491493f54a7e712"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cone.002_mesh29",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2b75cd7c142b2548b71409d0b0f7da20",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "72736da5736e1a49be47be62323742e9"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Plane.003_mesh28",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "b80f24441d0823478e6c9acc1ea1bf06",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "5e5544d893204640bee62827a4b62db9"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Spikes.002_mesh27",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2fb4f95becc56248b66da5b5aa8fab47",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "3e37210a4b781f42b89841d27ec1da35"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Knee_Joints.004_mesh26",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "b80f24441d0823478e6c9acc1ea1bf06",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "8898fb0f31545943a5dbe2f3ca962a23"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cylinder.045_mesh25",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "b80f24441d0823478e6c9acc1ea1bf06",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "16597e7f8aa43b45bb9175ff2bdeece4"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cylinder.044_mesh24",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "b80f24441d0823478e6c9acc1ea1bf06",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "7758669232e9ab47beb0f21a3e4f5878"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Ankle_Joints.005_mesh23",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "b80f24441d0823478e6c9acc1ea1bf06",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "4401ebe4dd090c469faccfbac3c2c259"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cylinder.046_mesh22",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "b80f24441d0823478e6c9acc1ea1bf06",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "c4be378b946d6a45b63fbd0ecb770be3"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cylinder.034_mesh21",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2fb4f95becc56248b66da5b5aa8fab47",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "8b58612fd6b99f4b8c74d71ca77f7f64"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cylinder.037_mesh20",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2b75cd7c142b2548b71409d0b0f7da20",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "2dce498e03078e45be2f755396f4449a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Knee_Joints.005_mesh19",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "b80f24441d0823478e6c9acc1ea1bf06",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "b0838fc3b7746e418b5373b775f82ba1"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__d3_mesh18",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "b80f24441d0823478e6c9acc1ea1bf06",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "59b65d1ab7d3534cb21cfcfc7310b109"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cylinder.043_mesh17",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "b80f24441d0823478e6c9acc1ea1bf06",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "9008b63e6d2a8341993344862ce73a40"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Lantern rungs.004_mesh16",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2fb4f95becc56248b66da5b5aa8fab47",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "281adc09f6f5ee419a3dc12c3e47a833"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Lantern rungs.005_mesh15",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2fb4f95becc56248b66da5b5aa8fab47",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "f19cbb9cf6aebc459c1dac6d7a00d239"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cube.005_mesh14",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2b75cd7c142b2548b71409d0b0f7da20",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "d61061bd3f9e3d42b65a5c9dc7354c25"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Torus.002_mesh13",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "b80f24441d0823478e6c9acc1ea1bf06",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "ffe39ca49641194892fff817d441adbb"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cylinder.038_mesh12",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2b75cd7c142b2548b71409d0b0f7da20",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "2d720b13530696429e9fb612059278c6"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__NurbsPath.005_mesh11",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "f6bc06080a2e7f45b7b928dfbf51b579",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "8d950d63b7980b4f9d2b7d286d99b40d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cylinder.041_mesh10",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2b75cd7c142b2548b71409d0b0f7da20",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "d727a6d79c0c504ba86ef36989c59bb5"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Upper_Arm.002_mesh9",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "f6bc06080a2e7f45b7b928dfbf51b579",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "5ffb056244a8db408c8666d437a89359"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__NurbsPath.004_mesh8",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "f6bc06080a2e7f45b7b928dfbf51b579",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "93b815f7387ff44f98bf630e427e6ac4"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Sphere.007_mesh7",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2fb4f95becc56248b66da5b5aa8fab47",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "a31c4c43c7e1b24bbd3d8fa690eae90a"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Ankle_Joints.004_mesh6",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "b80f24441d0823478e6c9acc1ea1bf06",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "2f37be78848d234593617578e9038467"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cylinder.050_mesh5",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "f6bc06080a2e7f45b7b928dfbf51b579",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "4795d00aa9df8848bb8940a41cfde31d"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pSphere2_mesh4",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "c62afd5c3aa7e44791fcb7afd67c538f",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "aa4ffc3e13ab4046b80c78f4e929928b"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cylinder.048_mesh3",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "f6bc06080a2e7f45b7b928dfbf51b579",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "950e9e83e4b69e4db5531027feab9ce8"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cylinder.049_mesh2",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "f6bc06080a2e7f45b7b928dfbf51b579",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "248a68ac92ff734eb932db99198066dc"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__Cylinder.040_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2b75cd7c142b2548b71409d0b0f7da20",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "components": {
+        "IDComponent": {
+          "guid": "094dbe800f7448418d716ea0de89b13f"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_BrokenWalker03.fbx_pasted__ShoulderPads.002_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "2b75cd7c142b2548b71409d0b0f7da20",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "051c5e02b26fa540bda5f52609096817",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    }
+  ]
+}
