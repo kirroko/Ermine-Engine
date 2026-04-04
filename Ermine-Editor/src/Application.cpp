@@ -33,7 +33,7 @@ int main()
 {
     Logger::Init();
 
-    GLFWwindow* window = Window::InitWindow(1920,1080, "Ermine Editor 0.4");
+    GLFWwindow* window = Window::InitWindow(1920,1080, "Ermine Editor 1.0");
     if (window == nullptr)
         return -1;
 
