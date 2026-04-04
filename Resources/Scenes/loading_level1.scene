@@ -44,7 +44,7 @@
       }
     },
     {
-      "id": 4,
+      "id": 2,
       "components": {
         "IDComponent": {
           "guid": "f43049e552e0fb49a7d1805b2f5c504e"
@@ -86,17 +86,17 @@
                   "t": 3,
                   "v": "../Resources/Scenes/m4-test_copy_copy.scene"
                 },
+                "videoDurationSeconds": {
+                  "t": 0,
+                  "v": 2.0999999046325685
+                },
                 "VideoFileName": {
                   "t": 3,
                   "v": "LoadingScreen_v1.mpeg"
                 },
-                "videoDurationSeconds": {
-                  "t": 0,
-                  "v": 2.0
-                },
                 "assumedFPS": {
-                  "t": 1,
-                  "v": 60
+                  "t": 0,
+                  "v": 60.0
                 }
               }
             }
@@ -105,7 +105,7 @@
       }
     },
     {
-      "id": 5,
+      "id": 3,
       "components": {
         "IDComponent": {
           "guid": "b1e2f3a4c5d6e7f8a9b0c1d2e3f4a5b6"
@@ -209,7 +209,7 @@
     "exposure": 1.0,
     "contrast": 1.0,
     "saturation": 1.0,
-    "gamma": 2.1999998092651369,
+    "gamma": 2.8000001907348635,
     "vignetteIntensity": 0.30000001192092898,
     "vignetteRadius": 0.800000011920929,
     "vignetteCoverage": 0.0,
