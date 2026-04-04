@@ -1,15 +1,28 @@
 {
   "entities": [
     {
-      "id": 0,
+      "id": 1,
       "components": {
         "IDComponent": {
           "guid": "e1f2a3b4c5d6e7f8a1b2c3d4e5f6a7b8"
         },
         "Transform": {
-          "position": [0.0, 0.0, 5.0],
-          "rotation": [0.0, 0.0, 0.0, 1.0],
-          "scale": [1.0, 1.0, 1.0]
+          "position": [
+            0.0,
+            0.0,
+            5.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
         },
         "ObjectMetaData": {
           "name": "LoadingCamera",
@@ -31,7 +44,7 @@
       }
     },
     {
-      "id": 1,
+      "id": 2,
       "components": {
         "IDComponent": {
           "guid": "d50f519b22fb0a52b1a58ecf4d96c6eb"
@@ -80,77 +93,7 @@
       }
     },
     {
-      "id": 2,
-      "components": {
-        "IDComponent": {
-          "guid": "7b38f67d6a6628580f5d7ef0f7e9b7a8"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "loading screen level 2",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "UIImageComponent": {
-          "imagePath": "Resources/Textures/UI/LoadingScreen_Level2.png",
-          "fullscreen": true,
-          "position": [
-            0.5,
-            0.5,
-            0.0
-          ],
-          "width": 1.0,
-          "height": 1.0,
-          "tintColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "alpha": 1.0,
-          "maintainAspectRatio": true,
-          "caption": "",
-          "showCaption": false,
-          "captionColor": [
-            1.0,
-            1.0,
-            1.0
-          ],
-          "captionFontSize": 24.0,
-          "captionPosition": [
-            0.5,
-            0.10000000149011612,
-            0.0
-          ],
-          "renderOrder": 0
-        },
-        "GlobalTransform": {},
-        "ScriptsComponent": {
-          "scripts": []
-        }
-      }
-    },
-    {
-      "id": 3,
+      "id": 4,
       "components": {
         "IDComponent": {
           "guid": "a54150f663f10c5ab8e2916c3e6d615f"
@@ -185,21 +128,97 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "LoadingScreen",
+              "class": "CutsceneVideo",
               "enabled": true,
               "fields": {
-                "nextScenePath": {
+                "nextSceneName": {
                   "t": 3,
                   "v": "../Resources/Scenes/Level2Wcol.scene"
                 },
-                "displayDuration": {
+                "VideoFileName": {
+                  "t": 3,
+                  "v": "LoadingScreen_v1.mpeg"
+                },
+                "videoDurationSeconds": {
                   "t": 0,
                   "v": 2.0
+                },
+                "assumedFPS": {
+                  "t": 0,
+                  "v": 60.0
                 }
               }
             }
           ]
         }
+      }
+    },
+    {
+      "id": 5,
+      "components": {
+        "IDComponent": {
+          "guid": "c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "BlackScreenPrefab",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "HierarchyComponent": {
+          "parentGuid": "a54150f663f10c5ab8e2916c3e6d615f",
+          "depth": 1
+        },
+        "UIImageComponent": {
+          "imagePath": "Resources/Textures/black-screen_39.png",
+          "fullscreen": false,
+          "position": [
+            0.5,
+            0.5,
+            0.0
+          ],
+          "width": 1.0,
+          "height": 4.519999980926514,
+          "tintColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "alpha": 1.0,
+          "maintainAspectRatio": true,
+          "caption": "",
+          "showCaption": false,
+          "captionColor": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "captionFontSize": 24.0,
+          "captionPosition": [
+            0.5,
+            0.10000000149011612,
+            0.0
+          ],
+          "renderOrder": 0
+        },
+        "GlobalTransform": {}
       }
     }
   ],
@@ -239,7 +258,7 @@
     "exposure": 1.0,
     "contrast": 1.0,
     "saturation": 1.0,
-    "gamma": 2.200000047683716,
+    "gamma": 2.1999998092651369,
     "vignetteIntensity": 0.30000001192092898,
     "vignetteRadius": 0.800000011920929,
     "vignetteCoverage": 0.0,
