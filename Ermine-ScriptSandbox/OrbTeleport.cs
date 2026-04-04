@@ -4,6 +4,7 @@ using System.Threading;
 
 public class OrbTeleport : MonoBehaviour
 {
+    public static bool shoot = false;
     private Transform origin;
     private Transform cam;
     private Animator anim;
@@ -136,58 +137,61 @@ public class OrbTeleport : MonoBehaviour
 
     void Update()
     {
-        if (dashEndRadialBlurRestoreActive)
+        if (shoot)
         {
-            UpdateDashEndRadialBlurRestore();
-        }
-
-        if (isTeleportDashing)
-        {
-            UpdateTeleportDash();
-            return;
-        }
-
-        timeSinceLastDamage += Time.deltaTime;
-
-        // Check if orb disappeared on its own (hit something, traveled too far, etc.)
-        if (orbShot && (orbProjectile == null || !orbProjectile.activeSelf))
-        {
-            Debug.Log("OrbTeleport: Orb vanished, resetting state");
-            orbShot = false;
-            SetSkillsForReadyToShoot();
-        }
-
-        // Regenerate health when orb is not out
-        if (!orbShot && timeSinceLastDamage >= regenDelay)
-        {
-            RegenerateHealth();
-        }
-
-
-        if (Input.GetMouseButton(0))
-        {
-            if (!orbShot)
+            if (dashEndRadialBlurRestoreActive)
             {
-                if (!CanShootOrb())
-                {
-                    // Optional feedback
-                    //GlobalAudio.PlaySFX("Error"); 
-                    return;
-                }
+                UpdateDashEndRadialBlurRestore();
+            }
 
-                ShootOrb();
-                orbShot = true;
+            if (isTeleportDashing)
+            {
+                UpdateTeleportDash();
                 return;
             }
 
-            TeleportToOrb();
-            orbShot = false;
+            timeSinceLastDamage += Time.deltaTime;
+
+            // Check if orb disappeared on its own (hit something, traveled too far, etc.)
+            if (orbShot && (orbProjectile == null || !orbProjectile.activeSelf))
+            {
+                Debug.Log("OrbTeleport: Orb vanished, resetting state");
+                orbShot = false;
+                SetSkillsForReadyToShoot();
+            }
+
+            // Regenerate health when orb is not out
+            if (!orbShot && timeSinceLastDamage >= regenDelay)
+            {
+                RegenerateHealth();
+            }
+
+
+            if (Input.GetMouseButton(0))
+            {
+                if (!orbShot)
+                {
+                    if (!CanShootOrb())
+                    {
+                        // Optional feedback
+                        //GlobalAudio.PlaySFX("Error"); 
+                        return;
+                    }
+
+                    ShootOrb();
+                    orbShot = true;
+                    return;
+                }
+
+                TeleportToOrb();
+                orbShot = false;
+            }
+
+
+            // Recall orb on 'R' key press
+            if (Input.GetKeyDown(KeyCode.R))
+                RecallOrb();
         }
-
-
-        // Recall orb on 'R' key press
-        if (Input.GetKeyDown(KeyCode.R))
-            RecallOrb();
     }
 
     void RegenerateHealth()
