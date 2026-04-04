@@ -297,7 +297,8 @@ public class PlayerController2 : MonoBehaviour
                     objobj.name == "GearKeyPrefab" ||
                     objobj.name == "ComputerDoorUnlock1" ||
                     objobj.name == "ComputerDoorUnlock2" ||
-                    objobj.name == "SyringeWeapon")
+                    objobj.name == "SyringeWeapon" ||
+                    objobj.name == "EmergencyComputer")
                 {
                     SceneManager.SetEntityOutline(objobj.GetInstanceID());
                 }

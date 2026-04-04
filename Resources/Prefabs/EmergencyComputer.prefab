@@ -8,7 +8,7 @@
         "Transform": {
           "position": [
             -22.297834396362306,
-            9.274139404296875,
+            9.92724609375,
             45.67808151245117
           ],
           "rotation": [
@@ -18,15 +18,32 @@
             0.7071067094802856
           ],
           "scale": [
-            0.029997648671269418,
+            0.02999742701649666,
             0.029999999329447748,
-            0.029997648671269418
+            0.02999742701649666
           ]
         },
         "ObjectMetaData": {
           "name": "EmergencyComputer",
           "tag": "Untagged",
           "selfActive": true
+        },
+        "AudioComponent": {
+          "soundName": "../Resources/Audio/earthquake.mp3",
+          "eventName": "earthquake",
+          "useRandomVariation": false,
+          "is3D": false,
+          "isLooping": false,
+          "isStreaming": false,
+          "volume": 0.5,
+          "followTransform": true,
+          "minDistance": 1.0,
+          "maxDistance": 100.0,
+          "playOnStart": false,
+          "useReverb": false,
+          "reverbWetLevel": -12.0,
+          "reverbDryLevel": 0.0,
+          "reverbDecayTime": 1.0
         },
         "PhysicComponent": {
           "bodyType": "Rigid",

@@ -300,7 +300,15 @@
                 },
                 "rumbleYawDuration": {
                   "t": 0,
-                  "v": 2.0
+                  "v": 7.0
+                },
+                "pitchIntensity": {
+                  "t": 0,
+                  "v": 0.5
+                },
+                "rollIntensity": {
+                  "t": 0,
+                  "v": 0.5
                 }
               }
             },
@@ -3606,7 +3614,7 @@
         "Transform": {
           "position": [
             -22.297834396362306,
-            9.274139404296875,
+            9.92724609375,
             45.67808151245117
           ],
           "rotation": [
@@ -3616,15 +3624,32 @@
             0.7071067094802856
           ],
           "scale": [
-            0.029997648671269418,
+            0.02999742701649666,
             0.029999999329447748,
-            0.029997648671269418
+            0.02999742701649666
           ]
         },
         "ObjectMetaData": {
           "name": "EmergencyComputer",
           "tag": "Untagged",
           "selfActive": true
+        },
+        "AudioComponent": {
+          "soundName": "../Resources/Audio/earthquake.mp3",
+          "eventName": "earthquake",
+          "useRandomVariation": false,
+          "is3D": false,
+          "isLooping": false,
+          "isStreaming": false,
+          "volume": 0.5,
+          "followTransform": true,
+          "minDistance": 1.0,
+          "maxDistance": 100.0,
+          "playOnStart": false,
+          "useReverb": false,
+          "reverbWetLevel": -12.0,
+          "reverbDryLevel": 0.0,
+          "reverbDecayTime": 1.0
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
@@ -3899,9 +3924,9 @@
           "selfActive": false
         },
         "GlobalAudioComponent": {
-          "masterVolume": 1.0,
-          "musicVolume": 0.23999999463558198,
-          "sfxVolume": 1.0,
+          "masterVolume": 0.285959392786026,
+          "musicVolume": 0.30125296115875246,
+          "sfxVolume": 0.4233565330505371,
           "ambienceVolume": 0.10000000149011612,
           "voiceVolume": 1.0,
           "autoPlay": true,
@@ -3982,6 +4007,21 @@
               "name": "LightDamageLoop",
               "path": "../Resources/Audio/LightDamage_Loop.wav",
               "volume": 0.3499999940395355
+            },
+            {
+              "name": "earthquake",
+              "path": "../Resources/Audio/earthquake.mp3",
+              "volume": 1.0
+            },
+            {
+              "name": "test_sfx",
+              "path": "../Resources/Audio/",
+              "volume": 1.0
+            },
+            {
+              "name": "alarm",
+              "path": "../Resources/Audio/Alarms.wav",
+              "volume": 1.0
             }
           ],
           "ambience": [
@@ -4356,13 +4396,13 @@
           ]
         },
         "ObjectMetaData": {
-          "name": "Rotating floor 1",
+          "name": "Rotating floorEmgcy",
           "tag": "Untagged",
           "selfActive": true
         },
         "AudioComponent": {
-          "soundName": "../Resources\\Audio\\RotatingPlatform_Loop.wav",
-          "eventName": "",
+          "soundName": "../Resources\\Audio\\Alarms.wav",
+          "eventName": "alarm",
           "useRandomVariation": false,
           "is3D": true,
           "isLooping": true,
@@ -4416,7 +4456,7 @@
               "fields": {
                 "speed": {
                   "t": 0,
-                  "v": 0.800000011920929
+                  "v": 2.0
                 },
                 "active": {
                   "t": 2,
@@ -4947,7 +4987,7 @@
     "exposure": 1.0,
     "contrast": 1.0,
     "saturation": 1.0,
-    "gamma": 2.1999998092651369,
+    "gamma": 1.912495732307434,
     "vignetteIntensity": 0.30000001192092898,
     "vignetteRadius": 0.800000011920929,
     "vignetteCoverage": 0.0,
