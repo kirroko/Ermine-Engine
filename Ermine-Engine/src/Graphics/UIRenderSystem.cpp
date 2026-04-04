@@ -254,12 +254,12 @@ namespace Ermine
         m_uiShader->SetUniformMatrix4fv("projection", m_orthoProjection);
         m_uiShader->SetUniform1i("uUseTexture", 0); // Default: don't use textures
 
-        static bool firstRender = true;
-        if (firstRender)
-        {
-            EE_CORE_INFO("UIRenderSystem: First render call! Entities count: {}", m_Entities.size());
-            firstRender = false;
-        }
+        //static bool firstRender = true;
+        //if (firstRender)
+        //{
+        //    EE_CORE_INFO("UIRenderSystem: First render call! Entities count: {}", m_Entities.size());
+        //    firstRender = false;
+        //}
 
         // Render UIImageComponent entities sorted by renderOrder
         auto& ecs = ECS::GetInstance();
@@ -286,16 +286,20 @@ namespace Ermine
         std::vector<EntityID> sliderEntities;
         std::vector<EntityID> textEntities;
 
+        std::vector<EntityID> healthbarEntities;
+        std::vector<EntityID> crosshairEntities;
+        std::vector<EntityID> skillsEntities;
+
         imageEntities.reserve(m_Entities.size());
         buttonEntities.reserve(m_Entities.size());
         sliderEntities.reserve(m_Entities.size());
         textEntities.reserve(m_Entities.size());
 
-        for (EntityID entity : m_Entities)
+        for (EntityID entity = 1; entity < MAX_ENTITIES; ++entity)
         {
             if (!ecs.IsEntityValid(entity))
                 continue;
-            if (!isEntityActiveCached(entity))
+            if (!IsEntityActiveInHierarchy(entity))
                 continue;
 
             if (ecs.HasComponent<UIImageComponent>(entity))
@@ -309,6 +313,13 @@ namespace Ermine
 
             if (ecs.HasComponent<UITextComponent>(entity))
                 textEntities.push_back(entity);
+
+            if (ecs.HasComponent<UIHealthbarComponent>(entity))
+                healthbarEntities.push_back(entity);
+            if (ecs.HasComponent<UICrosshairComponent>(entity))
+                crosshairEntities.push_back(entity);
+            if (ecs.HasComponent<UISkillsComponent>(entity))
+                skillsEntities.push_back(entity);
         }
 
         ranges::sort(imageEntities, [&ecs](EntityID a, EntityID b)
@@ -451,49 +462,71 @@ namespace Ermine
 
         // Render new separate UI components (skip when game is paused — pause background covers them)
         if (!UIButtonSystem::IsGamePaused())
-        for (auto& entity : m_Entities)
         {
-            if (!ecs.IsEntityValid(entity))
-                continue;
-
-            if (!IsEntityActiveInHierarchy(entity))
-                continue;
-
-            // Render UIHealthbarComponent
-            if (const auto& healthbar =  ecs.TryGetComponent<UIHealthbarComponent>(entity))
+            for (EntityID entity : healthbarEntities)
             {
-                if (healthbar->showHealthbar)
-                    RenderHealthBarNew(*healthbar);
+                const auto& healthbar = ecs.GetComponent<UIHealthbarComponent>(entity);
+                if (healthbar.showHealthbar)
+                    RenderHealthBarNew(healthbar);
             }
 
-            // Render UICrosshairComponent
-            if (const auto& crosshair = ecs.TryGetComponent<UICrosshairComponent>(entity))
+            for (EntityID entity : crosshairEntities)
             {
-                if (crosshair->showCrosshair)
-                    RenderCrosshairNew(*crosshair);
+                const auto& crosshair = ecs.GetComponent<UICrosshairComponent>(entity);
+                if (crosshair.showCrosshair)
+                    RenderCrosshairNew(crosshair);
             }
 
-            // Render UISkillsComponent
-            if (const auto& skills = ecs.TryGetComponent<UISkillsComponent>(entity))
+            for (EntityID entity : skillsEntities)
             {
-                if (skills->showSkills)
-                    RenderSkillSlotsNew(*skills, entity);
-            }
-
-            // Render UIManaBarComponent
-            if (const auto& manaBar = ecs.TryGetComponent<UIManaBarComponent>(entity))
-            {
-                if (manaBar->showManaBar)
-                    RenderManaBarNew(*manaBar);
-            }
-
-            // Render UIBookCounterComponent
-            if (const auto& bookCounter = ecs.TryGetComponent<UIBookCounterComponent>(entity))
-            {
-                if (bookCounter->showBookCounter)
-                    RenderBookCounterNew(*bookCounter);
+                const auto& skills = ecs.GetComponent<UISkillsComponent>(entity);
+                if (skills.showSkills)
+                    RenderSkillSlotsNew(skills, entity);
             }
         }
+        //for (auto& entity : m_Entities)
+        //{
+        //    if (!ecs.IsEntityValid(entity))
+        //        continue;
+
+        //    if (!isEntityActiveCached(entity))
+        //        continue;
+
+        //    // Render UIHealthbarComponent
+        //    if (const auto& healthbar =  ecs.TryGetComponent<UIHealthbarComponent>(entity))
+        //    {
+        //        if (healthbar->showHealthbar)
+        //            RenderHealthBarNew(*healthbar);
+        //    }
+
+        //    // Render UICrosshairComponent
+        //    if (const auto& crosshair = ecs.TryGetComponent<UICrosshairComponent>(entity))
+        //    {
+        //        if (crosshair->showCrosshair)
+        //            RenderCrosshairNew(*crosshair);
+        //    }
+
+        //    // Render UISkillsComponent
+        //    if (const auto& skills = ecs.TryGetComponent<UISkillsComponent>(entity))
+        //    {
+        //        if (skills->showSkills)
+        //            RenderSkillSlotsNew(*skills, entity);
+        //    }
+
+        //    // Render UIManaBarComponent
+        //    if (const auto& manaBar = ecs.TryGetComponent<UIManaBarComponent>(entity))
+        //    {
+        //        if (manaBar->showManaBar)
+        //            RenderManaBarNew(*manaBar);
+        //    }
+
+        //    // Render UIBookCounterComponent
+        //    if (const auto& bookCounter = ecs.TryGetComponent<UIBookCounterComponent>(entity))
+        //    {
+        //        if (bookCounter->showBookCounter)
+        //            RenderBookCounterNew(*bookCounter);
+        //    }
+        //}
 
         // Render UIButtonComponent entities sorted by renderOrder
         for (EntityID entity : buttonEntities)
@@ -540,7 +573,6 @@ namespace Ermine
     {
         auto& ecs = ECS::GetInstance();
 
-        // Safety cap to avoid infinite loop if hierarchy data is malformed (cycle).
         constexpr int MAX_HIERARCHY_DEPTH = 256;
         int depth = 0;
 

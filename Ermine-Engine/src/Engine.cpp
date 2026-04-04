@@ -607,7 +607,7 @@ void engine::Shutdown()
 	cfg.themeMode = SettingsGUI::GetMode();
 
 #if defined(EE_EDITOR)
-	cfg.title = "Ermine Editor 0.4";
+	cfg.title = "Ermine Editor 1.0";
 #else
 	cfg.title = "Machina";
 #endif
