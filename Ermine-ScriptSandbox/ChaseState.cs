@@ -416,6 +416,9 @@ public class Chase : MonoBehaviour
             if (anim != null)
                 anim.SetBool("IsMoving", false);
 
+            // Stop any playing chase VO before transitioning to attack
+            GlobalAudio.StopVoice();
+            
             StateMachine.RequestNextState(entityID);
             return;
         }
