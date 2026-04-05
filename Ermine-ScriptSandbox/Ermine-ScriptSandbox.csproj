@@ -101,6 +101,7 @@
     <Compile Include="PlayerController.cs" />
     <Compile Include="PlayerController2.cs" />
     <Compile Include="AlarmLights.cs" />
+    <Compile Include="RotatePlatform.cs" />
     <Compile Include="RotatingPlatform.cs" />
     <Compile Include="Sandbox.cs" />
     <Compile Include="Sandbox2.cs" />
