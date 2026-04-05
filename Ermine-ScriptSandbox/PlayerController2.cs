@@ -298,6 +298,7 @@ public class PlayerController2 : MonoBehaviour
                     objobj.name == "ComputerDoorUnlock1" ||
                     objobj.name == "ComputerDoorUnlock2" ||
                     objobj.name == "SyringeWeapon" ||
+                    objobj.name == "SwitchShortCut" ||
                     objobj.name == "EmergencyComputer")
                 {
                     SceneManager.SetEntityOutline(objobj.GetInstanceID());
