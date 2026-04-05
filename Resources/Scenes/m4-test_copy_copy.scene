@@ -51224,7 +51224,7 @@
             0.10000000149011612,
             0.0
           ],
-          "renderOrder": 0
+          "renderOrder": -1
         },
         "GlobalTransform": {}
       }
@@ -51292,7 +51292,7 @@
             0.10000000149011612,
             0.0
           ],
-          "renderOrder": 0
+          "renderOrder": -1
         },
         "GlobalTransform": {}
       }
@@ -51360,7 +51360,7 @@
             0.10000000149011612,
             0.0
           ],
-          "renderOrder": 0
+          "renderOrder": -1
         },
         "GlobalTransform": {}
       }
@@ -51428,7 +51428,7 @@
             0.10000000149011612,
             0.0
           ],
-          "renderOrder": 0
+          "renderOrder": 1
         },
         "GlobalTransform": {}
       }
@@ -51496,7 +51496,7 @@
             0.10000000149011612,
             0.0
           ],
-          "renderOrder": 0
+          "renderOrder": 1
         },
         "GlobalTransform": {}
       }
@@ -51564,7 +51564,7 @@
             0.10000000149011612,
             0.0
           ],
-          "renderOrder": 0
+          "renderOrder": 1
         },
         "GlobalTransform": {}
       }
@@ -51632,7 +51632,7 @@
             0.10000000149011612,
             0.0
           ],
-          "renderOrder": 0
+          "renderOrder": 1
         },
         "GlobalTransform": {}
       }
@@ -52180,7 +52180,7 @@
             0.10000000149011612,
             0.0
           ],
-          "renderOrder": 0
+          "renderOrder": 1
         },
         "GlobalTransform": {}
       }
@@ -52248,7 +52248,7 @@
             0.10000000149011612,
             0.0
           ],
-          "renderOrder": 0
+          "renderOrder": 1
         },
         "GlobalTransform": {}
       }
@@ -52316,7 +52316,7 @@
             0.10000000149011612,
             0.0
           ],
-          "renderOrder": 0
+          "renderOrder": 1
         },
         "GlobalTransform": {}
       }
@@ -52384,7 +52384,7 @@
             0.10000000149011612,
             0.0
           ],
-          "renderOrder": 0
+          "renderOrder": 1
         },
         "GlobalTransform": {}
       }
@@ -67394,7 +67394,7 @@
             0.10000000149011612,
             0.0
           ],
-          "renderOrder": -2
+          "renderOrder": 0
         },
         "GlobalTransform": {}
       }
@@ -78204,7 +78204,7 @@
         "Transform": {
           "position": [
             17.361753463745118,
-            -1.1931959390640259,
+            -19.545000076293947,
             -110.39832305908203
           ],
           "rotation": [
@@ -90983,14 +90983,14 @@
         },
         "UIImageComponent": {
           "imagePath": "Resources/Textures/UI/UI UPDATED/Black Overlay.png",
-          "fullscreen": true,
+          "fullscreen": false,
           "position": [
             0.5,
             0.5,
             0.0
           ],
           "width": 1.0,
-          "height": 1.0,
+          "height": 3.0399999618530275,
           "tintColor": [
             1.0,
             1.0,
@@ -92837,6 +92837,191 @@
         },
         "HierarchyComponent": {
           "parentGuid": "1660dcb918588444ad74837673793311",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1923,
+      "components": {
+        "IDComponent": {
+          "guid": "8321b7f6b70c4c40a7a89a5f39abda01"
+        },
+        "Transform": {
+          "position": [
+            17.361753463745118,
+            -1.1931959390640259,
+            -110.39832305908203
+          ],
+          "rotation": [
+            -4.371138118131057e-8,
+            1.0,
+            -4.3711402497592647e-8,
+            1.9106869474723628e-15
+          ],
+          "scale": [
+            0.0350412055850029,
+            0.048006150871515277,
+            0.03969283029437065
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "WallSmall (111)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Static",
+          "mass": 0.0,
+          "shapeType": "CustomMesh",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ModelComponent": {
+          "model": "ART1_wall_new_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1924,
+      "components": {
+        "IDComponent": {
+          "guid": "895cc6dd0c895d48bd25ff8b5f673076"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "70e78d85217a10418d6981d4cfbc774b",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "8321b7f6b70c4c40a7a89a5f39abda01",
+          "depth": 1
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1925,
+      "components": {
+        "IDComponent": {
+          "guid": "d7ebdc3b470a294d870812d6a898ffd1"
+        },
+        "Transform": {
+          "position": [
+            18.062000274658204,
+            -20.788000106811525,
+            -111.0
+          ],
+          "rotation": [
+            0.0,
+            0.7071068286895752,
+            0.0,
+            0.7071067094802856
+          ],
+          "scale": [
+            0.023000000044703485,
+            0.04648089408874512,
+            0.030718697234988214
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "wall11 (5)",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_wall_new_low.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "depth": 0
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 1926,
+      "components": {
+        "IDComponent": {
+          "guid": "1874ac1c526e33469d35ea98016fdf24"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "1c7e368869a95a499eccbed936214dae",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "d7ebdc3b470a294d870812d6a898ffd1",
           "depth": 1
         },
         "GlobalTransform": {}

@@ -452,6 +452,32 @@ public class PlayerController2 : MonoBehaviour
                     interactTimer = 0f;
                 }
 
+                // Switch2 -> ElectricFence
+                if (obj.name == "SwitchShortCut" && interactTimer >= 1f)
+                {
+                    GlobalAudio.PlaySFX("SwitchOn");
+
+                    if (!flipSwitch2)
+                    {
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
+
+                        flipSwitch2 = true;
+                        GameObject fence = GameObject.Find("ElectricFenc 5");
+                        if (fence != null) fence.SetActive(false);
+                    }
+                    else
+                    {
+                        Quaternion rotate180Z = new Quaternion(0f, 0f, 1f, 0f);
+                        obj.transform.rotation = obj.transform.rotation * rotate180Z;
+
+                        flipSwitch2 = false;
+                        GameObject fence = GameObject.Find("ElectricFenc 5");
+                        if (fence != null) fence.SetActive(true);
+                    }
+                    interactTimer = 0f;
+                }
+
                 if (obj.name == "Paper1" && interactTimer > 1f)
                 {
                     // Collect book
