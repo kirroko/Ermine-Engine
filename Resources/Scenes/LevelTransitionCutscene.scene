@@ -84,15 +84,15 @@
               "fields": {
                 "nextSceneName": {
                   "t": 3,
-                  "v": "../Resources/Scenes/Level2Wcol_TestEndIdea.scene"
-                },
-                "videoDurationSeconds": {
-                  "t": 0,
-                  "v": 11.0
+                  "v": "../Resources/Scenes/loading_level2.scene"
                 },
                 "VideoFileName": {
                   "t": 3,
                   "v": "ElevatorAnimation_Final.mpeg"
+                },
+                "videoDurationSeconds": {
+                  "t": 0,
+                  "v": 11.0
                 },
                 "assumedFPS": {
                   "t": 0,
@@ -209,7 +209,7 @@
     "exposure": 1.0,
     "contrast": 1.0,
     "saturation": 1.0,
-    "gamma": 1.5999999046325684,
+    "gamma": 2.8000001907348635,
     "vignetteIntensity": 0.30000001192092898,
     "vignetteRadius": 0.800000011920929,
     "vignetteCoverage": 0.0,

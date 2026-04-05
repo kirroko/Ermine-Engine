@@ -133,15 +133,15 @@
               "fields": {
                 "nextSceneName": {
                   "t": 3,
-                  "v": "../Resources/Scenes/Level2Wcol.scene"
-                },
-                "videoDurationSeconds": {
-                  "t": 0,
-                  "v": 2.0999999046325685
+                  "v": "../Resources/Scenes/Level2Wcol_TestEndIdea.scene"
                 },
                 "VideoFileName": {
                   "t": 3,
                   "v": "LoadingScreen_v1.mpeg"
+                },
+                "videoDurationSeconds": {
+                  "t": 0,
+                  "v": 2.0999999046325685
                 },
                 "assumedFPS": {
                   "t": 0,

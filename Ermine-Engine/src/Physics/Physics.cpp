@@ -1342,6 +1342,11 @@ namespace Ermine
 	***************************************************************************/
 	void Physics::SetPosition(EntityID ID, Ermine::Vec3 position)
 	{
+		if (!ECS::GetInstance().HasComponent<PhysicComponent>(ID))
+		{
+			return;
+		}
+
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
 
 		auto bodyPos = ECS::GetInstance().GetComponent<PhysicComponent>(ID).colliderPivot;
@@ -1363,6 +1368,11 @@ namespace Ermine
 	***************************************************************************/
 	void Physics::SetRotation(EntityID ID, Ermine::Vec3 rotation)
 	{
+		if (!ECS::GetInstance().HasComponent<PhysicComponent>(ID))
+		{
+			return;
+		}
+
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
 
 		// Convert input Euler angles to quaternion
@@ -1398,6 +1408,11 @@ namespace Ermine
 	***************************************************************************/
 	void Physics::SetRotation(EntityID ID, Ermine::Quaternion rotation)
 	{
+		if (!ECS::GetInstance().HasComponent<PhysicComponent>(ID))
+		{
+			return;
+		}
+
 		auto& bodyInterface = mPhysicsSystem.GetBodyInterface();
 
 		Ermine::Quaternion rot = QuaternionNormalize(rotation);
