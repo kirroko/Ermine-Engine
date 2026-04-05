@@ -152,7 +152,8 @@ namespace Ermine
 
         if (globalAudioEntity != MAX_ENTITIES)
         {
-            globalAudio = &ecs.GetComponent<GlobalAudioComponent>(globalAudioEntity);
+            if (ecs.HasComponent<GlobalAudioComponent>(globalAudioEntity))
+                globalAudio = &ecs.GetComponent<GlobalAudioComponent>(globalAudioEntity);
         }
 
         // Get normalized mouse position once per frame
