@@ -21,8 +21,8 @@
           "selfActive": false
         },
         "GlobalAudioComponent": {
-          "masterVolume": 1.0,
-          "musicVolume": 0.23999999463558198,
+          "masterVolume": 0.496822714805603,
+          "musicVolume": 0.19973081350326539,
           "sfxVolume": 1.0,
           "ambienceVolume": 0.10000000149011612,
           "voiceVolume": 1.0,
@@ -19843,6 +19843,840 @@
         "HierarchyComponent": {
           "parentGuid": "feff02cde6cdfd4aa3b29781033e0321",
           "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 400,
+      "components": {
+        "IDComponent": {
+          "guid": "97e1312fc0cd1b4787a565d94c227abd"
+        },
+        "Transform": {
+          "position": [
+            16.248126983642579,
+            3.9966421127319338,
+            -181.49838256835938
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Jail base top floor 1",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            5.0,
+            0.5,
+            5.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "321b3e7c1d89db4498257e775f32e9d1",
+          "depth": 1
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": [
+            {
+              "class": "VerticalPlatform",
+              "enabled": true,
+              "fields": {
+                "moveDistance": {
+                  "t": 0,
+                  "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": 401,
+      "components": {
+        "IDComponent": {
+          "guid": "23c1223f5c34df499b1b24cac371fe08"
+        },
+        "Transform": {
+          "position": [
+            0.09436798095703125,
+            8.069235801696778,
+            -0.1587066650390625
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "chain",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            0.5,
+            15.0,
+            0.5
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "97e1312fc0cd1b4787a565d94c227abd",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 402,
+      "components": {
+        "IDComponent": {
+          "guid": "67355588c364aa4494cd4be618330e6f"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -0.09999990463256836,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Jail base top floor 2",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            -47.29999923706055,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            5.0,
+            0.5,
+            5.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "97e1312fc0cd1b4787a565d94c227abd",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 403,
+      "components": {
+        "IDComponent": {
+          "guid": "939e7937d2c32843a805d20628abac80"
+        },
+        "Transform": {
+          "position": [
+            2.5116958618164064,
+            -4.192999839782715,
+            -1.462127685546875
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Jail Bars 6",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            -71.44999694824219,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            3.0,
+            8.0,
+            0.5
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "97e1312fc0cd1b4787a565d94c227abd",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 404,
+      "components": {
+        "IDComponent": {
+          "guid": "c559e3d3734c984687da0d06b5be5a7a"
+        },
+        "Transform": {
+          "position": [
+            -2.255438804626465,
+            -4.192999839782715,
+            -1.452789306640625
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Jail Bars 5",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            -119.19999694824219,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            3.0,
+            8.0,
+            0.5
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "97e1312fc0cd1b4787a565d94c227abd",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 405,
+      "components": {
+        "IDComponent": {
+          "guid": "d7b0096677ce5a4daf53b0957e615bb6"
+        },
+        "Transform": {
+          "position": [
+            2.4078731536865236,
+            -4.192999839782715,
+            1.2828521728515626
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Jail Bars 4",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            -119.19999694824219,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            3.0,
+            8.0,
+            0.5
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "97e1312fc0cd1b4787a565d94c227abd",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 406,
+      "components": {
+        "IDComponent": {
+          "guid": "b0f3b749fcf15545bb3e768db41a27d6"
+        },
+        "Transform": {
+          "position": [
+            -2.2229785919189455,
+            -4.192999839782715,
+            1.1999359130859376
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Jail Bars 3",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            -59.599998474121097,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            3.0,
+            8.0,
+            0.5
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "97e1312fc0cd1b4787a565d94c227abd",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 407,
+      "components": {
+        "IDComponent": {
+          "guid": "bc395f78c536f24497223971104ab382"
+        },
+        "Transform": {
+          "position": [
+            0.08367729187011719,
+            -4.192999839782715,
+            -2.788604736328125
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Jail Bars 2",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            3.0,
+            8.0,
+            0.5
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "97e1312fc0cd1b4787a565d94c227abd",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 408,
+      "components": {
+        "IDComponent": {
+          "guid": "1411e69a131bb74a80fa702e77178e68"
+        },
+        "Transform": {
+          "position": [
+            0.08367729187011719,
+            -4.192999839782715,
+            2.6104888916015627
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Jail Bars 1",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            3.0,
+            8.0,
+            0.5
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "97e1312fc0cd1b4787a565d94c227abd",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 409,
+      "components": {
+        "IDComponent": {
+          "guid": "44cb404b664a684ab7713dfb9c8a1de5"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -7.799612045288086,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Jail base floor 2",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            -47.29999923706055,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            5.0,
+            0.5,
+            5.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "97e1312fc0cd1b4787a565d94c227abd",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 410,
+      "components": {
+        "IDComponent": {
+          "guid": "73a0b0d499e6964e8257fe0bc07f7adc"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            -7.799612045288086,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Jail base floor 1",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "PhysicComponent": {
+          "bodyType": "Rigid",
+          "motionType": "Kinematic",
+          "mass": 0.0,
+          "shapeType": "Box",
+          "colliderpivot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "posx": false,
+          "posy": false,
+          "posz": false,
+          "colliderrot": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotx": false,
+          "roty": false,
+          "rotz": false,
+          "collidersize": [
+            5.0,
+            0.5,
+            5.0
+          ]
+        },
+        "HierarchyComponent": {
+          "parentGuid": "97e1312fc0cd1b4787a565d94c227abd",
+          "depth": 2
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 411,
+      "components": {
+        "IDComponent": {
+          "guid": "a85b7e5a0fd6284b93c7f7774b98ca1c"
+        },
+        "Transform": {
+          "position": [
+            0.06053733825683594,
+            -8.11653995513916,
+            -0.1057586669921875
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.05999999865889549,
+            0.05999999865889549,
+            0.05999999865889549
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "NewJailFloating",
+          "tag": "Untagged",
+          "selfActive": true
+        },
+        "ModelComponent": {
+          "model": "ART1_Floating_Jail_Cell.fbx",
+          "isSkinFile": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "97e1312fc0cd1b4787a565d94c227abd",
+          "depth": 2
+        },
+        "GlobalTransform": {},
+        "ScriptsComponent": {
+          "scripts": []
+        }
+      }
+    },
+    {
+      "id": 412,
+      "components": {
+        "IDComponent": {
+          "guid": "fff2dc79da37d341b8c2845c9f153f84"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Floating_Jail_Cell.fbx_group9_pCube85_mesh1",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "8b910c2619f08e409ef82fb2d8dfe7cf",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "a85b7e5a0fd6284b93c7f7774b98ca1c",
+          "depth": 3
+        },
+        "GlobalTransform": {}
+      }
+    },
+    {
+      "id": 413,
+      "components": {
+        "IDComponent": {
+          "guid": "69790986bf0735428672b20bb03f0c03"
+        },
+        "Transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "ObjectMetaData": {
+          "name": "Mesh_ART1_Floating_Jail_Cell.fbx_group9_pCube85_mesh0",
+          "tag": "Mesh",
+          "selfActive": true
+        },
+        "Material": {
+          "guid": "8b910c2619f08e409ef82fb2d8dfe7cf",
+          "flickerEmissive": false
+        },
+        "HierarchyComponent": {
+          "parentGuid": "a85b7e5a0fd6284b93c7f7774b98ca1c",
+          "depth": 3
         },
         "GlobalTransform": {}
       }
@@ -47288,9 +48122,9 @@
         },
         "Transform": {
           "position": [
-            -6.0,
+            0.30000001192092898,
             0.06639766693115235,
-            -0.480499267578125
+            -0.2800000011920929
           ],
           "rotation": [
             0.0,
@@ -47435,9 +48269,9 @@
         },
         "Transform": {
           "position": [
-            6.0,
+            0.30000001192092898,
             0.06639766693115235,
-            -0.480499267578125
+            -0.2800000011920929
           ],
           "rotation": [
             0.0,
@@ -49940,7 +50774,7 @@
           ]
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79",
+          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -50051,7 +50885,7 @@
           ]
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79",
+          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -50162,7 +50996,7 @@
           ]
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79",
+          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -50273,7 +51107,7 @@
           ]
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79",
+          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
           "flickerEmissive": false
         },
         "ModelComponent": {
@@ -71077,7 +71911,7 @@
           }
         },
         "Material": {
-          "guid": "bc8e6db2ba54b547956f897567a62d79",
+          "guid": "46b041ae5a6ec440b7fb244f7ee49a58",
           "flickerEmissive": false
         },
         "HierarchyComponent": {
@@ -88355,7 +89189,7 @@
           "trackImage": "Resources/Textures/UI/UI UPDATED/Audio_Bar.png",
           "fillImage": "Resources/Textures/UI/UI UPDATED/Audio_Fill.png",
           "handleImage": "Resources/Textures/UI/UI UPDATED/Audio_Indicator.png",
-          "value": 1.0,
+          "value": 0.496822714805603,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 1,
@@ -88458,7 +89292,7 @@
           "trackImage": "./Resources/Textures/UI/Audio_Bar.png",
           "fillImage": "./Resources/Textures/UI/Audio_Fill.png",
           "handleImage": "./Resources/Textures/UI/Audio_Indicator.png",
-          "value": 0.23999999463558198,
+          "value": 0.19973081350326539,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 2,
@@ -89692,7 +90526,7 @@
           "trackImage": "Resources/Textures/UI/UI UPDATED/Audio_Bar.png",
           "fillImage": "Resources/Textures/UI/UI UPDATED/Audio_Fill.png",
           "handleImage": "Resources/Textures/UI/UI UPDATED/Audio_Indicator.png",
-          "value": 0.5,
+          "value": 1.0,
           "minValue": 0.0,
           "maxValue": 1.0,
           "target": 5,
@@ -92230,7 +93064,7 @@
     "exposure": 1.003999948501587,
     "contrast": 1.093000054359436,
     "saturation": 1.1030000448226929,
-    "gamma": 2.200000047683716,
+    "gamma": 2.8000001907348635,
     "vignetteIntensity": 0.30000001192092898,
     "vignetteRadius": 0.800000011920929,
     "vignetteCoverage": 0.0,
