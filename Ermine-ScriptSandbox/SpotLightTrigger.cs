@@ -96,7 +96,12 @@ public class SpotLightTrigger : MonoBehaviour
         }
 
         if (player == null) return;
-        if (Physics.Internal_GetLightValue((ulong)gameObject.GetInstanceID()) == 0) return;
+        if (Physics.Internal_GetLightValue((ulong)gameObject.GetInstanceID()) == 0)
+        {
+            playerInside = false;
+            OnSpotExit();
+            return;
+        }
 
         bool inside = IsPointInsideSpot(player.transform.position);
 
