@@ -1083,6 +1083,39 @@ namespace Ermine
 				continue;
 			}
 
+			if (phys.shapeType == ShapeType::Box)
+			{
+				const JPH::AABox localBounds = body.GetShape()->GetLocalBounds();
+				const JPH::RMat44 world = body.GetCenterOfMassTransform();
+
+				JPH::Vec3 mn = localBounds.mMin;
+				JPH::Vec3 mx = localBounds.mMax;
+
+				JPH::RVec3 p000 = world * JPH::Vec3(mn.GetX(), mn.GetY(), mn.GetZ());
+				JPH::RVec3 p001 = world * JPH::Vec3(mn.GetX(), mn.GetY(), mx.GetZ());
+				JPH::RVec3 p010 = world * JPH::Vec3(mn.GetX(), mx.GetY(), mn.GetZ());
+				JPH::RVec3 p011 = world * JPH::Vec3(mn.GetX(), mx.GetY(), mx.GetZ());
+				JPH::RVec3 p100 = world * JPH::Vec3(mx.GetX(), mn.GetY(), mn.GetZ());
+				JPH::RVec3 p101 = world * JPH::Vec3(mx.GetX(), mn.GetY(), mx.GetZ());
+				JPH::RVec3 p110 = world * JPH::Vec3(mx.GetX(), mx.GetY(), mn.GetZ());
+				JPH::RVec3 p111 = world * JPH::Vec3(mx.GetX(), mx.GetY(), mx.GetZ());
+
+				mDebugRenderer->DrawLine(p000, p001, color);
+				mDebugRenderer->DrawLine(p000, p010, color);
+				mDebugRenderer->DrawLine(p000, p100, color);
+				mDebugRenderer->DrawLine(p111, p110, color);
+				mDebugRenderer->DrawLine(p111, p101, color);
+				mDebugRenderer->DrawLine(p111, p011, color);
+				mDebugRenderer->DrawLine(p001, p011, color);
+				mDebugRenderer->DrawLine(p001, p101, color);
+				mDebugRenderer->DrawLine(p010, p011, color);
+				mDebugRenderer->DrawLine(p010, p110, color);
+				mDebugRenderer->DrawLine(p100, p101, color);
+				mDebugRenderer->DrawLine(p100, p110, color);
+
+				continue;
+			}
+
 			JPH::AllHitCollisionCollector<JPH::TransformedShapeCollector> collector;
 			body.GetTransformedShape().CollectTransformedShapes(body.GetWorldSpaceBounds(), collector);
 
