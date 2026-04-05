@@ -221909,7 +221909,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "RotatingPlatform",
+              "class": "RotatePlatform",
               "enabled": true,
               "fields": {
                 "speed": {
@@ -222420,7 +222420,7 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "RotatingPlatform",
+              "class": "RotatePlatform",
               "enabled": true,
               "fields": {
                 "speed": {
@@ -223143,9 +223143,22 @@
         "ScriptsComponent": {
           "scripts": [
             {
-              "class": "RotatingPlatform",
+              "class": "RotatePlatform",
               "enabled": true,
-              "fields": {}
+              "fields": {
+                "speed": {
+                  "t": 0,
+                  "v": 0.800000011920929
+                },
+                "active": {
+                  "t": 2,
+                  "v": true
+                },
+                "audioActivationRange": {
+                  "t": 0,
+                  "v": 120.0
+                }
+              }
             }
           ]
         }
