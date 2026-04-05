@@ -710,6 +710,11 @@ public class PlayerController2 : MonoBehaviour
                         Debug.Log("EmergencySequenceController not found on " + obj.name);
                     }
 
+                    GameObject hint5 = GameObject.Find("Hint5");
+                    GameObject hint6 = GameObject.Find("Hint6");
+
+                    hint5.SetActive(false);
+                    hint6.SetActive(true);
 
                     interactTimer = 0f;
                 }
