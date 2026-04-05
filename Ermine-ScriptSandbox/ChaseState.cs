@@ -170,6 +170,13 @@ public class Chase : MonoBehaviour
             return;
 
         Physics.Internal_SetLightValue((ulong)enemyLight.GetInstanceID(), 0.0f);
+        SpotLightTrigger trigger = enemyLight.GetComponent<SpotLightTrigger>();
+        if (trigger != null)
+        {
+            trigger.playerInside = false;
+            trigger.OnSpotExit();
+            trigger.timer = 0;
+        }
         enemyLight.SetActive(false);
         GlobalAudio.StopSFX("LightDamageLoop");
         lightVisible = false;

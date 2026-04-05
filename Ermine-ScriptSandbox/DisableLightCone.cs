@@ -84,6 +84,7 @@ public class DisableLightCone : MonoBehaviour
         {
             trigger.playerInside = false;
             trigger.OnSpotExit();
+            trigger.timer = 0;
         }
 
         if (lightCone.activeSelf)

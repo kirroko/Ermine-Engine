@@ -18,7 +18,7 @@ public class SpotLightTrigger : MonoBehaviour
     public bool playerInside = false;
 
     private GameObject healthBar;
-    private float timer;
+    public float timer;
     private float health = 0f;
 
     private float regenRate;
@@ -98,8 +98,13 @@ public class SpotLightTrigger : MonoBehaviour
         if (player == null) return;
         if (Physics.Internal_GetLightValue((ulong)gameObject.GetInstanceID()) == 0)
         {
-            playerInside = false;
-            OnSpotExit();
+            if (playerInside)
+            {
+                playerInside = false;
+                OnSpotExit();
+            }
+
+            timer = 0;
             return;
         }
 
