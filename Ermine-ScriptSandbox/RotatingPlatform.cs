@@ -76,7 +76,7 @@ public class RotatingPlatform : MonoBehaviour
         lastPlatformPos = transform.position;
         lastPlatformRot = transform.rotation;
 
-        //HandleAudioByDistance();
+        HandleAudioByDistance();
     }
 
     private void ApplyPlatformMotion(Vector3 deltaPos, Quaternion deltaRot)
