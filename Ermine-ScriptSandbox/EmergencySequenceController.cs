@@ -231,7 +231,7 @@ public class EmergencySequenceController : MonoBehaviour
             if (obj != null)
                 obj.GetComponent<RotatingPlatform>().active = true;
             else
-                Debug.Log(obj.name + " not found");
+                Debug.Log(control + " not found");
         }
 
         AudioComponent aud = gameObject.GetComponent<AudioComponent>();
