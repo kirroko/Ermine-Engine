@@ -12,8 +12,6 @@ set "STAGING_DIR=%INSTALLER_DIR%\GAMEDIRECTORY"
 set "OUTPUT_DIR=%INSTALLER_DIR%\INSTALLER"
 set "GAME_BUILD_DIR=%ROOT%dist\Internal\Game-Release"
 
-if not exist "%GAME_BUILD_DIR%" set "GAME_BUILD_DIR=%ROOT%dist\Internal\Game-Debug"
-
 if not exist "%ISS_FILE%" (
 	echo [ERROR] Inno Setup script not found: "%ISS_FILE%"
 	exit /b 1
@@ -21,7 +19,7 @@ if not exist "%ISS_FILE%" (
 
 if not exist "%GAME_BUILD_DIR%" (
 	echo [ERROR] Game build output not found: "%GAME_BUILD_DIR%"
-	echo Build either Game-Release or Game-Debug first, then run this script again.
+	echo Build Game-Release then run this script again.
 	exit /b 1
 )
 
@@ -37,11 +35,6 @@ if errorlevel 2 (
     exit /b 1
 )
 ren "%STAGING_DIR%\Ermine-Game\Ermine-Game.exe" "Machina.exe"
-del "%STAGING_DIR%\Ermine-Game\validation.sh"
-del "%STAGING_DIR%\Ermine-Game\VERSION.txt"
-del "%STAGING_DIR%\Ermine-Game\Ermine-Engine.dll"
-
-pause
 
 REM --- Locate Inno Setup Compiler (ISCC.exe) ---
 echo Searching for Inno Setup Compiler ISCC.exe in standard locations...
