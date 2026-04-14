@@ -159549,13 +159549,13 @@
               "class": "PlayerController2",
               "enabled": true,
               "fields": {
-                "jumpHeight": {
-                  "t": 0,
-                  "v": 2.0
-                },
                 "mouseHorSens": {
                   "t": 0,
                   "v": 0.10000000149011612
+                },
+                "jumpHeight": {
+                  "t": 0,
+                  "v": 2.0
                 },
                 "rumbleYawIntensity": {
                   "t": 0,
@@ -159573,13 +159573,13 @@
                   "t": 0,
                   "v": 8.0
                 },
-                "camDefaultY": {
-                  "t": 0,
-                  "v": 4.5
-                },
                 "jumpspeed": {
                   "t": 0,
                   "v": 5.0
+                },
+                "camDefaultY": {
+                  "t": 0,
+                  "v": 4.5
                 },
                 "crouchLerpSpeed": {
                   "t": 0,
@@ -159619,21 +159619,21 @@
               "class": "OrbTeleport",
               "enabled": true,
               "fields": {
-                "recallHealAmt": {
+                "teleportChromaticAberrationIntensity": {
                   "t": 0,
-                  "v": 5.0
-                },
-                "damage": {
-                  "t": 0,
-                  "v": 5.0
+                  "v": 0.029999999329447748
                 },
                 "shoot": {
                   "t": 2,
                   "v": false
                 },
-                "teleportChromaticAberrationIntensity": {
+                "damage": {
                   "t": 0,
-                  "v": 0.029999999329447748
+                  "v": 5.0
+                },
+                "recallHealAmt": {
+                  "t": 0,
+                  "v": 5.0
                 },
                 "regenDelay": {
                   "t": 0,
@@ -364136,13 +364136,13 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
-                  "t": 0,
-                  "v": 1.9092522859573365
-                },
                 "moveDistance": {
                   "t": 0,
                   "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 1.9092522859573365
                 }
               }
             }
@@ -364969,13 +364969,13 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
-                  "t": 0,
-                  "v": 1.9955408573150635
-                },
                 "moveDistance": {
                   "t": 0,
                   "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 1.9955408573150635
                 }
               }
             }
@@ -365802,13 +365802,13 @@
               "class": "VerticalPlatform",
               "enabled": true,
               "fields": {
-                "moveSpeed": {
-                  "t": 0,
-                  "v": 2.081829309463501
-                },
                 "moveDistance": {
                   "t": 0,
                   "v": 2.0
+                },
+                "moveSpeed": {
+                  "t": 0,
+                  "v": 2.081829309463501
                 }
               }
             }
@@ -370129,13 +370129,13 @@
                   "t": 0,
                   "v": 2.0
                 },
-                "sceneName": {
-                  "t": 3,
-                  "v": "Level2toEnd.scene"
-                },
                 "eDuration": {
                   "t": 0,
                   "v": 3.0
+                },
+                "sceneName": {
+                  "t": 3,
+                  "v": "Level2toEnd.scene"
                 },
                 "dSpeed": {
                   "t": 0,
