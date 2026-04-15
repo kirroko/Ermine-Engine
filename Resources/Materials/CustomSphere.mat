@@ -9,17 +9,17 @@
                 0.17599999904632569
             ]
         },
-        "materialMetallic": {
-            "type": "float",
-            "value": 0.0
-        },
-        "materialRoughness": {
-            "type": "float",
-            "value": 0.30000001192092898
+        "materialAlbedoMap": {
+            "type": "texture2d",
+            "value": "../Resources\\Textures\\Particles\\Circular 8_Alpha.png"
         },
         "materialAo": {
             "type": "float",
             "value": 1.0
+        },
+        "materialCastsShadows": {
+            "type": "bool",
+            "value": true
         },
         "materialEmissive": {
             "type": "vec3",
@@ -31,19 +31,7 @@
         },
         "materialEmissiveIntensity": {
             "type": "float",
-            "value": 0
-        },
-        "materialNormalStrength": {
-            "type": "float",
-            "value": 1.0
-        },
-        "materialShadingModel": {
-            "type": "int",
-            "value": 0
-        },
-        "materialCastsShadows": {
-            "type": "bool",
-            "value": true
+            "value": 0.0
         },
         "materialFillAmount": {
             "type": "float",
@@ -68,18 +56,6 @@
             "type": "bool",
             "value": true
         },
-        "materialHasNormalMap": {
-            "type": "bool",
-            "value": true
-        },
-        "materialHasRoughnessMap": {
-            "type": "bool",
-            "value": true
-        },
-        "materialHasMetallicMap": {
-            "type": "bool",
-            "value": false
-        },
         "materialHasAoMap": {
             "type": "bool",
             "value": false
@@ -88,17 +64,41 @@
             "type": "bool",
             "value": false
         },
-        "materialAlbedoMap": {
-            "type": "texture2d",
-            "value": "../Resources\\Textures\\Particles\\Circular 8_Alpha.png"
+        "materialHasMetallicMap": {
+            "type": "bool",
+            "value": false
+        },
+        "materialHasNormalMap": {
+            "type": "bool",
+            "value": true
+        },
+        "materialHasRoughnessMap": {
+            "type": "bool",
+            "value": true
+        },
+        "materialMetallic": {
+            "type": "float",
+            "value": 0.0
         },
         "materialNormalMap": {
             "type": "texture2d",
             "value": "../Resources\\Textures\\Noise\\Cracks 10_Alpha.png"
         },
+        "materialNormalStrength": {
+            "type": "float",
+            "value": 1.0
+        },
+        "materialRoughness": {
+            "type": "float",
+            "value": 0.30000001192092898
+        },
         "materialRoughnessMap": {
             "type": "texture2d",
             "value": "../Resources\\Textures\\Noise\\Voronoi 15_Alpha.png"
+        },
+        "materialShadingModel": {
+            "type": "int",
+            "value": 0
         }
     },
     "uvTransform": {

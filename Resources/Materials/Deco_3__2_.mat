@@ -1,9 +1,5 @@
 {
     "parameters": {
-        "materialMetallicMap": {
-            "type": "texture2d",
-            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Metallic.png"
-        },
         "materialAlbedo": {
             "type": "vec4",
             "value": [
@@ -88,6 +84,10 @@
             "type": "float",
             "value": 0.0
         },
+        "materialMetallicMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Metallic.png"
+        },
         "materialNormalMap": {
             "type": "texture2d",
             "value": "D:\\UNI study notes\\Year 3\\GAM300\\Github\\Ermine Editor\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Decor_3_NRM.png"
@@ -98,7 +98,7 @@
         },
         "materialRoughness": {
             "type": "float",
-            "value": 0.7
+            "value": 0.699999988079071
         },
         "materialRoughnessMap": {
             "type": "texture2d",

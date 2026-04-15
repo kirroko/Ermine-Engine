@@ -9,17 +9,13 @@
                 1.0
             ]
         },
-        "materialMetallic": {
-            "type": "float",
-            "value": 0.0
-        },
-        "materialRoughness": {
-            "type": "float",
-            "value": 0.5
-        },
         "materialAo": {
             "type": "float",
             "value": 1.0
+        },
+        "materialCastsShadows": {
+            "type": "bool",
+            "value": true
         },
         "materialEmissive": {
             "type": "vec3",
@@ -32,18 +28,6 @@
         "materialEmissiveIntensity": {
             "type": "float",
             "value": 0.0
-        },
-        "materialNormalStrength": {
-            "type": "float",
-            "value": 1.0
-        },
-        "materialShadingModel": {
-            "type": "int",
-            "value": 0
-        },
-        "materialCastsShadows": {
-            "type": "bool",
-            "value": true
         },
         "materialFillAmount": {
             "type": "float",
@@ -68,6 +52,18 @@
             "type": "bool",
             "value": false
         },
+        "materialHasAoMap": {
+            "type": "bool",
+            "value": false
+        },
+        "materialHasEmissiveMap": {
+            "type": "bool",
+            "value": false
+        },
+        "materialHasMetallicMap": {
+            "type": "bool",
+            "value": false
+        },
         "materialHasNormalMap": {
             "type": "bool",
             "value": false
@@ -76,17 +72,21 @@
             "type": "bool",
             "value": false
         },
-        "materialHasMetallicMap": {
-            "type": "bool",
-            "value": false
+        "materialMetallic": {
+            "type": "float",
+            "value": 0.0
         },
-        "materialHasAoMap": {
-            "type": "bool",
-            "value": false
+        "materialNormalStrength": {
+            "type": "float",
+            "value": 1.0
         },
-        "materialHasEmissiveMap": {
-            "type": "bool",
-            "value": false
+        "materialRoughness": {
+            "type": "float",
+            "value": 0.5
+        },
+        "materialShadingModel": {
+            "type": "int",
+            "value": 0
         }
     },
     "uvTransform": {

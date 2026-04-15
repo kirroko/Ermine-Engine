@@ -59,6 +59,10 @@
             "type": "texture2d",
             "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_NRM.png"
         },
+        "materialRoughness": {
+            "type": "float",
+            "value": 1.0
+        },
         "materialRoughnessMap": {
             "type": "texture2d",
             "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_floor_Roughness.png"

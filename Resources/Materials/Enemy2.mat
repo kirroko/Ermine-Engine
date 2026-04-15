@@ -1,25 +1,5 @@
 {
     "parameters": {
-        "materialAlbedoMap": {
-            "type": "texture2d",
-            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_enemy_2_BC.png"
-        },
-        "materialHasNormalMap": {
-            "type": "bool",
-            "value": true
-        },
-        "materialMetallicMap": {
-            "type": "texture2d",
-            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Metallic.png"
-        },
-        "materialNormalMap": {
-            "type": "texture2d",
-            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_enemy_2_NRM.png"
-        },
-        "materialRoughness": {
-            "type": "float",
-            "value": 0.7
-        },
         "materialAlbedo": {
             "type": "vec4",
             "value": [
@@ -28,6 +8,10 @@
                 0.800000011920929,
                 1.0
             ]
+        },
+        "materialAlbedoMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_enemy_2_BC.png"
         },
         "materialAo": {
             "type": "float",
@@ -88,6 +72,10 @@
             "type": "bool",
             "value": true
         },
+        "materialHasNormalMap": {
+            "type": "bool",
+            "value": true
+        },
         "materialHasRoughnessMap": {
             "type": "bool",
             "value": true
@@ -96,9 +84,21 @@
             "type": "float",
             "value": 0.0
         },
+        "materialMetallicMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Metallic.png"
+        },
+        "materialNormalMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_enemy_2_NRM.png"
+        },
         "materialNormalStrength": {
             "type": "float",
             "value": 1.0
+        },
+        "materialRoughness": {
+            "type": "float",
+            "value": 0.699999988079071
         },
         "materialRoughnessMap": {
             "type": "texture2d",

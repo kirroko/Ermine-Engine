@@ -9,13 +9,17 @@
                 1.0
             ]
         },
-        "materialMetallic": {
-            "type": "float",
-            "value": 0.0
+        "materialAlbedoMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_BC.png"
         },
-        "materialRoughness": {
-            "type": "float",
-            "value": 0.7
+        "materialAoMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_AO.png"
+        },
+        "materialCastsShadows": {
+            "type": "bool",
+            "value": true
         },
         "materialEmissive": {
             "type": "vec3",
@@ -28,10 +32,6 @@
         "materialEmissiveIntensity": {
             "type": "float",
             "value": 1.0
-        },
-        "materialCastsShadows": {
-            "type": "bool",
-            "value": true
         },
         "materialFillAmount": {
             "type": "float",
@@ -56,6 +56,14 @@
             "type": "bool",
             "value": true
         },
+        "materialHasAoMap": {
+            "type": "bool",
+            "value": true
+        },
+        "materialHasMetallicMap": {
+            "type": "bool",
+            "value": true
+        },
         "materialHasNormalMap": {
             "type": "bool",
             "value": true
@@ -64,33 +72,25 @@
             "type": "bool",
             "value": true
         },
-        "materialHasMetallicMap": {
-            "type": "bool",
-            "value": true
-        },
-        "materialHasAoMap": {
-            "type": "bool",
-            "value": true
-        },
-        "materialAlbedoMap": {
-            "type": "texture2d",
-            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_BC.png"
-        },
-        "materialNormalMap": {
-            "type": "texture2d",
-            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_NRM.png"
-        },
-        "materialRoughnessMap": {
-            "type": "texture2d",
-            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_Roughness.png"
+        "materialMetallic": {
+            "type": "float",
+            "value": 0.0
         },
         "materialMetallicMap": {
             "type": "texture2d",
             "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_Metallic.png"
         },
-        "materialAoMap": {
+        "materialNormalMap": {
             "type": "texture2d",
-            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_AO.png"
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_NRM.png"
+        },
+        "materialRoughness": {
+            "type": "float",
+            "value": 0.699999988079071
+        },
+        "materialRoughnessMap": {
+            "type": "texture2d",
+            "value": "C:\\Users\\lum_k\\OneDrive\\Desktop\\SEP6_csd3451\\Ermine-Engine\\Build\\bin\\Editor-Release-windows-x86_64\\Ermine-Editor\\../Resources\\Textures\\ART1_clock_Roughness.png"
         }
     },
     "uvTransform": {

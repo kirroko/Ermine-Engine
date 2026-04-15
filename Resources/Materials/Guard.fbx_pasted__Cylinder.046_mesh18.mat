@@ -1,5 +1,9 @@
 {
     "parameters": {
+        "materialAlbedoMap": {
+            "type": "texture2d",
+            "value": "../Resources/Textures/Arms_Bolts_M_D.png"
+        },
         "materialCastsShadows": {
             "type": "bool",
             "value": true
@@ -26,10 +30,6 @@
         "materialHasAlbedoMap": {
             "type": "bool",
             "value": true
-        },
-        "materialAlbedoMap": {
-            "type": "texture2d",
-            "value": "../Resources/Textures/Arms_Bolts_M_D.png"
         }
     },
     "uvTransform": {
