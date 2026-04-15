@@ -9574,7 +9574,7 @@
         "ObjectMetaData": {
           "name": "floor_1 (35)",
           "tag": "Untagged",
-          "selfActive": true
+          "selfActive": false
         },
         "PhysicComponent": {
           "bodyType": "Rigid",
@@ -159728,7 +159728,7 @@
         "ObjectMetaData": {
           "name": "PlayerAnim",
           "tag": "Untagged",
-          "selfActive": true
+          "selfActive": false
         },
         "ModelComponent": {
           "model": "DavidArmsV3_ALL.fbx",
@@ -184747,7 +184747,7 @@
         "ObjectMetaData": {
           "name": "Healthbar",
           "tag": "Untagged",
-          "selfActive": true
+          "selfActive": false
         },
         "HierarchyComponent": {
           "depth": 0
@@ -195186,7 +195186,7 @@
         "ObjectMetaData": {
           "name": "Skills",
           "tag": "Untagged",
-          "selfActive": true
+          "selfActive": false
         },
         "HierarchyComponent": {
           "depth": 0
@@ -196833,7 +196833,7 @@
         },
         "Transform": {
           "position": [
-            54.107208251953128,
+            51.03907775878906,
             27.352550506591798,
             144.15208435058595
           ],
@@ -196844,9 +196844,9 @@
             0.7071067094802856
           ],
           "scale": [
-            0.09999524801969528,
+            0.09999240934848786,
             0.10000000149011612,
-            0.009998595342040062
+            0.09999716281890869
           ]
         },
         "ObjectMetaData": {
@@ -198959,85 +198959,6 @@
       }
     },
     {
-      "id": 4594,
-      "components": {
-        "IDComponent": {
-          "guid": "7f6ffb5334a87448951c0db348b0ea32"
-        },
-        "Transform": {
-          "position": [
-            51.23624038696289,
-            27.352550506591798,
-            144.15208435058595
-          ],
-          "rotation": [
-            0.0,
-            0.7071068286895752,
-            0.0,
-            0.7071067094802856
-          ],
-          "scale": [
-            0.09999408572912216,
-            0.10000000149011612,
-            0.009998450055718422
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "BrickWall (124)",
-          "tag": "Untagged",
-          "selfActive": true
-        },
-        "ModelComponent": {
-          "model": "ART1_wall_new_low.fbx",
-          "isSkinFile": false
-        },
-        "HierarchyComponent": {
-          "depth": 0
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
-      "id": 4595,
-      "components": {
-        "IDComponent": {
-          "guid": "c2752f0e2584d841bbc89e320608b0aa"
-        },
-        "Transform": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "rotation": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "scale": [
-            1.0,
-            1.0,
-            1.0
-          ]
-        },
-        "ObjectMetaData": {
-          "name": "Mesh_ART1_wall_new_low.fbx_Jail_wall_old_mesh0",
-          "tag": "Mesh",
-          "selfActive": true
-        },
-        "Material": {
-          "guid": "1c7e368869a95a499eccbed936214dae",
-          "flickerEmissive": false
-        },
-        "HierarchyComponent": {
-          "parentGuid": "7f6ffb5334a87448951c0db348b0ea32",
-          "depth": 1
-        },
-        "GlobalTransform": {}
-      }
-    },
-    {
       "id": 4596,
       "components": {
         "IDComponent": {
@@ -199045,7 +198966,7 @@
         },
         "Transform": {
           "position": [
-            38.528446197509769,
+            36.31467056274414,
             27.352550506591798,
             144.15208435058595
           ],
@@ -199056,9 +198977,9 @@
             0.7071067094802856
           ],
           "scale": [
-            0.09999275207519531,
+            0.09999161213636399,
             0.10000000149011612,
-            0.009998283348977566
+            0.09999886155128479
           ]
         },
         "ObjectMetaData": {
@@ -199124,7 +199045,7 @@
         },
         "Transform": {
           "position": [
-            51.20560073852539,
+            51.03824234008789,
             24.19533348083496,
             86.61504364013672
           ],
@@ -199135,9 +199056,9 @@
             0.7071067094802856
           ],
           "scale": [
-            0.09999605268239975,
+            0.09999480843544007,
             0.10000000149011612,
-            0.00999869592487812
+            0.09999875724315644
           ]
         },
         "ObjectMetaData": {
@@ -199203,7 +199124,7 @@
         },
         "Transform": {
           "position": [
-            38.54631042480469,
+            35.90019607543945,
             24.19533348083496,
             86.61504364013672
           ],
@@ -199214,9 +199135,9 @@
             0.7071067094802856
           ],
           "scale": [
-            0.09999388456344605,
+            0.09999313950538635,
             0.10000000149011612,
-            0.009998424910008908
+            0.09999925643205643
           ]
         },
         "ObjectMetaData": {
