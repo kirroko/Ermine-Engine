@@ -2,8 +2,6 @@
 
 The Ermine Engine is a custom C++ game engine developed by third-year students of DigiPen Singapore.
 
-> :exclamation: **Warning**: Project is still in active development!
-
 ---
 
 ## Overview
